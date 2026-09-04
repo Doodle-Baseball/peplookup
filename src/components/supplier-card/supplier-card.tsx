@@ -35,22 +35,37 @@ export function SupplierCard({ supplier, productCount }: { supplier: Supplier; p
   const reviewCount = formatReviewCount(supplier.reviewCount);
   const visiblePayments = supplier.paymentMethods.slice(0, VISIBLE_PAYMENT_METHODS);
   const hiddenPaymentCount = supplier.paymentMethods.length - visiblePayments.length;
+  const hasPaymentInfo = supplier.paymentMethods.length > 0;
   const labReportsHref = `/lab-reports?supplier=${encodeURIComponent(supplier.name)}`;
+  const logo = supplier.logoUrl ?? supplier.faviconUrl;
 
   return (
-    <article className="flex h-full flex-col gap-4 rounded-card border border-line bg-surface-raised p-5 shadow-card transition hover:shadow-lift">
+    <article
+      className={cn(
+        'group relative flex h-full flex-col gap-4 overflow-hidden rounded-card border border-line',
+        'bg-surface-raised p-5 shadow-card transition-all duration-300 ease-out',
+        'hover:-translate-y-1 hover:border-brand/30 hover:shadow-lift',
+      )}
+    >
+      {/* Decorative top accent, revealed on hover. Purely cosmetic, so it stays out of the a11y tree. */}
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 top-0 h-1 origin-left scale-x-0 bg-gradient-to-r from-brand via-brand-strong to-brand transition-transform duration-300 group-hover:scale-x-100"
+      />
+
       <header className="flex items-start gap-3">
-        <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-chip border border-line bg-surface">
-          {supplier.logoUrl ? (
+        <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-chip border border-line bg-surface shadow-sm transition-transform duration-300 group-hover:scale-105">
+          {logo ? (
             <Image
-              src={supplier.logoUrl}
+              src={logo}
               alt=""
               width={56}
               height={56}
-              className="h-full w-full object-contain"
+              className="h-full w-full object-contain p-1.5"
+              unoptimized
             />
           ) : (
-            // No logo on file yet. Initial keeps the grid aligned instead of
+            // No logo resolved. Initial keeps the grid aligned instead of
             // shifting layout, and is decorative since the name is adjacent.
             <span aria-hidden="true" className="text-lg font-bold text-faint">
               {supplier.name.charAt(0)}
@@ -112,29 +127,29 @@ export function SupplierCard({ supplier, productCount }: { supplier: Supplier; p
           </dd>
         </div>
 
-        <div className="flex items-center gap-3 rounded-chip bg-surface-sunken px-3 py-2.5">
-          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-chip bg-surface text-brand">
-            <WalletIcon className="h-4 w-4" />
-          </span>
-          <dt className="sr-only">Payment methods</dt>
-          <dd className="flex min-w-0 flex-1 flex-wrap items-center gap-1">
-            {visiblePayments.length === 0 ? (
-              <span className="text-sm text-muted">Not listed</span>
-            ) : (
-              visiblePayments.map((method) => (
+        {/* Payment methods are optional: the row is omitted entirely rather
+            than shown empty when no vendor payment data has been confirmed. */}
+        {hasPaymentInfo ? (
+          <div className="flex items-center gap-3 rounded-chip bg-surface-sunken px-3 py-2.5">
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-chip bg-surface text-brand">
+              <WalletIcon className="h-4 w-4" />
+            </span>
+            <dt className="sr-only">Payment methods</dt>
+            <dd className="flex min-w-0 flex-1 flex-wrap items-center gap-1">
+              {visiblePayments.map((method) => (
                 <span
                   key={method}
                   className="rounded-chip bg-surface px-1.5 py-0.5 text-micro font-bold uppercase text-muted"
                 >
                   {method}
                 </span>
-              ))
-            )}
-            {hiddenPaymentCount > 0 ? (
-              <span className="text-micro font-bold text-faint">+{hiddenPaymentCount}</span>
-            ) : null}
-          </dd>
-        </div>
+              ))}
+              {hiddenPaymentCount > 0 ? (
+                <span className="text-micro font-bold text-faint">+{hiddenPaymentCount}</span>
+              ) : null}
+            </dd>
+          </div>
+        ) : null}
       </dl>
 
       {supplier.labVerified ? (
@@ -146,7 +161,7 @@ export function SupplierCard({ supplier, productCount }: { supplier: Supplier; p
           </div>
           <Link
             href={labReportsHref}
-            className="inline-flex shrink-0 items-center gap-1 rounded-chip bg-brand px-2.5 py-1.5 text-micro font-bold uppercase text-white hover:bg-brand-strong"
+            className="inline-flex shrink-0 items-center gap-1 rounded-chip bg-brand px-2.5 py-1.5 text-micro font-bold uppercase text-white transition-colors hover:bg-brand-strong"
           >
             View reports
             <ChevronRightIcon className="h-3 w-3" />
@@ -168,7 +183,7 @@ export function SupplierCard({ supplier, productCount }: { supplier: Supplier; p
         <div className="grid grid-cols-2 gap-2">
           <Link
             href={`/suppliers/${supplier.slug}`}
-            className="inline-flex items-center justify-center gap-1 rounded-chip bg-brand-soft px-3 py-2.5 text-sm font-bold text-brand-strong hover:bg-brand/20"
+            className="inline-flex items-center justify-center gap-1 rounded-chip bg-brand-soft px-3 py-2.5 text-sm font-bold text-brand-strong transition-colors hover:bg-brand/20"
           >
             View Profile
             <ChevronRightIcon className="h-3.5 w-3.5" />
@@ -177,7 +192,7 @@ export function SupplierCard({ supplier, productCount }: { supplier: Supplier; p
             href={`/go?to=${encodeURIComponent(supplier.affiliateUrl)}`}
             target="_blank"
             rel="sponsored noopener"
-            className="inline-flex items-center justify-center gap-1.5 rounded-chip border border-line bg-surface px-3 py-2.5 text-sm font-bold text-content hover:bg-surface-sunken"
+            className="inline-flex items-center justify-center gap-1.5 rounded-chip border border-line bg-surface px-3 py-2.5 text-sm font-bold text-content transition-colors hover:bg-surface-sunken"
           >
             Visit Site
             <ExternalIcon className="h-3.5 w-3.5" />
@@ -187,11 +202,12 @@ export function SupplierCard({ supplier, productCount }: { supplier: Supplier; p
           href={`/?supplier=${encodeURIComponent(supplier.name)}`}
           className={cn(
             'inline-flex w-full items-center justify-center gap-2 rounded-chip bg-brand px-3 py-3',
-            'text-sm font-bold text-white hover:bg-brand-strong',
+            'text-sm font-bold text-white shadow-sm transition-all duration-200',
+            'hover:bg-brand-strong hover:shadow-lift active:scale-[0.98]',
           )}
         >
           View Prices
-          <ArrowRightIcon className="h-4 w-4" />
+          <ArrowRightIcon className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
         </Link>
       </div>
 

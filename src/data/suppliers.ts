@@ -1,12 +1,14 @@
 import { supplierListSchema, type Supplier } from '@/lib/schema';
+import { faviconUrl } from '@/lib/favicon';
 
 /**
  * Seed suppliers.
  *
  * Only fields we have actually confirmed are populated; everything unknown is
  * null and renders as an empty state rather than a plausible-looking guess.
- * Ratings, lab scores, logos and founding years are absent because they have
- * not been verified for these vendors yet.
+ * Ratings, lab scores and founding years are absent because they have not
+ * been verified for these vendors yet. Logos use each vendor's own favicon,
+ * resolved in the visitor's browser rather than scraped by us.
  *
  * affiliateUrl is OUR affiliate link. Never copy another aggregator's ref
  * parameters — that pays commission to them, not us.
@@ -16,7 +18,7 @@ const seed: Supplier[] = [
     slug: 'elevate-research-co',
     name: 'Elevate Research Co',
     logoUrl: null,
-    faviconUrl: null,
+    faviconUrl: faviconUrl('https://elevateresearchco.com/'),
     homepageUrl: 'https://elevateresearchco.com/',
     affiliateUrl: 'https://elevateresearchco.com/?ref=PRODUCTS',
     tier: null,
@@ -40,7 +42,7 @@ const seed: Supplier[] = [
     slug: 'peptime',
     name: 'Peptime',
     logoUrl: null,
-    faviconUrl: null,
+    faviconUrl: faviconUrl('https://www.peptime.com/'),
     homepageUrl: 'https://www.peptime.com/',
     affiliateUrl: 'https://peptime.link/peplookup',
     tier: null,
@@ -64,7 +66,7 @@ const seed: Supplier[] = [
     slug: 'refined-bio-labs',
     name: 'Refined Bio Labs',
     logoUrl: null,
-    faviconUrl: null,
+    faviconUrl: faviconUrl('https://refinedbiolabs.com/'),
     homepageUrl: 'https://refinedbiolabs.com/',
     // No affiliate programme confirmed yet, so this points at the plain
     // homepage. Swap in the tracked link once the relationship is approved.
