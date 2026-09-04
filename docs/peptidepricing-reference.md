@@ -16,6 +16,17 @@ separate times.
 
 Everything below comes from **search-engine titles and meta descriptions only**.
 
+**Paths already proven blocked — do not retry these, they fail at the network
+gateway and catch every tool equally:**
+
+| Method | Result |
+|---|---|
+| `curl` | `403` to CONNECT |
+| `WebFetch` | `EGRESS_BLOCKED` |
+| Headless Chromium (`/opt/pw-browsers`) | `ERR_TUNNEL_CONNECTION_FAILED` |
+| Vercel MCP | no projects on the account |
+| GitHub repos (51) | no peptidepricing source present |
+
 | Label | Meaning |
 |---|---|
 | ✅ CONFIRMED | URL appeared in the search index — the page exists |
