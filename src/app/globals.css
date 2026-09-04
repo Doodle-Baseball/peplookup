@@ -1,0 +1,72 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --surface: 255 255 255;
+    --surface-raised: 255 255 255;
+    --surface-sunken: 244 245 247;
+    --line: 229 231 235;
+    --content: 15 23 42;
+    --muted: 100 116 139;
+    --faint: 148 163 184;
+
+    --brand: 22 163 74;
+    --brand-strong: 21 128 61;
+    --brand-soft: 220 252 231;
+    --brand-tint: 240 253 244;
+
+    --promo: 234 88 12;
+    --promo-soft: 255 237 213;
+    --promo-tint: 255 247 237;
+
+    --rating: 245 158 11;
+    --lab-soft: 254 243 199;
+    --lab-ink: 180 83 9;
+
+    --ok: 22 163 74;
+    --warn: 217 119 6;
+    --danger: 220 38 38;
+    --info: 37 99 235;
+  }
+
+  .dark {
+    --surface: 15 20 28;
+    --surface-raised: 22 28 38;
+    --surface-sunken: 30 38 50;
+    --line: 45 55 70;
+    --content: 241 245 249;
+    --muted: 156 172 190;
+    --faint: 120 138 158;
+
+    --brand: 45 190 100;
+    --brand-strong: 74 213 126;
+    --brand-soft: 20 55 35;
+    --brand-tint: 16 40 27;
+
+    --promo: 251 146 60;
+    --promo-soft: 62 34 14;
+    --promo-tint: 48 27 12;
+
+    --rating: 251 191 36;
+    --lab-soft: 60 44 12;
+    --lab-ink: 252 211 77;
+
+    --ok: 45 190 100;
+    --warn: 251 191 36;
+    --danger: 248 113 113;
+    --info: 96 165 250;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    @apply bg-surface text-content antialiased;
+  }
+
+  /* One visible focus treatment for every interactive element. */
+  :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+    @apply outline-none ring-2 ring-brand ring-offset-2 ring-offset-surface rounded-chip;
+  }
+}
