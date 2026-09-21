@@ -1,0 +1,387 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Both currently resolve to the same stack, kept as two tokens (rather
+       than one) so a future request to diverge heading/body type doesn't
+       require touching every component that already reads --font-display. */
+    --font-display: var(--font-archivo), system-ui, sans-serif;
+    --font-body: var(--font-archivo), system-ui, sans-serif;
+
+    /* Off-white page ground (#f6f5f5) with pure-white cards floating on top,
+       the contrast between the two is what gives cards their lift, so
+       --surface must stay darker than --surface-raised. */
+    --surface: 246 245 245;
+    --surface-raised: 255 255 255;
+    --surface-sunken: 241 240 235;
+    --line: 227 225 218;
+    --content: 13 13 13;
+    --muted: 106 106 100;
+    --faint: 150 150 143;
+
+    /* Primary actions stay near-black: buttons, active nav pills and the cart
+       chip all read as ink, with green reserved for accents (see --accent). */
+    --brand: 13 13 13;
+    --brand-strong: 0 0 0;
+    --brand-soft: 232 231 225;
+    --brand-tint: 245 244 240;
+
+    /* Forest green accent, heading accent words, verified marks, active
+       dots. Deliberately NOT --brand: making buttons green would swamp the
+       monochrome-with-one-accent balance the theme depends on. */
+    --accent: 45 106 79;
+    --accent-strong: 27 77 54;
+    --accent-soft: 214 233 220;
+    --accent-tint: 236 244 239;
+
+    /* Research-area dots. Five hues, used only as small identifying marks. */
+    --cat-1: 232 179 61;
+    --cat-2: 127 178 217;
+    --cat-3: 232 112 58;
+    --cat-4: 95 196 168;
+    --cat-5: 232 144 160;
+
+    --promo: 234 88 12;
+    --promo-soft: 255 237 213;
+    --promo-tint: 255 247 237;
+
+    /* Coupon codes specifically, a distinct gold, not the general promo orange. */
+    --coupon: 255 185 0;
+    --coupon-soft: 255 243 205;
+    --coupon-tint: 255 250 230;
+    --coupon-ink: 133 77 0;
+
+    /* Trust/verification green, brighter than --accent so a "VERIFIED" tag
+       still reads at 11px next to body copy. */
+    --rating: 0 168 98;
+    --lab-soft: 251 244 224;
+    --lab-ink: 146 100 20;
+
+    --ok: 0 168 98;
+    --warn: 191 122 26;
+    --danger: 202 42 42;
+    --info: 37 99 235;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    @apply bg-surface font-sans text-content antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    /* Display type in this theme is set tight and heavy, the optical gap in
+       a 700+ weight grotesque at large sizes reads as loose without this. */
+    letter-spacing: -0.03em;
+    text-wrap: balance;
+  }
+
+  h1 { letter-spacing: -0.045em; }
+
+  code,
+  kbd,
+  samp,
+  .font-mono {
+    font-family: var(--font-jetbrains-mono), SFMono-Regular, ui-monospace, Menlo, Monaco, Consolas,
+      'Liberation Mono', 'Courier New', monospace;
+  }
+
+  /* Visible focus treatment for clickable controls. */
+  :where(a, button, [tabindex]):focus-visible {
+    @apply outline-none ring-2 ring-brand ring-offset-2 ring-offset-surface rounded-chip;
+  }
+  /* Text fields get a subtle neutral ring instead of the brand-colored one,
+     a loud purple outline around every input read as visual noise, not polish. */
+  :where(input, select, textarea):focus-visible {
+    @apply outline-none ring-1 ring-line;
+  }
+}
+
+@layer utilities {
+  .search-field {
+    border-color: rgb(var(--line));
+    background: rgb(var(--surface-raised));
+    color: rgb(var(--content));
+    border-radius: 9999px;
+    box-shadow: 0 4px 14px rgb(var(--content) / 0.05);
+    transition: border-color 180ms ease, box-shadow 180ms ease;
+  }
+
+  .search-field:focus-within {
+    border-color: rgb(var(--content) / 0.35);
+    box-shadow: 0 6px 20px rgb(var(--content) / 0.1);
+  }
+
+  /* The pill itself shows focus, so the input's own ring would draw a second
+     box inside it. */
+  .search-field :where(input, select, textarea):focus,
+  .search-field :where(input, select, textarea):focus-visible {
+    outline: none;
+    box-shadow: none;
+    --tw-ring-shadow: 0 0 #0000;
+  }
+
+  /* Horizontally-scrolling chip rows (e.g. "Popular:") stay scrollable by
+     touch/trackpad/drag without a visible scrollbar track cluttering the card. */
+  .scrollbar-hide {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Entrance animation for above-the-fold content. Respects reduced-motion
+     by simply not animating, content is already visible either way, so
+     nothing is lost by skipping it. */
+  @media (prefers-reduced-motion: no-preference) {
+    .animate-fade-up {
+      animation: fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+  }
+  .animate-delay-100 { animation-delay: 100ms; }
+  .animate-delay-200 { animation-delay: 200ms; }
+  .animate-delay-300 { animation-delay: 300ms; }
+  .animate-delay-400 { animation-delay: 400ms; }
+
+  /* Mobile menu drawer entering from the right edge. Same reduced-motion
+     treatment as above: the panel is in place either way, only the slide
+     is skipped. */
+  @media (prefers-reduced-motion: no-preference) {
+    .animate-slide-in-right {
+      animation: slide-in-right 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+  }
+
+  /* Slow drift for decorative background glows. Transform-only, so it never
+     causes layout work, and skipped entirely for reduced-motion users. */
+  @media (prefers-reduced-motion: no-preference) {
+    .animate-drift {
+      animation: drift 18s ease-in-out infinite alternate;
+    }
+    .animate-drift-reverse {
+      animation: drift 24s ease-in-out infinite alternate-reverse;
+    }
+  }
+
+  /* Theme-aware dot grid for decorative backdrops. Tracks --content, so the
+     dots stay faint but visible in both light and dark mode. */
+  .dot-grid {
+    background-image: radial-gradient(circle at 1px 1px, rgb(var(--content) / 0.12) 1px, transparent 0);
+    background-size: 22px 22px;
+  }
+
+  /* A card that floats above the page at rest, a soft ambient shadow plus a
+     hairline glass highlight along the top edge, and lifts as one solid
+     piece on hover, a plain translateY plus a hair of scale for depth, no
+     rotateX. A rotated tilt turns the top and bottom edges in opposite
+     directions as the card tips toward the viewer, which reads as the top
+     and bottom moving out of sync ("broken") rather than the whole card
+     rising together. This stays a single transform on a single element, one
+     duration, one easing curve. Shadow and highlight are pure black/white
+     alpha layers on top of the card's own colors, no palette color is
+     introduced or changed by this effect. */
+  .tilt-card {
+    position: relative;
+    transition:
+      transform 300ms cubic-bezier(0.16, 1, 0.3, 1),
+      box-shadow 300ms cubic-bezier(0.16, 1, 0.3, 1),
+      border-color 300ms cubic-bezier(0.16, 1, 0.3, 1),
+      background-color 300ms cubic-bezier(0.16, 1, 0.3, 1),
+      color 300ms cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: transform;
+    box-shadow:
+      inset 0 1px 0 0 rgb(255 255 255 / 0.5),
+      0 2px 6px -2px rgb(0 0 0 / 0.06),
+      0 14px 28px -10px rgb(0 0 0 / 0.14);
+  }
+  @media (hover: hover) {
+    .tilt-card:hover {
+      transform: translateY(-6px) scale(1.012);
+      box-shadow:
+        inset 0 1px 0 0 rgb(255 255 255 / 0.5),
+        0 4px 10px -2px rgb(0 0 0 / 0.1),
+        0 28px 48px -12px rgb(0 0 0 / 0.22);
+    }
+  }
+
+  /* Tactile "keycap" 3D button: a solid drop edge that compresses on click,
+     so a primary CTA reads as physically pressable rather than flat. */
+  .btn-3d {
+    box-shadow:
+      0 4px 0 0 rgb(var(--brand-strong)),
+      0 10px 20px -6px rgb(var(--brand) / 0.45);
+    transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.15s ease;
+  }
+  @media (hover: hover) {
+    .btn-3d:hover {
+      transform: translateY(-2px);
+      box-shadow:
+        0 6px 0 0 rgb(var(--brand-strong)),
+        0 14px 24px -6px rgb(var(--brand) / 0.5);
+    }
+  }
+  .btn-3d:active {
+    transform: translateY(3px);
+    box-shadow:
+      0 1px 0 0 rgb(var(--brand-strong)),
+      0 4px 10px -4px rgb(var(--brand) / 0.4);
+  }
+
+  /* --- Section chrome -------------------------------------------------- */
+
+  /* The small uppercase mono label that sits above every section heading
+     ("SECTION 03 · INDEPENDENT TESTING"). One class instead of repeating
+     five utilities at every call site. */
+  .eyebrow {
+    font-family: theme('fontFamily.mono');
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgb(var(--muted));
+  }
+
+  /* Dark full-bleed panel (newsletter, testing callout), a near-black
+     gradient with a faint dot grid, matching the theme's hero panels. */
+  .panel-dark {
+    background:
+      radial-gradient(circle at 1px 1px, rgb(255 255 255 / 0.06) 1px, transparent 0) 0 0 / 22px 22px,
+      linear-gradient(145deg, rgb(26 26 24), rgb(13 13 12) 60%);
+    color: rgb(250 250 248);
+  }
+  .panel-dark .eyebrow {
+    color: rgb(255 255 255 / 0.55);
+  }
+
+  /* --- Motion ----------------------------------------------------------- */
+
+  /* `.reveal` is intentionally inert: the scroll-linked fade-up it used to
+     carry was removed, and the class is left in place so the markup that
+     still references it keeps rendering its content fully visible. */
+
+  /* Infinite ticker strip ("RESEARCH USE ONLY · ≥99% PURITY · …"). The track
+     holds the content twice; translating exactly -50% makes the seam
+     invisible and the loop continuous. */
+  .marquee {
+    overflow: hidden;
+  }
+  .marquee-track {
+    display: flex;
+    width: max-content;
+    animation: marquee 38s linear infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .marquee-track { animation: none; }
+  }
+  .marquee:hover .marquee-track {
+    animation-play-state: paused;
+  }
+
+  /* --- Depth ------------------------------------------------------------ */
+
+  /* Opt-in 3D hover for cards. The perspective lives on the element itself
+     and the rotation is small (2deg) and paired with a lift, so the card
+     tips toward the pointer as one plane instead of shearing, the failure
+     mode that made a larger rotateX read as "broken" on .tilt-card. */
+  .card-3d {
+    transform: perspective(900px) translateZ(0);
+    transform-style: preserve-3d;
+    transition:
+      transform 180ms cubic-bezier(0.16, 1, 0.3, 1),
+      box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: transform;
+    box-shadow:
+      0 1px 2px rgb(var(--content) / 0.04),
+      0 12px 28px -14px rgb(var(--content) / 0.18);
+  }
+  @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+    .card-3d:hover {
+      transform: perspective(900px) translateY(-8px) rotateX(2deg) scale(1.015);
+      box-shadow:
+        0 2px 4px rgb(var(--content) / 0.05),
+        0 34px 56px -18px rgb(var(--content) / 0.28);
+    }
+    /* Lifts slightly further than its card, so the art reads as sitting
+       above the surface rather than printed on it. */
+    .card-3d:hover .card-3d-layer {
+      transform: translateY(-6px) scale(1.04);
+    }
+  }
+  .card-3d-layer {
+    transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* Frosted-glass card: translucent brand tint over a blurred backdrop, for
+     a section that should feel like a distinct "floating" panel. */
+  .glass-panel {
+    background: linear-gradient(
+      135deg,
+      rgb(var(--brand) / 0.14),
+      rgb(var(--surface-raised) / 0.6) 60%
+    );
+    backdrop-filter: blur(20px) saturate(140%);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+    border: 1px solid rgb(var(--brand) / 0.22);
+    box-shadow:
+      0 1px 0 0 rgb(255 255 255 / 0.15) inset,
+      0 30px 60px -20px rgb(var(--brand) / 0.35);
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* Splash-screen progress bar: the fill grows left to right while a soft
+   highlight sweeps across it. Duration is set inline to match the hold. */
+.loading-bar-fill {
+  transform-origin: left;
+  animation: loading-fill var(--loading-duration, 1.4s) cubic-bezier(0.65, 0, 0.35, 1) both;
+}
+.loading-bar-fill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.55), transparent);
+  animation: loading-shimmer 0.9s ease-in-out infinite;
+}
+
+@keyframes loading-fill {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+@keyframes loading-shimmer {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(100%); }
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@keyframes drift {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to { transform: translate3d(4%, 8%, 0) scale(1.1); }
+}

@@ -1,0 +1,136 @@
+// Adds PepTime's product listings, as supplied from peptime.com,
+// to the Supabase `offers` table. See scripts/lib/seed-vendor-offers.js.
+// No COA links were supplied for any listing.
+const { runSeed } = require('./lib/seed-vendor-offers');
+
+const IMAGES = 'https://pub-7b5bd3fa586e4b8581eaa6606af2ac76.r2.dev/products/';
+const REF = '?ref=peplookup';
+
+const listings = [
+  {
+    productSlug: 'nad',
+    mg: 1000,
+    priceCents: 8900,
+    inStock: false,
+    imageUrl: `${IMAGES}PT-017-1000.png?v=2d6ab7c2`,
+    coaUrl: null,
+    productUrl: `https://peptime.com/catalog/PT-017-1000${REF}`,
+  },
+  {
+    productSlug: 'ghk-cu',
+    mg: 50,
+    priceCents: 4900,
+    imageUrl: `${IMAGES}PT-007-50MG.png?v=18bbfff8`,
+    coaUrl: null,
+    productUrl: `https://peptime.com/catalog/PT-007${REF}`,
+  },
+  {
+    productSlug: 'ghk-cu',
+    mg: 100,
+    priceCents: 8900,
+    imageUrl: `${IMAGES}PT-007-100MG.png?v=b4af294d`,
+    coaUrl: null,
+    productUrl: `https://peptime.com/catalog/PT-007${REF}`,
+  },
+  {
+    productSlug: 'epitalon',
+    mg: 50,
+    priceCents: 8000,
+    inStock: false,
+    imageUrl: `${IMAGES}PT-013-50.png?v=21adeb4c`,
+    coaUrl: null,
+    productUrl: `https://peptime.com/catalog/PT-013-50${REF}`,
+  },
+  {
+    productSlug: 'melanotan-2',
+    mg: 10,
+    priceCents: 4900,
+    imageUrl: `${IMAGES}PT-018-10.png?v=d4062fef`,
+    coaUrl: null,
+    productUrl: `https://peptime.com/catalog/PT-018-10${REF}`,
+  },
+  {
+    productSlug: 'bpc-157',
+    mg: 10,
+    priceCents: 5300,
+    imageUrl: `${IMAGES}PT-006-10.png?v=11c61b52`,
+    coaUrl: null,
+    productUrl: `https://peptime.com/catalog/PT-006-10${REF}`,
+  },
+  {
+    productSlug: 'tb-500',
+    mg: 10,
+    priceCents: 8900,
+    imageUrl: `${IMAGES}PT-005-10.png?v=43627319`,
+    coaUrl: null,
+    productUrl: `https://peptime.com/catalog/PT-005-10${REF}`,
+  },
+  {
+    productSlug: 'tesamorelin',
+    mg: 10,
+    priceCents: 8900,
+    imageUrl: `${IMAGES}PT-011-10.png?v=19272c79`,
+    coaUrl: null,
+    productUrl: `https://peptime.com/catalog/PT-011-10${REF}`,
+  },
+  {
+    productSlug: 'retatrutide',
+    mg: 10,
+    priceCents: 9000,
+    imageUrl: `${IMAGES}PT-001-10MG.png?v=d5dc2cb5`,
+    coaUrl: null,
+    productUrl: `https://peptime.com/catalog/PT-001${REF}`,
+  },
+  {
+    productSlug: 'retatrutide',
+    mg: 11,
+    priceCents: 12000,
+    imageUrl: `${IMAGES}PT-001-11MG.png?v=3b9b697d`,
+    coaUrl: null,
+    productUrl: `https://peptime.com/catalog/PT-001${REF}`,
+  },
+  {
+    productSlug: 'mots-c',
+    mg: 10,
+    priceCents: 8900,
+    inStock: false,
+    imageUrl: `${IMAGES}PT-009-10.png?v=6f59b86c`,
+    coaUrl: null,
+    productUrl: `https://peptime.com/catalog/PT-009-10${REF}`,
+  },
+  {
+    productSlug: 'tirzepatide',
+    mg: 20,
+    priceCents: 17900,
+    inStock: false,
+    imageUrl: `${IMAGES}PT-003-20.png?v=529110df`,
+    coaUrl: null,
+    productUrl: `https://peptime.com/catalog/PT-003-20${REF}`,
+  },
+  {
+    productSlug: 'semaglutide',
+    mg: 10,
+    priceCents: 12900,
+    imageUrl: `${IMAGES}PT-002-10.png?v=21bdebc2`,
+    coaUrl: null,
+    productUrl: `https://peptime.com/catalog/PT-002-10${REF}`,
+  },
+  {
+    productSlug: 'bpc-157-tb-500',
+    mg: 20,
+    priceCents: 14900,
+    imageUrl: `${IMAGES}PT-016-20.png?v=f25d5bb7`,
+    coaUrl: null,
+    productUrl: `https://peptime.com/catalog/PT-016-20${REF}`,
+  },
+  {
+    productSlug: 'glow-ghk-cu-bpc-157-tb-500',
+    mg: 90,
+    priceCents: 19900,
+    imageUrl: `${IMAGES}PT-015-90.png?v=da3f82a8`,
+    coaUrl: null,
+    productUrl: `https://peptime.com/catalog/PT-015-90${REF}`,
+  },
+];
+
+runSeed({ supplierSlug: 'peptime-2', listings });

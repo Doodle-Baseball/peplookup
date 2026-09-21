@@ -1,0 +1,155 @@
+import { supplierListSchema, supplierSchema, type Supplier } from '@/lib/schema';
+import type { z } from 'zod';
+import { faviconUrl } from '@/lib/favicon';
+import { resolveAffiliateUrl } from '@/data/vendor-affiliate-links';
+
+/**
+ * Seed suppliers.
+ *
+ * Only fields we have actually confirmed are populated; everything unknown is
+ * null and renders as an empty state rather than a plausible-looking guess.
+ * Ratings, lab scores and founding years are absent because they have not
+ * been verified for these vendors yet. Logos use each vendor's own favicon,
+ * resolved in the visitor's browser rather than scraped by us.
+ *
+ * affiliateUrl is OUR affiliate link. Never copy another aggregator's ref
+ * parameters, that pays commission to them, not us.
+ */
+
+/** When these seed records were added to our system, not a vendor-claimed date. */
+const SEED_CREATED_AT = '2026-09-04T00:00:00.000Z';
+
+const seed: z.input<typeof supplierSchema>[] = [
+  {
+    slug: 'elevate-research-co',
+    name: 'Elevate Research Co',
+    logoUrl: null,
+    faviconUrl: faviconUrl('https://elevateresearchco.com/'),
+    homepageUrl: 'https://elevateresearchco.com/',
+    affiliateUrl: resolveAffiliateUrl('https://elevateresearchco.com/'),
+    tier: null,
+    trustRating: null,
+    labScore: null,
+    labVerified: false,
+    foundedYear: null,
+    reviewRating: null,
+    reviewCount: null,
+    reviewsUrl: null,
+    shippingCost: { kind: 'unknown' },
+    shippingSpeed: null,
+    paymentMethods: [],
+    coupon: { code: 'PRODUCTS', percentOff: 10 },
+    description: null,
+    hotline: null,
+    policyUrls: { shipping: null, returns: null, privacy: null, terms: null },
+    inventoryRefreshedAt: null,
+    country: null,
+    isActive: true,
+    createdAt: SEED_CREATED_AT,
+    accessType: null,
+    supplyCountries: [],
+    coaVerificationLevel: null,
+    coaLabName: null,
+    domainRegisteredAt: null,
+  },
+  {
+    slug: 'peptime',
+    name: 'Peptime',
+    logoUrl: null,
+    faviconUrl: faviconUrl('https://www.peptime.com/'),
+    homepageUrl: 'https://www.peptime.com/',
+    affiliateUrl: resolveAffiliateUrl('https://www.peptime.com/'),
+    tier: null,
+    trustRating: null,
+    labScore: null,
+    labVerified: false,
+    foundedYear: null,
+    reviewRating: null,
+    reviewCount: null,
+    reviewsUrl: null,
+    shippingCost: { kind: 'unknown' },
+    shippingSpeed: null,
+    paymentMethods: [],
+    coupon: { code: '11@Awan22', percentOff: 11 },
+    description: null,
+    hotline: null,
+    policyUrls: { shipping: null, returns: null, privacy: null, terms: null },
+    inventoryRefreshedAt: null,
+    country: null,
+    isActive: true,
+    createdAt: SEED_CREATED_AT,
+    accessType: null,
+    supplyCountries: [],
+    coaVerificationLevel: null,
+    coaLabName: null,
+    domainRegisteredAt: null,
+  },
+  {
+    slug: 'refined-bio-labs',
+    name: 'Refined Bio Labs',
+    logoUrl: null,
+    faviconUrl: faviconUrl('https://refinedbiolabs.com/'),
+    homepageUrl: 'https://refinedbiolabs.com/',
+    // No affiliate programme confirmed yet, so this points at the plain
+    // homepage. Swap in the tracked link once the relationship is approved.
+    affiliateUrl: resolveAffiliateUrl('https://refinedbiolabs.com/'),
+    tier: null,
+    trustRating: null,
+    labScore: null,
+    labVerified: false,
+    foundedYear: null,
+    reviewRating: null,
+    reviewCount: null,
+    reviewsUrl: null,
+    shippingCost: { kind: 'unknown' },
+    shippingSpeed: null,
+    paymentMethods: [],
+    coupon: null,
+    description: null,
+    hotline: null,
+    policyUrls: { shipping: null, returns: null, privacy: null, terms: null },
+    inventoryRefreshedAt: null,
+    country: null,
+    isActive: true,
+    createdAt: SEED_CREATED_AT,
+    accessType: null,
+    supplyCountries: [],
+    coaVerificationLevel: null,
+    coaLabName: null,
+    domainRegisteredAt: null,
+  },
+  {
+    slug: 'axis-peptide-labs-2',
+    name: 'Axis Peptide Labs',
+    logoUrl: null,
+    faviconUrl: faviconUrl('https://axispeptidelabs.com/'),
+    homepageUrl: 'https://axispeptidelabs.com/',
+    affiliateUrl: resolveAffiliateUrl('https://axispeptidelabs.com/'),
+    tier: null,
+    trustRating: 4.8,
+    labScore: 9.4,
+    labVerified: true,
+    foundedYear: 2026,
+    reviewRating: 4.8,
+    reviewCount: { kind: 'exact', value: 128 },
+    reviewsUrl: 'https://www.trustpilot.com/review/axispeptidelabs.com',
+    shippingCost: { kind: 'free' },
+    shippingSpeed: '2-4 business days',
+    paymentMethods: ['Credit Card', 'ACH', 'Crypto'],
+    coupon: { code: 'AXIS10', percentOff: 10 },
+    description: 'U.S.-fulfilled research peptides independently tested for 99.4%+ purity, with published COAs and fast domestic shipping.',
+    hotline: null,
+    policyUrls: { shipping: null, returns: null, privacy: null, terms: null },
+    inventoryRefreshedAt: null,
+    country: 'United States',
+    isActive: true,
+    createdAt: SEED_CREATED_AT,
+    accessType: null,
+    supplyCountries: ['United States'],
+    coaVerificationLevel: 'product_level',
+    coaLabName: 'Axis Peptide Labs QA',
+    domainRegisteredAt: null,
+  },
+];
+
+export const suppliers: readonly Supplier[] = supplierListSchema.parse(seed);

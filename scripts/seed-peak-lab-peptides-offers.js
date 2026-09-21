@@ -1,0 +1,252 @@
+// Adds Peak Lab Peptides's product listings, as supplied from peaklabpeptides.com,
+// to the Supabase `offers` table. See scripts/lib/seed-vendor-offers.js.
+const { runSeed } = require('./lib/seed-vendor-offers');
+
+// The vendor's general COA page rather than a certificate per listing; it is the link supplied for every product.
+const COA_LIBRARY = 'https://peaklabpeptides.com/certificate-of-analysis/?afref=a1n9';
+const UPLOADS = 'https://peaklabpeptides.com/wp-content/uploads/';
+const REF = '?afref=a1n9';
+
+const listings = [
+  {
+    productSlug: 'bpc-157',
+    mg: 5,
+    priceCents: 3340,
+    imageUrl: `${UPLOADS}2025/11/BPC157_5mg_3b86ea79-88ca-4e27-86bf-5e52064c92a4_800x800.jpg`,
+    coaUrl: COA_LIBRARY,
+    productUrl: `https://peaklabpeptides.com/products/bpc-157/${REF}`,
+  },
+  {
+    productSlug: 'bpc-157',
+    mg: 10,
+    priceCents: 5440,
+    imageUrl: `${UPLOADS}2025/11/BPC157_10mg_b391e84c-cdef-45fe-b13c-2845b6c7891a_800x800.jpg`,
+    coaUrl: COA_LIBRARY,
+    productUrl: `https://peaklabpeptides.com/products/bpc-157/${REF}`,
+  },
+  {
+    productSlug: 'tb-500',
+    mg: 5,
+    priceCents: 3800,
+    imageUrl: `${UPLOADS}2025/11/TB500_5mg_800x800.jpg`,
+    coaUrl: COA_LIBRARY,
+    productUrl: `https://peaklabpeptides.com/products/tb-500/${REF}`,
+  },
+  {
+    productSlug: 'tb-500',
+    mg: 10,
+    priceCents: 5400,
+    imageUrl: `${UPLOADS}2025/11/TB500_10mg_800x800.jpg`,
+    coaUrl: COA_LIBRARY,
+    productUrl: `https://peaklabpeptides.com/products/tb-500/${REF}`,
+  },
+  {
+    // Sold as the "Wolverine Stack" but the vendor's compound field lists it as BPC-157 + TB-500.
+    productSlug: 'bpc-157-tb-500',
+    mg: 10,
+    priceCents: 6000,
+    imageUrl: `${UPLOADS}2025/11/BPC157_5MGTB5005MG_10mg_7c9dd30a-82ba-4262-aad4-a74289614e83_800x800.jpg`,
+    coaUrl: COA_LIBRARY,
+    productUrl: `https://peaklabpeptides.com/products/wolverine-stack-bpc-157-tb-500/${REF}`,
+  },
+  {
+    productSlug: 'bpc-157-tb-500',
+    mg: 20,
+    priceCents: 8900,
+    imageUrl: `${UPLOADS}2025/12/100-MG-2.png`,
+    coaUrl: COA_LIBRARY,
+    productUrl: `https://peaklabpeptides.com/products/wolverine-stack-bpc-157-tb-500/${REF}`,
+  },
+  {
+    productSlug: 'ghk-cu',
+    mg: 50,
+    priceCents: 3530,
+    imageUrl: `${UPLOADS}2025/11/Vesugen-20mg-3-1.png`,
+    coaUrl: COA_LIBRARY,
+    productUrl: `https://peaklabpeptides.com/products/ghk-cu/${REF}`,
+  },
+  {
+    productSlug: 'ghk-cu',
+    mg: 100,
+    priceCents: 5040,
+    imageUrl: `${UPLOADS}2025/11/GHK-Cu_100mg_126cc077-0ae6-4e6d-81b1-4e0ea926f6e8_800x800-1.jpg`,
+    coaUrl: COA_LIBRARY,
+    productUrl: `https://peaklabpeptides.com/products/ghk-cu/${REF}`,
+  },
+  {
+    // Sold as "GLP-3 Reta"; the vendor lists this as their Retatrutide product.
+    productSlug: 'retatrutide',
+    mg: 5,
+    priceCents: 7000,
+    imageUrl: `${UPLOADS}2025/11/GLP-3R_5mg_4aa57f47-0c9d-4e02-8a3f-e3aa20c84d0a_800x800.jpg`,
+    coaUrl: COA_LIBRARY,
+    productUrl: `https://peaklabpeptides.com/products/glp-3-reta/${REF}`,
+  },
+  {
+    productSlug: 'retatrutide',
+    mg: 10,
+    priceCents: 9500,
+    imageUrl: `${UPLOADS}2025/11/GLP-3R_10mg_8c97727f-557b-4ab7-9463-ac32eef05da3_800x800.jpg`,
+    coaUrl: COA_LIBRARY,
+    productUrl: `https://peaklabpeptides.com/products/glp-3-reta/${REF}`,
+  },
+  {
+    productSlug: 'retatrutide',
+    mg: 20,
+    priceCents: 14600,
+    imageUrl: `${UPLOADS}2025/11/GLP-3R_20mg_22def4f8-ab25-4a97-9aaa-150a98aa1008_800x800.jpg`,
+    coaUrl: COA_LIBRARY,
+    productUrl: `https://peaklabpeptides.com/products/glp-3-reta/${REF}`,
+  },
+  {
+    productSlug: 'retatrutide',
+    mg: 40,
+    priceCents: 25320,
+    imageUrl: `${UPLOADS}2025/11/GLP-3R_40mg_800x800.jpg`,
+    coaUrl: COA_LIBRARY,
+    productUrl: `https://peaklabpeptides.com/products/glp-3-reta/${REF}`,
+  },
+  {
+    productSlug: 'retatrutide',
+    mg: 60,
+    priceCents: 31880,
+    imageUrl: `${UPLOADS}2025/11/GLP-3_R_60mg.jpg`,
+    coaUrl: COA_LIBRARY,
+    productUrl: `https://peaklabpeptides.com/products/glp-3-reta/${REF}`,
+  },
+  {
+    productSlug: 'ipamorelin',
+    mg: 5,
+    priceCents: 2900,
+    imageUrl: `${UPLOADS}2025/11/Ipamorelin_5mg_73d57d97-ba35-402f-a0ec-1c870b38f141_800x800.jpg`,
+    coaUrl: COA_LIBRARY,
+    productUrl: `https://peaklabpeptides.com/products/ipamorelin/${REF}`,
+  },
+  {
+    productSlug: 'ipamorelin',
+    mg: 10,
+    priceCents: 3800,
+    imageUrl: `${UPLOADS}2025/11/Ipamorelin_10mg_b9c9c0f1-c17d-4114-8c7e-33ff2eee206c_800x800.jpg`,
+    coaUrl: COA_LIBRARY,
+    productUrl: `https://peaklabpeptides.com/products/ipamorelin/${REF}`,
+  },
+  {
+    productSlug: 'nad',
+    mg: 100,
+    priceCents: 2600,
+    imageUrl: `${UPLOADS}2025/12/100-MG.png`,
+    coaUrl: COA_LIBRARY,
+    productUrl: `https://peaklabpeptides.com/products/nad/${REF}`,
+  },
+  {
+    productSlug: 'nad',
+    mg: 500,
+    priceCents: 5600,
+    imageUrl: `${UPLOADS}2025/11/NAD_500mg_d9f4340e-7780-43d9-8e10-62b59c399ab8_800x800.jpg`,
+    coaUrl: COA_LIBRARY,
+    productUrl: `https://peaklabpeptides.com/products/nad/${REF}`,
+  },
+  {
+    productSlug: 'nad',
+    mg: 1000,
+    priceCents: 10100,
+    imageUrl: `${UPLOADS}2026/05/NAD1000MG.png`,
+    coaUrl: COA_LIBRARY,
+    productUrl: `https://peaklabpeptides.com/products/nad/${REF}`,
+  },
+  {
+    // 5mg + 5mg = 10mg total.
+    productSlug: 'ipamorelin-cjc-1295-no-dac',
+    mg: 10,
+    priceCents: 6480,
+    imageUrl: `${UPLOADS}2025/11/CJC-1295-5mg-wo-DAC-IPA-5mg-10mg.jpg`,
+    coaUrl: COA_LIBRARY,
+    productUrl: `https://peaklabpeptides.com/products/cjc-1295-no-dac-ipamorelin/${REF}`,
+  },
+  {
+    productSlug: 'dsip',
+    mg: 5,
+    priceCents: 3100,
+    imageUrl: `${UPLOADS}2025/11/DSIP_5mg_c78fa129-f278-4752-b8e4-8839d20029ba_800x800.jpg`,
+    coaUrl: COA_LIBRARY,
+    productUrl: `https://peaklabpeptides.com/products/dsip/${REF}`,
+  },
+  {
+    productSlug: 'dsip',
+    mg: 10,
+    priceCents: 4480,
+    imageUrl: `${UPLOADS}2026/03/DSIP_10mg.png`,
+    coaUrl: COA_LIBRARY,
+    productUrl: `https://peaklabpeptides.com/products/dsip/${REF}`,
+  },
+  {
+    productSlug: 'glutathione',
+    mg: 1500,
+    priceCents: 5480,
+    imageUrl: `${UPLOADS}2025/11/Glutathione_1500mg_57d0adfc-afef-4968-8986-74a7528df1c8_800x800.jpg`,
+    coaUrl: COA_LIBRARY,
+    productUrl: `https://peaklabpeptides.com/products/glutathione/${REF}`,
+  },
+  {
+    // Sold as a pack of 10 vials, 10mg each.
+    productSlug: 'mots-c',
+    mg: 10,
+    count: 10,
+    priceCents: 32000,
+    imageUrl: `${UPLOADS}2026/06/1-11-scaled.jpg`,
+    coaUrl: COA_LIBRARY,
+    productUrl: `https://peaklabpeptides.com/products/mots-c/${REF}`,
+  },
+  {
+    // Sold as a pack of 10 vials, 40mg each.
+    productSlug: 'mots-c',
+    mg: 40,
+    count: 10,
+    priceCents: 98400,
+    imageUrl: `${UPLOADS}2026/06/2-7-scaled.jpg`,
+    coaUrl: COA_LIBRARY,
+    productUrl: `https://peaklabpeptides.com/products/mots-c/${REF}`,
+  },
+  {
+    // Sold as a pack of 10 vials, 10mg each.
+    productSlug: 'epitalon',
+    mg: 10,
+    count: 10,
+    priceCents: 28240,
+    imageUrl: `${UPLOADS}2026/06/1-3-scaled.jpg`,
+    coaUrl: COA_LIBRARY,
+    productUrl: `https://peaklabpeptides.com/products/epithalon/${REF}`,
+  },
+  {
+    // Sold as a pack of 10 vials, 50mg each.
+    productSlug: 'epitalon',
+    mg: 50,
+    count: 10,
+    priceCents: 64640,
+    imageUrl: `${UPLOADS}2026/06/2-2-scaled.jpg`,
+    coaUrl: COA_LIBRARY,
+    productUrl: `https://peaklabpeptides.com/products/epithalon/${REF}`,
+  },
+  {
+    // Sold as a pack of 10 vials, 80mg each.
+    productSlug: 'klow-bpc-157-tb-500-kpv-ghk-cu',
+    mg: 80,
+    count: 10,
+    priceCents: 83200,
+    imageUrl: `${UPLOADS}2026/06/1-8-scaled.jpg`,
+    coaUrl: COA_LIBRARY,
+    productUrl: `https://peaklabpeptides.com/products/klow-blend/${REF}`,
+  },
+  {
+    // Sold as a pack of 10 vials, 70mg each.
+    productSlug: 'glow-ghk-cu-bpc-157-tb-500',
+    mg: 70,
+    count: 10,
+    priceCents: 83360,
+    imageUrl: `${UPLOADS}2026/06/1-5-scaled.jpg`,
+    coaUrl: COA_LIBRARY,
+    productUrl: `https://peaklabpeptides.com/products/glow-blend/${REF}`,
+  },
+];
+
+runSeed({ supplierSlug: 'peak-lab-peptides-2', listings });
