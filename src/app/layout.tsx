@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import Script from 'next/script';
 import { Archivo, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 import { site } from '@/config/site';
@@ -28,10 +27,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: {
-    default: `${site.name} | Compare Peptide Prices by Cost per mg`,
-    template: `%s | ${site.name}`,
-  },
+  title: { default: `${site.name} | Compare Peptide Prices by Cost per mg`, template: `%s | ${site.name}` },
   description: site.description,
   metadataBase: new URL(`https://${site.domain}`),
   icons: {
@@ -41,36 +37,13 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html
-      lang="en"
-      className={`${archivo.variable} ${jetbrainsMono.variable}`}
-      suppressHydrationWarning
-    >
+    <html lang="en" className={`${archivo.variable} ${jetbrainsMono.variable}`} suppressHydrationWarning>
       <body className="flex min-h-screen flex-col" suppressHydrationWarning>
         <NavigationProgress />
         <LoadingScreen />
         {children}
-
-        {/* Google Analytics */}
-        <Script
-          async
-          src="https://www.googletagmanager.com/gtag/js?id=G-CTRYVJ794V"
-        />
-        <Script id="google-analytics">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-
-            gtag('config', 'G-CTRYVJ794V');
-          `}
-        </Script>
       </body>
     </html>
   );
