@@ -1,0 +1,10 @@
+# robots.txt for https://www.peplookup.com
+ 
+User-agent: *
+Allow: /
+ 
+# Outbound affiliate/redirect links - no crawl value, keep link equity internal
+Disallow: /go?
+ 
+Sitemap: https://www.peplookup.com/sitemap.xml
+ 
