@@ -8,6 +8,8 @@ import { staticSeoPage } from '@/config/seo-pages';
 import { pageMetadata } from '@/lib/seo-defaults';
 import { getSeoOverride, withSeo } from '@/lib/seo';
 import { PageFaqSection } from '@/components/faq/page-faq-section';
+import { PricingComparisonExplainer } from '@/components/home/pricing-comparison-explainer';
+import { catalogueStats } from '@/lib/catalogue-stats';
 
 const PAGE = staticSeoPage('/');
 
@@ -126,6 +128,10 @@ export default async function HomePage() {
       ) : (
         <ProductBrowser products={cardData} facets={facets} />
       )}
+
+      <div className="mx-auto max-w-shell px-4 pb-6 sm:pb-8">
+        <PricingComparisonExplainer stats={catalogueStats(suppliers, allOffers)} products={products} />
+      </div>
 
       <section className="mx-auto max-w-shell px-4 pb-12">
         <PageFaqSection path="/" />
