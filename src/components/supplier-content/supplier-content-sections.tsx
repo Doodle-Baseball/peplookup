@@ -53,13 +53,19 @@ function ContentBox({
     <section
       id={id}
       aria-labelledby={`${id}-heading`}
-      className={cn(PANEL_CLASS, 'reveal scroll-mt-24 p-5 sm:p-8', className)}
+      className={cn(PANEL_CLASS, 'reveal min-w-0 scroll-mt-24 p-5 sm:p-8 lg:p-10', className)}
     >
       <p className="eyebrow">{eyebrow}</p>
-      <h2 id={`${id}-heading`} className="mt-3 text-3xl font-black text-content sm:text-4xl">
+      {/* break-words: a long vendor name must wrap on a 320px phone rather than overflow the card. */}
+      <h2
+        id={`${id}-heading`}
+        className="mt-3 text-2xl font-black leading-tight text-content break-words sm:text-3xl lg:text-4xl"
+      >
         {title}
       </h2>
-      <p className="mt-4 max-w-3xl whitespace-pre-line text-base leading-7 text-muted">{body}</p>
+      <p className="mt-4 max-w-6xl whitespace-pre-line text-sm leading-7 text-muted break-words sm:text-base">
+        {body}
+      </p>
     </section>
   );
 }
@@ -75,7 +81,7 @@ export function SupplierContentSections({
   className?: string;
 }) {
   return (
-    <div className={cn('space-y-6', className)}>
+    <div className={cn('space-y-4 sm:space-y-6', className)}>
       {(['about', 'why', 'compare'] as const).map((key) => (
         <ContentBox
           key={key}

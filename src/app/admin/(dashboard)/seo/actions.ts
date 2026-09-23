@@ -16,7 +16,13 @@ import { savePageFaqs } from '@/lib/admin/page-faqs';
 import { FAQS_CACHE_TAG } from '@/lib/page-faqs';
 import { uniqueValues } from '@/lib/compound-content';
 import { saveSupplierContent } from '@/lib/admin/supplier-content';
-import { SUPPLIER_CONTENT_CACHE_TAG } from '@/lib/supplier-content-store';
+import { getGeneratedSupplierContent, SUPPLIER_CONTENT_CACHE_TAG } from '@/lib/supplier-content-store';
+import {
+  SUPPLIER_CONTENT_KEYS,
+  supplierContentFieldName,
+  toSupplierContentOverride,
+  type SupplierContent,
+} from '@/lib/supplier-content';
 
 export interface SeoSaveState {
   error: string | null;
@@ -83,7 +89,38 @@ function revalidateSite() {
   // the old slug's cached data for up to 5 minutes.
   revalidateTag('guides');
   revalidateTag(FAQS_CACHE_TAG);
+  revalidateTag(SUPPLIER_CONTENT_CACHE_TAG);
   revalidatePath('/', 'layout');
+}
+
+const SUPPLIER_TITLE_MAX = 200;
+const SUPPLIER_BODY_MAX = 5000;
+
+/**
+ * The About / Why / vs-other-suppliers fields from the dialog, or null when the
+ * form didn't include them (every non-supplier page). A field that is present
+ * but blank is kept as '' and later stored as "use the generated text".
+ */
+function readSupplierContent(formData: FormData): { content: SupplierContent } | { error: string } | null {
+  const field = (key: (typeof SUPPLIER_CONTENT_KEYS)[number], part: 'title' | 'body') => {
+    const value = formData.get(supplierContentFieldName(key, part));
+    return typeof value === 'string' ? value : null;
+  };
+  if (field('about', 'title') === null) return null;
+
+  const content = {} as SupplierContent;
+  for (const key of SUPPLIER_CONTENT_KEYS) {
+    const title = field(key, 'title') ?? '';
+    const body = field(key, 'body') ?? '';
+    if (title.trim().length > SUPPLIER_TITLE_MAX) {
+      return { error: `Supplier section titles can be at most ${SUPPLIER_TITLE_MAX} characters.` };
+    }
+    if (body.trim().length > SUPPLIER_BODY_MAX) {
+      return { error: `Supplier section details can be at most ${SUPPLIER_BODY_MAX.toLocaleString('en-US')} characters.` };
+    }
+    content[key] = { title, body };
+  }
+  return { content };
 }
 
 function isDefaultInput(input: SeoPageInput): boolean {
@@ -131,6 +168,10 @@ export async function saveSeoPageAction(_prevState: SeoSaveState, formData: Form
   }
 
   const form = parsed.data;
+  const supplierContent = form.kind === 'supplier' ? readSupplierContent(formData) : null;
+  if (supplierContent && 'error' in supplierContent) {
+    return { error: supplierContent.error, fieldErrors: {}, savedAt: null };
+  }
   const renamable = form.kind === 'compound' || form.kind === 'supplier' || form.kind === 'guide';
   const renaming = renamable && form.newSlug !== '' && form.newSlug !== form.slug;
   if (renaming && !SLUG_PATTERN.test(form.newSlug)) {
@@ -156,6 +197,7 @@ export async function saveSeoPageAction(_prevState: SeoSaveState, formData: Form
 
   let path = form.path;
   let renamed = false;
+  let seoSaved = false;
   try {
     await assertSeoPageExists(form.kind, form.path);
     if (renaming && (form.kind === 'compound' || form.kind === 'supplier' || form.kind === 'guide')) {
@@ -164,12 +206,24 @@ export async function saveSeoPageAction(_prevState: SeoSaveState, formData: Form
     }
     if (isDefaultInput(input)) await resetSeoPage(path);
     else await saveSeoPage(path, input);
+    seoSaved = true;
+    if (supplierContent) {
+      const slug = path.slice('/suppliers/'.length);
+      const generated = await getGeneratedSupplierContent(slug);
+      if (!generated) throw new Error(`No supplier exists at ${path}.`);
+      await saveSupplierContent(slug, toSupplierContentOverride(supplierContent.content, generated));
+    }
   } catch (error) {
-    // A rename that succeeded is already live, so the page must refresh even though the SEO save failed.
-    if (renamed) revalidateSite();
+    // A rename or SEO save that succeeded is already live, so the page must
+    // refresh even though a later step failed.
+    if (renamed || seoSaved) revalidateSite();
     const message = messageOf(error, 'Failed to save SEO settings.');
     return {
-      error: renamed ? `The slug was changed to ${path}, but the SEO settings could not be saved: ${message}` : message,
+      error: seoSaved
+        ? `The SEO settings were saved, but the supplier page sections could not be: ${message}`
+        : renamed
+          ? `The slug was changed to ${path}, but the SEO settings could not be saved: ${message}`
+          : message,
       fieldErrors: {},
       savedAt: null,
     };
@@ -256,44 +310,3 @@ export async function savePageFaqsAction(input: {
   return { error: null };
 }
 
-/** Blank means "use the generated text", stored as null. */
-const contentField = (max: number) =>
-  z
-    .string()
-    .trim()
-    .max(max, `Keep each field under ${max.toLocaleString('en-US')} characters.`)
-    .nullable()
-    .transform((value) => value || null);
-
-const contentBlockSchema = z.object({ title: contentField(200), body: contentField(5000) });
-
-const supplierContentInputSchema = z.object({
-  slug: z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, 'Unknown supplier.'),
-  content: z.object({ about: contentBlockSchema, why: contentBlockSchema, compare: contentBlockSchema }),
-});
-
-/**
- * Saves the About / Why researchers choose / vs other suppliers boxes for one
- * vendor. Saved separately from the SEO form, like FAQs, so an edit here never
- * waits on (or is lost by) a validation error in the fields above it.
- */
-export async function saveSupplierContentAction(input: {
-  slug: string;
-  content: Record<'about' | 'why' | 'compare', { title: string | null; body: string | null }>;
-}): Promise<{ error: string | null }> {
-  const parsed = supplierContentInputSchema.safeParse(input);
-  if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? 'These sections could not be saved.' };
-  }
-
-  try {
-    await assertSeoPageExists('supplier', `/suppliers/${parsed.data.slug}`);
-    await saveSupplierContent(parsed.data.slug, parsed.data.content);
-  } catch (error) {
-    return { error: messageOf(error, 'Failed to save these sections.') };
-  }
-
-  revalidateTag(SUPPLIER_CONTENT_CACHE_TAG);
-  revalidatePath(`/suppliers/${parsed.data.slug}`);
-  return { error: null };
-}

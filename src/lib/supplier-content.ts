@@ -43,6 +43,31 @@ export const SUPPLIER_CONTENT_LABEL: Record<SupplierContentKey, string> = {
   compare: 'Vs other suppliers',
 };
 
+/** Form field name for one box's title or body in the /admin/seo dialog. */
+export function supplierContentFieldName(key: SupplierContentKey, field: 'title' | 'body'): string {
+  return `supplierContent_${key}_${field}`;
+}
+
+/**
+ * Turns submitted text into what gets stored: blank, or unchanged from the
+ * generated version, is saved as null so the box keeps tracking live data
+ * instead of freezing today's numbers.
+ */
+export function toSupplierContentOverride(
+  submitted: SupplierContent,
+  defaults: SupplierContent,
+): SupplierContentOverride {
+  const stored = (key: SupplierContentKey, field: 'title' | 'body'): string | null => {
+    const value = submitted[key][field].trim();
+    return value === '' || value === defaults[key][field].trim() ? null : value;
+  };
+  return {
+    about: { title: stored('about', 'title'), body: stored('about', 'body') },
+    why: { title: stored('why', 'title'), body: stored('why', 'body') },
+    compare: { title: stored('compare', 'title'), body: stored('compare', 'body') },
+  };
+}
+
 export function wordCount(text: string): number {
   const trimmed = text.trim();
   return trimmed === '' ? 0 : trimmed.split(/\s+/).length;

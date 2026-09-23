@@ -4,6 +4,7 @@ import {
   resolveSupplierContent,
   SUPPLIER_CONTENT_WORD_TARGET,
   supplierMarketStats,
+  toSupplierContentOverride,
   wordCount,
   type SupplierMarketStats,
 } from '../supplier-content';
@@ -196,5 +197,22 @@ describe('resolveSupplierContent', () => {
     expect(resolved.about).toEqual({ title: 'Meet Amino Club', body: defaults.about.body });
     expect(resolved.why).toEqual({ title: defaults.why.title, body: 'Custom why.' });
     expect(resolved.compare).toEqual(defaults.compare);
+  });
+});
+
+describe('toSupplierContentOverride', () => {
+  const defaults = defaultSupplierContent(FULL_SUPPLIER, RICH_STATS);
+
+  it('stores untouched and blank fields as null so they keep tracking live data', () => {
+    const submitted = {
+      about: { title: `  ${defaults.about.title} `, body: '' },
+      why: { title: 'Why labs pick Amino Club', body: defaults.why.body },
+      compare: { title: defaults.compare.title, body: 'Edited comparison.' },
+    };
+    expect(toSupplierContentOverride(submitted, defaults)).toEqual({
+      about: { title: null, body: null },
+      why: { title: 'Why labs pick Amino Club', body: null },
+      compare: { title: null, body: 'Edited comparison.' },
+    });
   });
 });
