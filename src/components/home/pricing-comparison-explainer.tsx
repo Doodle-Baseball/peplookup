@@ -64,8 +64,8 @@ export function PricingComparisonExplainer({
 
         <div className="space-y-4 text-sm leading-7 text-muted sm:text-base lg:col-span-2">
           <p>
-            A true peptide pricing comparison isn&rsquo;t just listing prices side by side &mdash; it&rsquo;s
-            making them comparable. Vial sizes, forms, and packaging vary widely between suppliers, so PepLookup
+            A true peptide pricing comparison isn&rsquo;t just listing prices side by side. It&rsquo;s making
+            them comparable. Vial sizes, forms, and packaging vary widely between suppliers, so PepLookup
             normalizes every price to cost per milligram before it appears in any comparison. This is what
             separates an accurate peptide pricing comparison from a simple price list.
           </p>
@@ -77,11 +77,11 @@ export function PricingComparisonExplainer({
               {number.format(stats.compoundCount)} research compounds
             </strong>
             . Every comparison shows when a price was last observed, whether the supplier publishes a certificate
-            of analysis, and any active discount code &mdash; everything needed to run a fair peptide pricing
+            of analysis, and any active discount code: everything needed to run a fair peptide pricing
             comparison before ordering.
           </p>
           <p>
-            When you compare peptide prices on a single listing page, sort by cost per mg first &mdash; this is
+            When you compare peptide prices on a single listing page, sort by cost per mg first. This is
             the number that actually reflects value, since a lower sticker price on a smaller vial can cost more
             per milligram than a higher-priced larger one.
           </p>
