@@ -2,7 +2,7 @@ export const site = {
   name: 'PepLookup',
   /** Rendered as two tones in the wordmark. */
   nameParts: { lead: 'Pep', tail: 'Lookup' },
-  domain: 'peplookup.com',
+domain: 'www.peplookup.com',
   contactEmail: 'info@peplookup.com',
   /** Display form; `whatsappUrl` below builds the wa.me link from it. */
   whatsapp: '+1 260 218 1154',
