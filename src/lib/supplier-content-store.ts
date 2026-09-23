@@ -10,6 +10,7 @@ import {
   type SupplierContentOverride,
 } from '@/lib/supplier-content';
 import type { Offer, Supplier } from '@/lib/schema';
+import { getAllOffers, getSupplier } from '@/lib/repository';
 
 export const SUPPLIER_CONTENT_CACHE_TAG = 'supplier-page-content';
 
@@ -35,4 +36,14 @@ export async function getSupplierContent(supplier: Supplier, allOffers: readonly
   const saved = await getSavedSupplierContent();
   const defaults = defaultSupplierContent(supplier, supplierMarketStats(supplier.slug, allOffers));
   return resolveSupplierContent(defaults, saved[supplier.slug] ?? null);
+}
+
+/**
+ * The generated text for one vendor, built from exactly the data the public
+ * page uses, so the admin can tell "unchanged" edits from real ones. Null when
+ * the supplier doesn't exist.
+ */
+export async function getGeneratedSupplierContent(slug: string): Promise<SupplierContent | null> {
+  const [supplier, offers] = await Promise.all([getSupplier(slug), getAllOffers()]);
+  return supplier ? defaultSupplierContent(supplier, supplierMarketStats(supplier.slug, offers)) : null;
 }

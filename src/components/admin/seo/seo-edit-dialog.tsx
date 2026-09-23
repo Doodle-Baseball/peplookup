@@ -466,13 +466,12 @@ export function SeoEditDialog({ entry, onClose }: { entry: SeoEntry; onClose: ()
               <FaqEditor path={entry.path} saved={entry.faqs} effective={entry.defaultFaqs} />
             </Section>
 
-            {entry.supplierContent && entry.slug ? (
+            {entry.supplierContent ? (
               <Section
                 title="Supplier page sections"
-                description="The About, Why researchers choose and vs other suppliers boxes shown above the FAQs on this supplier's page. Saved separately from the fields above."
+                description="The About, Why researchers choose and vs other suppliers boxes shown above the FAQs on this supplier's page."
               >
                 <SupplierContentEditor
-                  slug={entry.slug}
                   saved={entry.supplierContent.saved}
                   defaults={entry.supplierContent.defaults}
                 />

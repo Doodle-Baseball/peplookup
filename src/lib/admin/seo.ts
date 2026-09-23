@@ -3,7 +3,7 @@ import { getSupabaseServerClient } from '@/lib/supabase/server';
 import { fetchProductIdentitiesFromDb } from '@/lib/supabase/products';
 import { fetchSuppliersFromDb } from '@/lib/supabase/suppliers';
 import { STATIC_SEO_PAGES } from '@/config/seo-pages';
-import { getAllOffers, getGuides } from '@/lib/repository';
+import { getAllOffers, getGuides, getSuppliers } from '@/lib/repository';
 import {
   compoundSeoDefaults,
   guideSeoDefaults,
@@ -112,7 +112,7 @@ function defaultsOnly(defaults: SeoDefaults): SeoDefaults {
 
 export async function getSeoDashboardData(): Promise<SeoDashboardData> {
   const client = requireClient();
-  const [compounds, suppliers, pages, redirects, guides, offers, savedSupplierContent] = await Promise.all([
+  const [compounds, suppliers, pages, redirects, guides, offers, savedSupplierContent, publicSuppliers] = await Promise.all([
     fetchProductIdentitiesFromDb(client),
     fetchSuppliersFromDb(client, { includeInactive: true }),
     client.from('seo_pages').select('*'),
@@ -120,6 +120,7 @@ export async function getSeoDashboardData(): Promise<SeoDashboardData> {
     getGuides(),
     getAllOffers(),
     listSavedSupplierContent(),
+    getSuppliers(),
   ]);
   if (!compounds) throw new AdminDbError('The products table could not be read.');
   if (!suppliers) throw new AdminDbError('The suppliers table could not be read.');
@@ -149,8 +150,13 @@ export async function getSeoDashboardData(): Promise<SeoDashboardData> {
     if (guide) return defaultGuideFaqs(guide);
     return [];
   };
+  const publicSupplierBySlug = new Map(publicSuppliers.map((supplier) => [supplier.slug, supplier]));
   const supplierContentFor = (kind: SeoPageKind, slug: string | null): SeoEntry['supplierContent'] => {
-    const supplier = kind === 'supplier' && slug ? supplierBySlug.get(slug) : undefined;
+    if (kind !== 'supplier' || !slug) return null;
+    // The public page builds its text from the public supplier record (which
+    // carries review profiles the raw row lacks), so the editor must seed from
+    // the same one or "unchanged" text would read as an edit on save.
+    const supplier = publicSupplierBySlug.get(slug) ?? supplierBySlug.get(slug);
     if (!supplier) return null;
     return {
       saved: savedSupplierContent.get(supplier.slug) ?? null,
