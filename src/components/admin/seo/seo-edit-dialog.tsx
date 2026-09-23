@@ -24,6 +24,7 @@ import { site } from '@/config/site';
 import { cn } from '@/lib/cn';
 import { ChevronDownIcon, CloseIcon, WarningIcon } from '@/components/icons/icons';
 import { FaqEditor } from '@/components/admin/seo/faq-editor';
+import { SupplierContentEditor } from '@/components/admin/seo/supplier-content-editor';
 
 const INITIAL_STATE: SeoSaveState = { error: null, fieldErrors: {}, savedAt: null };
 
@@ -464,6 +465,19 @@ export function SeoEditDialog({ entry, onClose }: { entry: SeoEntry; onClose: ()
             >
               <FaqEditor path={entry.path} saved={entry.faqs} effective={entry.defaultFaqs} />
             </Section>
+
+            {entry.supplierContent && entry.slug ? (
+              <Section
+                title="Supplier page sections"
+                description="The About, Why researchers choose and vs other suppliers boxes shown above the FAQs on this supplier's page. Saved separately from the fields above."
+              >
+                <SupplierContentEditor
+                  slug={entry.slug}
+                  saved={entry.supplierContent.saved}
+                  defaults={entry.supplierContent.defaults}
+                />
+              </Section>
+            ) : null}
           </div>
 
           <footer className="sticky bottom-0 rounded-b-card border-t border-line bg-surface-raised px-6 py-4">
