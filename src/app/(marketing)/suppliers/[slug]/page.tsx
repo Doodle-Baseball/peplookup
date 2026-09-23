@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import {
+  getAllOffers,
   getSupplier,
   getSuppliers,
   getOffersForSupplier,
@@ -43,6 +44,8 @@ import {
 import type { Offer } from '@/lib/schema';
 import { LiveSearchInput } from '@/components/ui/live-search-input';
 import { PageFaqSection } from '@/components/faq/page-faq-section';
+import { SupplierContentSections } from '@/components/supplier-content/supplier-content-sections';
+import { getSupplierContent } from '@/lib/supplier-content-store';
 
 /** Product Catalog tiles per page, 2 rows of the 3-column grid. */
 const CATALOG_PAGE_SIZE = 6;
@@ -140,12 +143,14 @@ export default async function SupplierPage({
 
   // One query for every compound up front instead of one round trip per
   // distinct product among this vendor's offers.
-  const [offers, allProducts, reviews, allSuppliers] = await Promise.all([
+  const [offers, allProducts, reviews, allSuppliers, marketOffers] = await Promise.all([
     getOffersForSupplier(supplier.slug),
     getProducts(),
     getSupplierReviews(supplier),
     getSuppliers(),
+    getAllOffers(),
   ]);
+  const supplierContent = await getSupplierContent(supplier, marketOffers);
   const productsBySlug = new Map(allProducts.map((p) => [p.slug, p]));
   // Offers whose product no longer resolves are dropped rather than shown
   // with a missing name.
@@ -510,6 +515,10 @@ export default async function SupplierPage({
             labSummary={labSummary}
           />
         ) : null}
+
+        {/* About / Why researchers choose / vs other suppliers, editable per
+            vendor from the supplier's popup in /admin/seo. */}
+        <SupplierContentSections vendorName={supplier.name} content={supplierContent} className="mt-12" />
 
         {/* FAQs for this vendor, generated from their own record until a set is
             saved for this path in /admin/seo. */}

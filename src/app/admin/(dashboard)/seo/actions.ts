@@ -15,6 +15,8 @@ import { clearRedirectCache, SEO_CACHE_TAG, type SeoTaskStatus } from '@/lib/seo
 import { savePageFaqs } from '@/lib/admin/page-faqs';
 import { FAQS_CACHE_TAG } from '@/lib/page-faqs';
 import { uniqueValues } from '@/lib/compound-content';
+import { saveSupplierContent } from '@/lib/admin/supplier-content';
+import { SUPPLIER_CONTENT_CACHE_TAG } from '@/lib/supplier-content-store';
 
 export interface SeoSaveState {
   error: string | null;
@@ -251,5 +253,47 @@ export async function savePageFaqsAction(input: {
   // revalidation updates the visible questions and the structured data together.
   revalidateTag(FAQS_CACHE_TAG);
   revalidateSite();
+  return { error: null };
+}
+
+/** Blank means "use the generated text", stored as null. */
+const contentField = (max: number) =>
+  z
+    .string()
+    .trim()
+    .max(max, `Keep each field under ${max.toLocaleString('en-US')} characters.`)
+    .nullable()
+    .transform((value) => value || null);
+
+const contentBlockSchema = z.object({ title: contentField(200), body: contentField(5000) });
+
+const supplierContentInputSchema = z.object({
+  slug: z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, 'Unknown supplier.'),
+  content: z.object({ about: contentBlockSchema, why: contentBlockSchema, compare: contentBlockSchema }),
+});
+
+/**
+ * Saves the About / Why researchers choose / vs other suppliers boxes for one
+ * vendor. Saved separately from the SEO form, like FAQs, so an edit here never
+ * waits on (or is lost by) a validation error in the fields above it.
+ */
+export async function saveSupplierContentAction(input: {
+  slug: string;
+  content: Record<'about' | 'why' | 'compare', { title: string | null; body: string | null }>;
+}): Promise<{ error: string | null }> {
+  const parsed = supplierContentInputSchema.safeParse(input);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? 'These sections could not be saved.' };
+  }
+
+  try {
+    await assertSeoPageExists('supplier', `/suppliers/${parsed.data.slug}`);
+    await saveSupplierContent(parsed.data.slug, parsed.data.content);
+  } catch (error) {
+    return { error: messageOf(error, 'Failed to save these sections.') };
+  }
+
+  revalidateTag(SUPPLIER_CONTENT_CACHE_TAG);
+  revalidatePath(`/suppliers/${parsed.data.slug}`);
   return { error: null };
 }

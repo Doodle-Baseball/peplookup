@@ -3,7 +3,7 @@ import { getSupabaseServerClient } from '@/lib/supabase/server';
 import { fetchProductIdentitiesFromDb } from '@/lib/supabase/products';
 import { fetchSuppliersFromDb } from '@/lib/supabase/suppliers';
 import { STATIC_SEO_PAGES } from '@/config/seo-pages';
-import { getGuides } from '@/lib/repository';
+import { getAllOffers, getGuides } from '@/lib/repository';
 import {
   compoundSeoDefaults,
   guideSeoDefaults,
@@ -21,6 +21,13 @@ import {
 import { AdminDbError } from '@/lib/admin/vendors';
 import { fetchPageFaqsFromDb } from '@/lib/supabase/page-faqs';
 import { DEFAULT_PAGE_FAQS, defaultGuideFaqs, defaultSupplierFaqs, type FaqItem } from '@/data/default-page-faqs';
+import { listSavedSupplierContent } from '@/lib/admin/supplier-content';
+import {
+  defaultSupplierContent,
+  supplierMarketStats,
+  type SupplierContent,
+  type SupplierContentOverride,
+} from '@/lib/supplier-content';
 
 const SEO_MIGRATION = 'supabase/migrations/0010_seo_management.sql';
 
@@ -52,6 +59,8 @@ export interface SeoEntry {
   faqs: FaqItem[] | null;
   /** What the page shows when nothing is saved, so the editor can seed from it. */
   defaultFaqs: FaqItem[];
+  /** Supplier pages only: the About / Why / vs-other-suppliers boxes. Null for every other kind. */
+  supplierContent: { saved: SupplierContentOverride | null; defaults: SupplierContent } | null;
 }
 
 export interface SeoDashboardData {
@@ -103,12 +112,14 @@ function defaultsOnly(defaults: SeoDefaults): SeoDefaults {
 
 export async function getSeoDashboardData(): Promise<SeoDashboardData> {
   const client = requireClient();
-  const [compounds, suppliers, pages, redirects, guides] = await Promise.all([
+  const [compounds, suppliers, pages, redirects, guides, offers, savedSupplierContent] = await Promise.all([
     fetchProductIdentitiesFromDb(client),
     fetchSuppliersFromDb(client, { includeInactive: true }),
     client.from('seo_pages').select('*'),
     client.from('seo_redirects').select('from_path, to_path, created_at').order('created_at', { ascending: false }),
     getGuides(),
+    getAllOffers(),
+    listSavedSupplierContent(),
   ]);
   if (!compounds) throw new AdminDbError('The products table could not be read.');
   if (!suppliers) throw new AdminDbError('The suppliers table could not be read.');
@@ -138,6 +149,14 @@ export async function getSeoDashboardData(): Promise<SeoDashboardData> {
     if (guide) return defaultGuideFaqs(guide);
     return [];
   };
+  const supplierContentFor = (kind: SeoPageKind, slug: string | null): SeoEntry['supplierContent'] => {
+    const supplier = kind === 'supplier' && slug ? supplierBySlug.get(slug) : undefined;
+    if (!supplier) return null;
+    return {
+      saved: savedSupplierContent.get(supplier.slug) ?? null,
+      defaults: defaultSupplierContent(supplier, supplierMarketStats(supplier.slug, offers)),
+    };
+  };
   const toEntry = (kind: SeoPageKind, group: string, name: string, slug: string | null, defaults: SeoDefaults) => ({
     path: defaults.path,
     kind,
@@ -148,6 +167,7 @@ export async function getSeoDashboardData(): Promise<SeoDashboardData> {
     override: overrides.get(defaults.path) ?? null,
     faqs: faqsByPath.get(defaults.path) ?? null,
     defaultFaqs: defaultFaqsFor(defaults.path),
+    supplierContent: supplierContentFor(kind, slug),
   });
   const byName = <T extends { name: string }>(a: T, b: T) => a.name.localeCompare(b.name);
 
