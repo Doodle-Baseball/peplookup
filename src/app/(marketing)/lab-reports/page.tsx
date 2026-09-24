@@ -1,9 +1,11 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { getSuppliers, getProducts, getAllOffers } from '@/lib/repository';
 import { timeAgo } from '@/lib/format';
 import type { ProductForm } from '@/lib/schema';
 import { LabReportsExplorer, type LabVendorGroup } from '@/components/lab-reports/lab-reports-explorer';
-import { FlaskIcon } from '@/components/icons/icons';
+import { DocumentIcon, FlaskIcon } from '@/components/icons/icons';
+import { site } from '@/config/site';
 import { staticSeoPage } from '@/config/seo-pages';
 import { pageMetadata } from '@/lib/seo-defaults';
 import { getSeoOverride, withSeo } from '@/lib/seo';
@@ -141,6 +143,19 @@ export default async function LabReportsPage({
         </div>
       </section>
 
+      <section className="mt-10 rounded-panel border border-line bg-surface-raised p-5 shadow-card sm:p-8">
+        <h2 className="text-lg font-black text-content sm:text-xl">
+          COA <span className="text-brand">Lab Reports</span>
+        </h2>
+        <p className="mt-3 text-sm leading-relaxed text-muted sm:text-base">
+          Every report below links to a certificate of analysis published by the vendor or produced
+          by a third-party testing laboratory on their behalf. {site.name} does not run tests or
+          rehost documents. You always read the original, and a report&rsquo;s presence here means
+          only that the vendor made it accessible, not that its claims have been independently verified
+          by us.
+        </p>
+      </section>
+
       <section className="mt-10">
         {vendorGroups.length === 0 ? (
           <div className="rounded-card border border-dashed border-line bg-surface-raised p-10 text-center text-sm text-muted">
@@ -150,6 +165,26 @@ export default async function LabReportsPage({
         ) : (
           <LabReportsExplorer vendors={vendorGroups} quickSearchTerms={quickSearchTerms} initialQuery={initialQuery} />
         )}
+      </section>
+
+      <section className="mt-10 rounded-panel border border-line bg-surface-raised p-5 shadow-card sm:p-8">
+        <h2 className="text-lg font-black text-content sm:text-xl">
+          Not Sure What You&rsquo;re <span className="text-brand">Looking At?</span>
+        </h2>
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
+          <p className="max-w-2xl text-sm leading-relaxed text-muted sm:text-base">
+            A COA can look intimidating on first read. Our COA Reader breaks down every
+            field, explains what the numbers mean, and flags the warning signs that signal
+            a fake or incomplete certificate.
+          </p>
+          <Link
+            href="/tools/coa-reader"
+            className="btn-3d inline-flex shrink-0 items-center gap-2 rounded-chip bg-brand px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-brand-strong"
+          >
+            <DocumentIcon className="h-4 w-4" />
+            Open COA Reader
+          </Link>
+        </div>
       </section>
 
       <PageFaqSection path="/lab-reports" className="mt-14" />

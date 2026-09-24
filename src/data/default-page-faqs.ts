@@ -131,6 +131,21 @@ export const DEFAULT_PAGE_FAQS: Readonly<Record<string, readonly FaqItem[]>> = {
     },
   ],
 
+  '/price-checker': [
+    {
+      question: 'How is the price checker different from the supplier directory?',
+      answer: `The supplier directory shows each vendor's full profile, including shipping terms, payment methods, review ratings and coupon codes. The price checker focuses on per-compound pricing: it groups every listing for a single compound across all tracked suppliers so you can compare cost per milligram in one view.`,
+    },
+    {
+      question: 'How often are prices updated?',
+      answer: `Every listing carries the time its price was last observed. Prices are refreshed as vendor catalogues change, and the timestamp is the honest limit of what we can promise: the figure was correct when we recorded it, not necessarily at the moment you read it. Confirm the current price on the vendor's own page before ordering.`,
+    },
+    {
+      question: 'What does the strikethrough price mean?',
+      answer: `A strikethrough price is the vendor's original list price before a sitewide coupon code is applied. The lower figure next to it is the price after the discount. Both are shown so you can see exactly how much the code saves. You still need to enter the code at the vendor's checkout for the discount to take effect.`,
+    },
+  ],
+
   '/tools/price-per-mg': [
     {
       question: 'How is cost per milligram calculated?',
