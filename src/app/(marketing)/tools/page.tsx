@@ -135,6 +135,19 @@ export default async function ToolsHubPage() {
             A free, no-login suite of calculators and verification tools for the modern peptide researcher.
             Reconstitute vials, compare prices, dose intranasal sprays, and read COAs like a pro.
           </p>
+          <p className="mx-auto mt-3 max-w-xl text-sm text-muted sm:text-base">
+            Every calculation runs entirely in your browser with no data stored. The same per-milligram
+            normalization used across the{' '}
+            <Link href="/suppliers" className="font-bold text-brand hover:underline">
+              supplier directory
+            </Link>{' '}
+            and{' '}
+            <Link href="/price-checker" className="font-bold text-brand hover:underline">
+              price checker
+            </Link>{' '}
+            powers these tools, so the numbers stay consistent whether you are browsing listings
+            or running your own figures.
+          </p>
 
           <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
             {BADGES.map((badge) => (

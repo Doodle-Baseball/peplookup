@@ -15,6 +15,7 @@ import {
   WarningIcon,
 } from '@/components/icons/icons';
 
+import { site } from '@/config/site';
 import { staticSeoPage } from '@/config/seo-pages';
 import { pageMetadata } from '@/lib/seo-defaults';
 import { getSeoOverride, withSeo } from '@/lib/seo';
@@ -162,6 +163,14 @@ export default async function CoaReaderGuidePage() {
           How to read a peptide certificate of analysis: every field, what the numbers mean, and the red flags
           that signal a fake.
         </p>
+        <div className="mx-auto mt-6 max-w-xl rounded-card border border-brand/20 bg-brand-tint p-4 text-sm text-muted sm:p-5">
+          <p>
+            <strong className="font-bold text-content">Watch for fakes.</strong> Fraudulent certificates
+            are common in the peptide market. A real COA names a specific batch, an identifiable lab,
+            and a dated analytical method. If any of those are missing, treat the document with extra
+            skepticism.
+          </p>
+        </div>
       </section>
 
       <section className="mt-10 rounded-card border border-line bg-surface-raised p-6 shadow-card sm:p-8">
@@ -176,6 +185,22 @@ export default async function CoaReaderGuidePage() {
           sequence?), <strong className="text-content">Purity</strong> (how chemically clean is it?),{' '}
           <strong className="text-content">Content</strong> (how much actual peptide?), and{' '}
           <strong className="text-content">Contaminants</strong> (any harmful compounds present?).
+        </p>
+      </section>
+
+      <section className="mt-6 rounded-card border border-line bg-surface-raised p-6 shadow-card sm:p-8">
+        <h2 className="text-lg font-black text-content">
+          Part of {site.name}&rsquo;s <span className="text-brand">COA Verification</span> Approach
+        </h2>
+        <p className="mt-3 text-sm text-muted">
+          This reader is one part of how {site.name} approaches certificate verification. Alongside
+          this field guide, our{' '}
+          <Link href="/lab-reports" className="font-bold text-brand hover:underline">
+            lab reports directory
+          </Link>{' '}
+          links directly to vendor-published certificates, and every supplier profile notes whether
+          a COA is on file for each listing. Together, these tools help you cross-check claims
+          rather than accepting them at face value.
         </p>
       </section>
 

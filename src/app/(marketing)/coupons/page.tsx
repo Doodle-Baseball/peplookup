@@ -46,6 +46,16 @@ export default async function CouponsPage() {
       </div>
 
       <div className="mx-auto max-w-shell px-4 py-14">
+        <div className="mb-8 rounded-panel border border-line bg-surface-raised p-5 shadow-card sm:p-8">
+          <p className="eyebrow">Research Peptide Coupon Codes</p>
+          <p className="mt-3 text-sm leading-relaxed text-muted sm:text-base">
+            Active discount codes from verified peptide suppliers, collected and tracked by {site.name}.
+            Every code is checked against the vendor&rsquo;s own checkout, and prices on the site already
+            reflect the discount where a sitewide code applies. Tap any code below to copy it, then
+            paste it at the vendor&rsquo;s checkout to apply.
+          </p>
+        </div>
+
         <span className="inline-flex items-center gap-1.5 rounded-pill bg-coupon-tint px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-coupon-ink">
           <TagIcon className="h-3.5 w-3.5" />
           Coupons
@@ -65,6 +75,25 @@ export default async function CouponsPage() {
         ) : (
           <CouponBrowser vendors={vendors} />
         )}
+
+        <section className="mt-10 rounded-panel border border-line bg-surface-raised p-5 shadow-card sm:p-8">
+          <h2 className="text-lg font-black text-content sm:text-xl">
+            How {site.name}&rsquo;s <span className="text-brand">Coupon Tracking</span> Works
+          </h2>
+          <div className="mt-4 space-y-3 text-sm leading-relaxed text-muted sm:text-base">
+            <p>
+              {site.name} monitors vendor sites for published discount codes and verifies each one
+              before listing it here. When a vendor runs a sitewide coupon, every listing from that
+              vendor on the site shows the discounted price alongside the original, so comparisons
+              reflect what you would actually pay.
+            </p>
+            <p>
+              Codes are set by the vendors, not by {site.name}. They can expire, carry conditions such
+              as minimum orders or first-time-customer restrictions, or be withdrawn at any time. If a
+              code stops working, let us know and we will recheck it.
+            </p>
+          </div>
+        </section>
 
         <PageFaqSection path="/coupons" className="mt-14" />
       </div>
