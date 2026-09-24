@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
-import { getVendor } from '@/lib/admin/vendors';
+import { notFound, redirect } from 'next/navigation';
+import { getStoredCoupon, getVendor } from '@/lib/admin/vendors';
+import { couponCodeFromLinks } from '@/lib/coupon-detect';
+import { getRedirectTarget } from '@/lib/seo';
 import { listOffersForVendor } from '@/lib/admin/offers';
 import { getProducts, getSupplierReviews } from '@/lib/repository';
 import { AdminPageHeader } from '@/components/admin/page-header';
@@ -28,9 +30,26 @@ export default async function EditVendorPage({
     // than an empty list.
     listOffersForVendor(slug).catch(() => null),
   ]);
-  if (!vendor) notFound();
+  if (!vendor) {
+    // A slug renamed in /admin/seo leaves bookmarks and open tabs on the old
+    // edit URL; follow the same redirect the public page uses so they land on
+    // the same vendor instead of a 404.
+    const renamedTo = await getRedirectTarget(`/suppliers/${slug}`);
+    if (renamedTo?.startsWith('/suppliers/')) {
+      const query = step ? `?step=${encodeURIComponent(step)}` : '';
+      redirect(`/admin/vendors/${renamedTo.slice('/suppliers/'.length)}/edit${query}`);
+    }
+    notFound();
+  }
 
-  const reviews = await getSupplierReviews(vendor).catch(() => []);
+  const [reviews, storedCoupon] = await Promise.all([
+    getSupplierReviews(vendor).catch(() => []),
+    getStoredCoupon(vendor.slug),
+  ]);
+  // Only offered when nothing is saved: a saved code always wins.
+  const detectedCouponCode = storedCoupon.code
+    ? null
+    : couponCodeFromLinks([vendor.affiliateUrl, vendor.policyUrls.shipping, vendor.policyUrls.returns]);
 
   const boundAction = updateVendorAction.bind(null, slug);
 
@@ -41,6 +60,8 @@ export default async function EditVendorPage({
         <VendorForm
           action={boundAction}
           vendor={vendor}
+          storedCoupon={storedCoupon}
+          detectedCouponCode={detectedCouponCode}
           reviews={[...reviews]}
           submitLabel="Save changes"
           products={products.map((product) => ({ slug: product.slug, name: product.name }))}

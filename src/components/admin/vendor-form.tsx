@@ -80,6 +80,8 @@ export function VendorForm({
   products = EMPTY_PRODUCTS,
   existingProducts,
   initialStep,
+  storedCoupon,
+  detectedCouponCode = null,
 }: {
   action: (prevState: VendorFormState, formData: FormData) => Promise<VendorFormState>;
   vendor?: Supplier;
@@ -90,6 +92,13 @@ export function VendorForm({
   existingProducts?: Offer[] | null;
   /** Step to land on, e.g. returning here right after creating the vendor from step 4. */
   initialStep?: number;
+  /**
+   * The coupon columns as stored, including a code saved without a percentage,
+   * which `vendor.coupon` can't represent. Omitted on the new-vendor form.
+   */
+  storedCoupon?: { code: string | null; percentOff: number | null };
+  /** A code found in the vendor's saved links when none is saved yet; shown until saved. */
+  detectedCouponCode?: string | null;
 }) {
   const router = useRouter();
   const [rawState, formAction, pending] = useActionState(action, INITIAL_STATE);
@@ -101,6 +110,15 @@ export function VendorForm({
   const [affiliateUrl, setAffiliateUrl] = useState(vendor?.affiliateUrl ?? vendor?.homepageUrl ?? '');
   const [vendorName, setVendorName] = useState(vendor?.name ?? '');
   const [newCouponCode, setNewCouponCode] = useState('');
+  const savedCouponCode = storedCoupon?.code ?? vendor?.coupon?.code ?? null;
+  const savedCouponPercentOff = storedCoupon?.percentOff ?? vendor?.coupon?.percentOff ?? null;
+  const [couponPercentOff, setCouponPercentOff] = useState(
+    savedCouponPercentOff !== null ? String(savedCouponPercentOff) : '',
+  );
+  // Keeps the field in step with a fresh save once router.refresh() re-renders with the stored value.
+  useEffect(() => {
+    setCouponPercentOff(savedCouponPercentOff !== null ? String(savedCouponPercentOff) : '');
+  }, [savedCouponPercentOff]);
   const [couponSaving, startCouponSave] = useTransition();
   const [couponSaveMessage, setCouponSaveMessage] = useState<{ tone: 'ok' | 'error'; text: string } | null>(null);
   const [csvImportResult, setCsvImportResult] = useState<{ added: number; errors: string[] } | null>(null);
@@ -368,7 +386,7 @@ export function VendorForm({
     if (!vendor) return;
     setCouponSaveMessage(null);
     startCouponSave(async () => {
-      const result = await updateVendorCouponCodeAction(vendor.slug, newCouponCode);
+      const result = await updateVendorCouponCodeAction(vendor.slug, newCouponCode, couponPercentOff);
       if (result.error) {
         setCouponSaveMessage({ tone: 'error', text: result.error });
         return;
@@ -499,9 +517,17 @@ export function VendorForm({
               <div>
                 <label className="block text-sm font-semibold text-content">Current/Existing Coupon Code</label>
                 <p className="mt-1.5 w-full truncate rounded-chip border border-line bg-surface-sunken px-3.5 py-2.5 text-sm text-muted">
-                  {vendor?.coupon?.code || 'None set'}
+                  {savedCouponCode || detectedCouponCode || 'None set'}
                 </p>
-                <p className="mt-1 text-xs text-muted">The code currently saved for this vendor.</p>
+                <p className="mt-1 text-xs text-muted">
+                  {savedCouponCode
+                    ? `The code currently saved for this vendor${
+                        savedCouponPercentOff !== null ? ` (${savedCouponPercentOff}% off)` : ', with no Discount % saved yet'
+                      }.`
+                    : detectedCouponCode
+                      ? 'Found in this vendor’s saved links but not saved yet. Enter the Discount % and click Save to keep it.'
+                      : 'The code currently saved for this vendor.'}
+                </p>
               </div>
               <div>
                 <label htmlFor="newCouponCode" className="block text-sm font-semibold text-content">
@@ -525,7 +551,8 @@ export function VendorForm({
                 label="Discount %"
                 name="couponPercentOff"
                 type="number"
-                defaultValue={vendor?.coupon ? String(vendor.coupon.percentOff) : undefined}
+                value={couponPercentOff}
+                onChange={(e) => setCouponPercentOff(e.target.value)}
                 placeholder="10"
               />
             </div>
@@ -535,7 +562,7 @@ export function VendorForm({
                 <button
                   type="button"
                   onClick={saveCouponCode}
-                  disabled={couponSaving || !newCouponCode.trim()}
+                  disabled={couponSaving || !(newCouponCode.trim() || savedCouponCode || detectedCouponCode)}
                   className="rounded-chip bg-brand px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-brand-strong disabled:pointer-events-none disabled:opacity-50"
                 >
                   {couponSaving ? 'Saving…' : 'Save'}
@@ -554,6 +581,10 @@ export function VendorForm({
             )}
 
             <input type="hidden" name="existingCouponCode" value={vendor?.coupon?.code ?? ''} />
+            {/* The stored code even when it has no percentage yet, so saving the
+                form keeps it rather than clearing it. Kept apart from
+                existingCouponCode, which decides which URLs get the code swapped. */}
+            <input type="hidden" name="storedCouponCode" value={savedCouponCode ?? ''} />
           </div>
       </section>
 

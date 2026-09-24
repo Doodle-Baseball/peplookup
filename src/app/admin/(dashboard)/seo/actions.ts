@@ -88,6 +88,8 @@ function revalidateSite() {
   // its FAQs) to a new slug, but without these the public site kept serving
   // the old slug's cached data for up to 5 minutes.
   revalidateTag('guides');
+  // Which vendors have stored reviews is cached by slug; a supplier rename moves its reviews.
+  revalidateTag('supplier-reviews');
   revalidateTag(FAQS_CACHE_TAG);
   revalidateTag(SUPPLIER_CONTENT_CACHE_TAG);
   revalidatePath('/', 'layout');

@@ -239,6 +239,30 @@ async function fetchRedirectsUncached(): Promise<SeoRedirect[]> {
   return rows;
 }
 
+/**
+ * Every earlier slug of each renamed supplier, keyed by its current slug.
+ * A rename moves the row and everything stored against it, but data shipped
+ * in code (e.g. the published COA links in src/data/vendor-coa-links.ts) is
+ * still keyed by the slug it was written for, so lookups there must also try
+ * the vendor's earlier slugs or a rename silently disconnects it.
+ */
+export function supplierSlugAliases(redirects: readonly SeoRedirect[]): Map<string, string[]> {
+  const prefix = '/suppliers/';
+  const aliases = new Map<string, string[]>();
+  for (const { fromPath } of redirects) {
+    if (!fromPath.startsWith(prefix)) continue;
+    const target = followRedirects(fromPath, redirects);
+    if (target === fromPath || !target.startsWith(prefix)) continue;
+    const current = target.slice(prefix.length);
+    aliases.set(current, [...(aliases.get(current) ?? []), fromPath.slice(prefix.length)]);
+  }
+  return aliases;
+}
+
+export async function getSupplierSlugAliases(): Promise<Map<string, string[]>> {
+  return supplierSlugAliases(await fetchRedirectsUncached());
+}
+
 /** Where a renamed page lives now, or null when this path was never renamed. */
 export async function getRedirectTarget(path: string): Promise<string | null> {
   const redirects = await fetchRedirectsUncached();

@@ -997,16 +997,30 @@ const VENDOR_COA_PAGES: Readonly<Record<string, string>> = {
   'idun-peptides-2': 'https://idunpeptides.com/coas/?ref=PEPLOOKUP',
 };
 
-export function publishedCoaLink(offer: Pick<Offer, 'supplierSlug' | 'productSlug' | 'form' | 'vialSize'>): string | null {
-  return (
-    COA_LINKS[`${offer.supplierSlug}/${offer.productSlug}/${offer.form}/${offer.vialSize}`] ??
-    VENDOR_COA_PAGES[offer.supplierSlug] ??
-    null
-  );
+/**
+ * `previousSlugs` are the vendor's slugs from before a rename in /admin/seo:
+ * the maps above are keyed by the slug each link was written for, so without
+ * them a renamed vendor would lose every published COA link.
+ */
+export function publishedCoaLink(
+  offer: Pick<Offer, 'supplierSlug' | 'productSlug' | 'form' | 'vialSize'>,
+  previousSlugs: readonly string[] = [],
+): string | null {
+  const slugs = [offer.supplierSlug, ...previousSlugs];
+  // A listing's own certificate still beats the vendor's general COA page.
+  for (const slug of slugs) {
+    const link = COA_LINKS[`${slug}/${offer.productSlug}/${offer.form}/${offer.vialSize}`];
+    if (link) return link;
+  }
+  for (const slug of slugs) {
+    const page = VENDOR_COA_PAGES[slug];
+    if (page) return page;
+  }
+  return null;
 }
 
-export function withPublishedCoaLink(offer: Offer): Offer {
+export function withPublishedCoaLink(offer: Offer, previousSlugs: readonly string[] = []): Offer {
   if (offer.coaUrl) return offer;
-  const coaUrl = publishedCoaLink(offer);
+  const coaUrl = publishedCoaLink(offer, previousSlugs);
   return coaUrl ? { ...offer, coaUrl } : offer;
 }

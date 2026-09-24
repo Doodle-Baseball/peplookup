@@ -7,6 +7,7 @@ import {
   updateVendor,
   deleteVendor,
   getVendor,
+  getStoredCoupon,
   setVendorActive,
   setVendorFeatured,
   saveVendorReviews,
@@ -29,6 +30,8 @@ import { toCents } from '@/lib/money';
 import { resolveAffiliateUrl } from '@/data/vendor-affiliate-links';
 import { getMappedCell, inferFieldMapping, parseCsvText, type VendorImportField } from '@/lib/vendor-import';
 import { saveDisplayOrder } from '@/lib/admin/display-order';
+import { getRedirectTarget } from '@/lib/seo';
+import { couponCodeFromLinks } from '@/lib/coupon-detect';
 
 export interface VendorFormState {
   error: string | null;
@@ -266,7 +269,8 @@ function readVendorInput(formData: FormData): VendorInput {
   // "existingCouponCode" field) rather than clearing it.
   const existingCouponCode = String(formData.get('existingCouponCode') ?? '').trim();
   const newCouponCode = String(formData.get('newCouponCode') ?? '').trim();
-  const couponCode = newCouponCode || existingCouponCode;
+  const storedCouponCode = String(formData.get('storedCouponCode') ?? '').trim();
+  const couponCode = newCouponCode || existingCouponCode || storedCouponCode;
   const couponPercentOffRaw = String(formData.get('couponPercentOff') ?? '').trim();
   const policyShippingUrl = String(formData.get('policyShippingUrl') ?? '').trim();
   const policyReturnsUrl = String(formData.get('policyReturnsUrl') ?? '').trim();
@@ -328,6 +332,20 @@ function propagateCouponCodeToVendorUrls(input: VendorInput, from: string, to: s
   };
 }
 
+/**
+ * The vendor a form was opened for, by its current slug. A slug renamed in
+ * /admin/seo while the edit page was open would otherwise save to the old
+ * slug, which matches no row, so the save silently wrote nothing.
+ */
+async function currentVendor(slug: string): Promise<Supplier> {
+  const vendor = await getVendor(slug);
+  if (vendor) return vendor;
+  const renamedTo = await getRedirectTarget(`/suppliers/${slug}`);
+  const renamed = renamedTo?.startsWith('/suppliers/') ? await getVendor(renamedTo.slice('/suppliers/'.length)) : null;
+  if (!renamed) throw new AdminDbError('Vendor not found.');
+  return renamed;
+}
+
 export async function createVendorAction(
   _prevState: VendorFormState,
   formData: FormData,
@@ -354,12 +372,19 @@ export async function createVendorAction(
 }
 
 export async function updateVendorAction(
-  slug: string,
+  requestedSlug: string,
   _prevState: VendorFormState,
   formData: FormData,
 ): Promise<VendorFormState> {
+  let slug = requestedSlug;
   try {
+    const existing = await currentVendor(requestedSlug);
+    slug = existing.slug;
     let input = readVendorInput(formData);
+    // The edit form has no status control (the list's toggle owns it), so an
+    // absent field means "unchanged", not "off": reading it as off disabled
+    // every vendor whenever its form was saved.
+    if (!formData.has('isActive')) input = { ...input, isActive: existing.isActive };
     const existingCouponCode = String(formData.get('existingCouponCode') ?? '').trim();
     const codeChanged = Boolean(existingCouponCode && input.couponCode && existingCouponCode !== input.couponCode);
     if (codeChanged) {
@@ -419,24 +444,39 @@ function supplierToVendorInput(vendor: Supplier): VendorInput {
  * requiring the rest of the multi-step form to be filled in or submitted.
  */
 export async function updateVendorCouponCodeAction(
-  slug: string,
+  requestedSlug: string,
   newCode: string,
+  percentOffText = '',
 ): Promise<{ error: string | null; code: string | null }> {
   try {
-    const vendor = await getVendor(slug);
-    if (!vendor) throw new AdminDbError('Vendor not found.');
+    const vendor = await currentVendor(requestedSlug);
+    const slug = vendor.slug;
+    const stored = await getStoredCoupon(slug);
 
+    // Only a complete saved coupon decides which URLs get the code swapped,
+    // exactly as before; a code saved without a percentage is kept, not swapped.
     const existingCode = vendor.coupon?.code ?? '';
     const trimmedNew = newCode.trim();
-    // Blank means "keep the current code", same rule as the field's own hint.
-    const finalCode = trimmedNew || existingCode;
+    // Blank means "keep the current code"; with none saved, the code already
+    // in the vendor's links is the one being confirmed.
+    const detectedCode = stored.code
+      ? null
+      : couponCodeFromLinks([vendor.affiliateUrl, vendor.policyUrls.shipping, vendor.policyUrls.returns]);
+    const finalCode = trimmedNew || existingCode || stored.code || detectedCode;
     if (!finalCode) {
       return { error: 'Enter a coupon code to save.', code: null };
+    }
+
+    const percentText = percentOffText.trim();
+    const percentOff = percentText === '' ? stored.percentOff : Number(percentText);
+    if (percentOff !== null && (!Number.isInteger(percentOff) || percentOff < 1 || percentOff > 100)) {
+      return { error: 'Discount % must be a whole number from 1 to 100.', code: null };
     }
 
     const codeChanged = Boolean(existingCode && finalCode !== existingCode);
     let input = supplierToVendorInput(vendor);
     input.couponCode = finalCode;
+    input.couponPercentOff = percentOff;
     if (codeChanged) {
       input = propagateCouponCodeToVendorUrls(input, existingCode, finalCode);
     }
