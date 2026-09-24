@@ -191,3 +191,20 @@ export async function deleteVendor(slug: string): Promise<void> {
   const { error } = await client.from('suppliers').delete().eq('slug', slug);
   if (error) throw new AdminDbError(error.message);
 }
+
+/**
+ * The coupon columns exactly as stored. `Supplier.coupon` only exists when
+ * both the code and the percentage are set, so a vendor saved with a code but
+ * no percentage looked couponless in the admin, and saving its form then
+ * dropped the code. The admin reads these raw values instead.
+ */
+export async function getStoredCoupon(slug: string): Promise<{ code: string | null; percentOff: number | null }> {
+  const { data, error } = await requireClient()
+    .from('suppliers')
+    .select('coupon_code, coupon_percent_off')
+    .eq('slug', slug)
+    .maybeSingle();
+  if (error) throw new AdminDbError(error.message);
+  const row = data as { coupon_code: string | null; coupon_percent_off: number | null } | null;
+  return { code: row?.coupon_code ?? null, percentOff: row?.coupon_percent_off ?? null };
+}

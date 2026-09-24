@@ -9,6 +9,7 @@ import {
 import type { Offer } from '@/lib/schema';
 import { AdminDbError } from '@/lib/admin/vendors';
 import { withPublishedCoaLink } from '@/data/vendor-coa-links';
+import { getSupplierSlugAliases } from '@/lib/seo';
 
 function requireClient() {
   const client = getSupabaseServerClient();
@@ -28,7 +29,8 @@ export async function listOffersForVendor(supplierSlug: string): Promise<Offer[]
       'The offers table could not be read. Run supabase/migrations/0006_offers.sql in the Supabase SQL editor first.',
     );
   }
-  return stored.map(withPublishedCoaLink);
+  const previousSlugs = (await getSupplierSlugAliases()).get(supplierSlug);
+  return stored.map((offer) => withPublishedCoaLink(offer, previousSlugs));
 }
 
 export async function getOfferRow(id: string): Promise<Offer | null> {

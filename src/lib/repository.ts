@@ -8,6 +8,7 @@ import { suppliers } from '@/data/suppliers';
 import { withDemoData } from '@/data/demo-overlay';
 import { withDemoProductContent } from '@/data/demo-products';
 import { withPublishedCoaLink } from '@/data/vendor-coa-links';
+import { getSupplierSlugAliases } from '@/lib/seo';
 import { getSupabaseServerClient } from './supabase/server';
 import { fetchSuppliersFromDb, fetchSupplierFromDb } from './supabase/suppliers';
 import { fetchSupplierReviewsFromDb } from './supabase/supplier-reviews';
@@ -48,7 +49,8 @@ const getAllOffersCached = unstable_cache(
 const allOffers = cache(async (): Promise<readonly Offer[]> => {
   // Applied outside the cache so a vendor's published COA links show without
   // waiting for the offers cache to revalidate.
-  return (await getAllOffersCached()).map(withPublishedCoaLink);
+  const [offers, slugAliases] = await Promise.all([getAllOffersCached(), getSupplierSlugAliases()]);
+  return offers.map((offer) => withPublishedCoaLink(offer, slugAliases.get(offer.supplierSlug)));
 });
 
 /**
