@@ -15,6 +15,10 @@ const VISIBLE_KEYWORDS = 4;
 
 type KindFilter = 'all' | SeoPageKind;
 type StatusFilter = 'any' | SeoStatus | 'customized';
+type TaskStatusFilter = 'all' | SeoTaskStatus;
+
+const SELECT_CLASS =
+  'cursor-pointer rounded-chip border border-line bg-surface px-3.5 py-2.5 text-sm font-semibold text-content outline-none transition-colors hover:border-brand focus-visible:border-brand focus-visible:ring-2 focus-visible:ring-brand/40';
 
 const KIND_TABS: readonly { value: KindFilter; label: string }[] = [
   { value: 'all', label: 'All pages' },
@@ -87,6 +91,7 @@ export function SeoDashboard({
   const [query, setQuery] = useState('');
   const [kind, setKind] = useState<KindFilter>('all');
   const [status, setStatus] = useState<StatusFilter>('any');
+  const [taskStatus, setTaskStatus] = useState<TaskStatusFilter>('all');
   const [page, setPage] = useState(0);
   const [editingPath, setEditingPath] = useState<string | null>(null);
 
@@ -120,6 +125,7 @@ export function SeoDashboard({
     if (kind !== 'all' && row.entry.kind !== kind) return false;
     if (status === 'customized' && !row.entry.override) return false;
     if (status !== 'any' && status !== 'customized' && row.status !== status) return false;
+    if (taskStatus !== 'all' && row.taskStatus !== taskStatus) return false;
     if (!needle) return true;
     return (
       row.entry.name.toLowerCase().includes(needle) ||
@@ -179,17 +185,30 @@ export function SeoDashboard({
             />
           </label>
           <label className="flex items-center gap-2 text-sm font-semibold text-content">
-            Status
+            SEO
             <select
               value={status}
               onChange={(event) => resetPaging(setStatus)(event.target.value as StatusFilter)}
-              className="rounded-chip border border-line bg-surface px-3 py-2.5 text-sm text-content outline-none"
+              className={SELECT_CLASS}
             >
               <option value="any">Any status</option>
               <option value="optimized">Optimized</option>
               <option value="needs-work">Needs work</option>
               <option value="noindex">Noindex</option>
               <option value="customized">Customized</option>
+            </select>
+          </label>
+          <label className="flex items-center gap-2 text-sm font-semibold text-content">
+            Status
+            <select
+              value={taskStatus}
+              onChange={(event) => resetPaging(setTaskStatus)(event.target.value as TaskStatusFilter)}
+              className={SELECT_CLASS}
+            >
+              <option value="all">All</option>
+              <option value="needs-work">Needs work</option>
+              <option value="pending">Pending</option>
+              <option value="done">Done</option>
             </select>
           </label>
         </div>
