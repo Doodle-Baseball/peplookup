@@ -14,8 +14,13 @@ export async function generateMetadata(): Promise<Metadata> {
   return withSeo(PAGE.path, pageMetadata(PAGE));
 }
 
-// Codes are edited in the admin; never serve a build-time snapshot of them.
-export const dynamic = 'force-dynamic';
+// Codes are edited in the admin, so this must not be a build-time snapshot.
+// Rendering per request was the costly way to get that: the page reads the
+// whole offer catalogue, and every visitor and crawler paid for a fresh scan.
+// The vendor actions already revalidatePath('/coupons') on every edit, so a
+// cached render is corrected the moment a code changes; the window only
+// applies to edits made outside those actions.
+export const revalidate = 300;
 
 export default async function CouponsPage() {
   const [seo, suppliers, offers] = await Promise.all([
