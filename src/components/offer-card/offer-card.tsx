@@ -111,7 +111,7 @@ export function OfferCard({
           <a
             href={buyHref}
             target="_blank"
-            rel="sponsored noopener"
+            rel="nofollow sponsored noopener"
             className="btn-3d inline-flex items-center justify-center gap-1.5 rounded-chip bg-brand px-3 py-2.5 text-sm font-bold text-surface"
           >
             Buy now
@@ -214,7 +214,7 @@ export function OfferCard({
         <a
           href={buyHref}
           target="_blank"
-          rel="sponsored noopener"
+          rel="nofollow sponsored noopener"
           className="btn-3d inline-flex shrink-0 items-center gap-1.5 rounded-chip bg-brand px-3 py-2.5 text-sm font-bold text-surface"
         >
           View offer

@@ -73,7 +73,7 @@ export function BulkVendorImport() {
 
       {open ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-          <div className="relative w-full max-w-4xl rounded-card border border-line bg-surface-raised p-5 shadow-lift sm:p-6">
+          <div className="relative max-h-[calc(100dvh-2rem)] w-full max-w-4xl overflow-y-auto rounded-card border border-line bg-surface-raised p-4 pt-14 shadow-lift sm:p-6 sm:pt-6">
             <button
               type="button"
               aria-label="Close import modal"
@@ -90,7 +90,7 @@ export function BulkVendorImport() {
                   <input type="file" accept=".csv,text/csv" className="hidden" onChange={handleFileUpload} />
                   <span className="text-xs text-muted">{selectedFileName || 'No file selected yet'}</span>
                 </label>
-                <div className="mt-3 flex flex-col items-center gap-1 border-t border-line pt-3">
+                <div className="mt-3 flex flex-col items-center gap-1 border-t border-line pt-3 text-center">
                   <button
                     type="button"
                     onClick={downloadTemplate}
@@ -133,7 +133,7 @@ export function BulkVendorImport() {
               {state.error ? <p className="text-sm font-semibold text-danger">{state.error}</p> : null}
               {state.success ? <p className="text-sm font-semibold text-ok">{state.success}</p> : null}
 
-              <div className="flex items-center justify-end gap-3">
+              <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-end">
                 <button
                   type="button"
                   onClick={() => setOpen(false)}
@@ -146,7 +146,7 @@ export function BulkVendorImport() {
                   disabled={pending || !csvText.trim()}
                   className="rounded-chip bg-brand px-5 py-2.5 text-sm font-bold text-white disabled:opacity-60"
                 >
-                  {pending ? 'Importing…' : 'Choose CSV file'}
+                  {pending ? 'Importing…' : 'Import vendors'}
                 </button>
               </div>
             </form>

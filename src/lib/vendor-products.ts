@@ -16,6 +16,8 @@ export interface VendorProductEntry {
   form: ProductForm;
   size: string;
   productUrl: string;
+  /** Product photo link; empty when the listing has none. */
+  imageUrl: string;
   coaUrl: string;
   price: string;
   discountCode: string;
@@ -41,6 +43,7 @@ export function offerToVendorProductEntry(offer: Offer, compoundName: string): V
     form: offer.form,
     size: sizeText(offer.vialSize),
     productUrl: offer.productUrl,
+    imageUrl: offer.imageUrl ?? '',
     coaUrl: offer.coaUrl ?? '',
     price: (offer.listPrice / 100).toFixed(2),
     // Coupon codes live on the vendor, not on a listing, so there is nothing stored to show.
@@ -72,8 +75,18 @@ const SIZE_PATTERN = /^\d+(?:\.\d+)?\s*(mg|mcg|ml)?$/i;
  */
 export function vendorProductsCsvTemplate(exampleCompound = 'BPC-157'): string {
   const csvCell = (value: string) => (/[",\r\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value);
-  const headers = ['Compound', 'Type', 'Size', 'Product URL', 'COA URL', 'Price', 'Discount Code', 'Discount %'];
-  const example = [exampleCompound, 'vial', '10 mg', 'https://example.com/product', '', '89.99', '', ''];
+  const headers = [
+    'Compound',
+    'Type',
+    'Size',
+    'Product URL',
+    'Product Image URL',
+    'COA URL',
+    'Price',
+    'Discount Code',
+    'Discount %',
+  ];
+  const example = [exampleCompound, 'vial', '10 mg', 'https://example.com/product', '', '', '89.99', '', ''];
   return `${headers.map(csvCell).join(',')}\r\n${example.map(csvCell).join(',')}\r\n`;
 }
 
@@ -109,6 +122,7 @@ export function parseVendorProductsCsv(
     type: colIndex('type', 'form'),
     size: colIndex('size'),
     url: colIndex('product url', 'url'),
+    image: colIndex('product image url', 'image url', 'image'),
     coa: colIndex('coa url', 'coa'),
     price: colIndex('price'),
     discountCode: colIndex('discount code', 'coupon code'),
@@ -136,6 +150,7 @@ export function parseVendorProductsCsv(
       const typeText = cell(row, columns.type);
       const sizeValue = cell(row, columns.size);
       const url = cell(row, columns.url);
+      const imageUrl = cell(row, columns.image);
       const coaUrl = cell(row, columns.coa);
       const priceText = cell(row, columns.price);
       const discountCode = cell(row, columns.discountCode);
@@ -154,6 +169,10 @@ export function parseVendorProductsCsv(
 
       if (!url) errors.push('Product URL is required.');
       else if (!/^https?:\/\//i.test(url)) errors.push('Product URL must start with http:// or https://.');
+
+      if (imageUrl && !/^https?:\/\//i.test(imageUrl)) {
+        errors.push('Product Image URL must start with http:// or https://, or be left blank.');
+      }
 
       if (coaUrl && !/^https?:\/\//i.test(coaUrl)) {
         errors.push('COA URL must start with http:// or https://, or be left blank.');
@@ -181,6 +200,7 @@ export function parseVendorProductsCsv(
               form,
               size: sizeValue,
               productUrl: url,
+              imageUrl,
               coaUrl,
               price: String(price),
               discountCode,

@@ -238,7 +238,7 @@ export function SupplierCard({ supplier, productCount }: { supplier: Supplier; p
           <Link
             href={supplier.affiliateUrl || supplier.homepageUrl}
             target="_blank"
-            rel="noopener noreferrer sponsored"
+            rel="nofollow noopener noreferrer sponsored"
             className="inline-flex items-center justify-center gap-2 rounded-chip border border-line bg-surface px-3 py-2.5 text-sm font-bold text-content transition-colors hover:border-accent hover:text-accent-strong"
           >
             Visit Site

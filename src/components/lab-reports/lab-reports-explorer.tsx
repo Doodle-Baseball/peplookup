@@ -244,7 +244,7 @@ export function LabReportsExplorer({
                             <a
                               href={row.reportUrl}
                               target="_blank"
-                              rel="noopener"
+                              rel="nofollow noopener"
                               className="inline-flex w-fit items-center gap-1.5 justify-self-start rounded-pill border border-brand/40 bg-brand-soft px-3.5 py-1.5 text-xs font-black uppercase tracking-wide text-brand-strong shadow-sm transition-colors hover:bg-brand hover:text-white sm:justify-self-end"
                             >
                               View Report

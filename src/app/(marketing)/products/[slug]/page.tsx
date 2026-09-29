@@ -758,7 +758,7 @@ export default async function ProductPage({
                   <a
                     href={item.link}
                     target="_blank"
-                    rel="noopener"
+                    rel="nofollow noopener"
                     className="mt-3 inline-flex items-center gap-1.5 font-mono text-xs font-bold uppercase tracking-[0.15em] text-accent transition-colors hover:text-content"
                   >
                     Source
@@ -1020,7 +1020,7 @@ function PriceRow({
         <a
           href={`/go?to=${encodeURIComponent(offer.productUrl)}`}
           target="_blank"
-          rel="sponsored noopener"
+          rel="nofollow sponsored noopener"
           aria-label={`View offer from ${supplier.name}`}
           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-chip bg-brand text-surface transition-transform hover:-translate-y-0.5 active:translate-y-0"
         >
@@ -1121,7 +1121,7 @@ function TestsPanel({
                 <a
                   href={(report?.reportUrl ?? report?.labUrl ?? offer.coaUrl)!}
                   target="_blank"
-                  rel="noopener"
+                  rel="nofollow noopener"
                   className="inline-flex items-center justify-center gap-1.5 rounded-pill border border-ok/40 bg-ok/10 px-3.5 py-2 text-xs font-black uppercase tracking-wide text-ok transition-colors hover:bg-ok hover:text-surface md:justify-self-end md:py-1.5"
                 >
                   View Report

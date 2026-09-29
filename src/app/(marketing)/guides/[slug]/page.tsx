@@ -45,8 +45,8 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
     headline: guide.title,
     description: guide.excerpt,
     datePublished: guide.publishedAt,
-    author: { '@type': 'Organization', name: site.name },
-    publisher: { '@type': 'Organization', name: site.name },
+    author: { '@type': 'Organization', name: site.publisher },
+    publisher: { '@type': 'Organization', name: site.publisher },
   };
 
   return (
@@ -87,6 +87,12 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
           {seo?.h1 || guide.title}
         </h1>
         <p className="mt-3 text-base leading-relaxed text-muted sm:text-lg">{guide.excerpt}</p>
+        <p className="mt-4 text-sm text-muted">
+          Author:{' '}
+          <Link href="/about" rel="author" className="font-bold text-brand hover:underline">
+            {site.publisher}
+          </Link>
+        </p>
 
         <div className="mt-10 space-y-8">
           {guide.sections.map((section) => (

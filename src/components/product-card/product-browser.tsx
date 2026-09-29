@@ -17,6 +17,8 @@ import {
 import { ChevronRightIcon, FlaskIcon, SearchIcon, SlidersIcon } from '@/components/icons/icons';
 
 const UNCATEGORIZED = 'Uncategorized';
+/** Compounds shown before the "Load more" button reveals the rest. */
+const INITIAL_COMPOUND_COUNT = 21;
 /** Suggestions listed when the search box is focused but empty. */
 const SUGGESTION_LIMIT = 8;
 
@@ -25,6 +27,7 @@ export function ProductBrowser({ products, facets }: { products: ProductCardData
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState<FilterState>(DEFAULT_FILTER);
   const [sort, setSort] = useState<SortState>(DEFAULT_SORT);
+  const [showAll, setShowAll] = useState(false);
   const { slugs: likedSlugs, ready } = useWatchlist();
 
   const { categoryFacets, supplierFacets, doseFacets } = facets;
@@ -77,6 +80,18 @@ export function ProductBrowser({ products, facets }: { products: ProductCardData
           }, {}),
         ).map(([heading, items]) => ({ heading, items }))
       : [{ heading: null, items: sorted }];
+
+  // The cap counts compounds across every group, so a category-grouped view
+  // stops at 21 in total rather than 21 per heading.
+  const hiddenCount = showAll ? 0 : Math.max(0, sorted.length - INITIAL_COMPOUND_COUNT);
+  let remaining = showAll ? sorted.length : INITIAL_COMPOUND_COUNT;
+  const visibleGroups = groups
+    .map((group) => {
+      const items = group.items.slice(0, remaining);
+      remaining -= items.length;
+      return { ...group, items };
+    })
+    .filter((group) => group.items.length > 0);
 
   return (
     <>
@@ -198,7 +213,7 @@ export function ProductBrowser({ products, facets }: { products: ProductCardData
           </div>
         ) : (
           <div className="space-y-8">
-            {groups.map((group) => (
+            {visibleGroups.map((group) => (
               <div key={group.heading ?? 'all'}>
                 {group.heading ? (
                   <h2 className="mb-3 text-micro font-bold uppercase text-faint">{group.heading}</h2>
@@ -212,6 +227,15 @@ export function ProductBrowser({ products, facets }: { products: ProductCardData
                 </ul>
               </div>
             ))}
+            {hiddenCount > 0 ? (
+              <button
+                type="button"
+                onClick={() => setShowAll(true)}
+                className="mx-auto flex items-center justify-center rounded-pill border border-line bg-surface px-8 py-3 text-sm font-bold text-content transition-colors hover:border-brand hover:bg-brand hover:text-surface"
+              >
+                Load more ({hiddenCount} more {hiddenCount === 1 ? 'compound' : 'compounds'})
+              </button>
+            ) : null}
           </div>
         )}
       </section>

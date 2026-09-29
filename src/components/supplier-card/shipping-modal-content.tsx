@@ -57,7 +57,7 @@ export function ShippingModalContent({
       <Link
         href={`/go?to=${encodeURIComponent(affiliateUrl || 'https://')}`}
         target="_blank"
-        rel="sponsored noopener"
+        rel="nofollow sponsored noopener"
         className="inline-flex w-full items-center justify-center gap-2 rounded-chip bg-brand px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-brand-strong"
       >
         Continue

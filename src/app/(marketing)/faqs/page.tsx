@@ -74,13 +74,11 @@ const FAQ_GROUPS: readonly { title: string; faqs: readonly Faq[] }[] = [
         question: 'What information is shown for each supplier?',
         answer:
           'Supplier profiles bring together what is available for each vendor: lab verification status, published COAs, shipping details, payment methods, coupons and policies. A listing is not an endorsement, so review a supplier\'s COAs and policies before ordering.',
-        link: { label: 'Read: choosing a research supplier', href: '/guides/choosing-a-research-supplier' },
       },
       {
         question: 'What is a COA and why does it matter?',
         answer:
           'A Certificate of Analysis is a lab report on a specific batch, usually covering identity and purity. The most important check is that the batch number on the COA matches the batch on your vial.',
-        link: { label: 'Read: how to read a COA', href: '/guides/how-to-read-a-coa' },
       },
       {
         question: 'Can I suggest a supplier or report incorrect data?',
@@ -133,7 +131,7 @@ function FaqLink({ link }: { link: NonNullable<Faq['link']> }) {
   const className = 'mt-3 inline-flex items-center gap-1.5 text-sm font-bold text-brand hover:underline';
   if (link.href.startsWith('http')) {
     return (
-      <a href={link.href} target="_blank" rel="noopener noreferrer" className={className}>
+      <a href={link.href} target="_blank" rel="nofollow noopener noreferrer" className={className}>
         {link.label}
         <ExternalIcon className="h-3.5 w-3.5" />
       </a>
@@ -240,7 +238,7 @@ export default async function FaqsPage() {
             <a
               href={SKOOL_URL}
               target="_blank"
-              rel="noopener noreferrer"
+              rel="nofollow noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-chip border border-line bg-surface px-6 py-3 text-sm font-bold text-content transition-colors duration-150 hover:border-brand"
             >
               Join on Skool

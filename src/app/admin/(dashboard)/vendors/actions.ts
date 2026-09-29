@@ -143,6 +143,15 @@ function salePriceFor(listPrice: number, discountPercentInput: string): number |
   return discountPercent > 0 ? Math.max(0, Math.round(listPrice * (1 - discountPercent / 100))) : null;
 }
 
+function isHttpUrl(value: string): boolean {
+  try {
+    const { protocol } = new URL(value);
+    return protocol === 'http:' || protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
 /** Replaces every literal occurrence of `from` in `url` with `to`, leaving the rest of the URL untouched. */
 function replaceCode(url: string, from: string, to: string): string {
   return url.includes(from) ? url.split(from).join(to) : url;
@@ -150,7 +159,7 @@ function replaceCode(url: string, from: string, to: string): string {
 
 /**
  * Applies step 5's product list. New rows are created; saved rows the admin
- * edited are updated, keeping what the form doesn't show (stock, photo, lab
+ * edited are updated, keeping what the form doesn't show (stock, lab
  * report, pack count); saved rows removed from the list are deleted. Saved
  * rows left untouched are not re-written, unless the vendor's coupon code
  * just changed and this row's URL still carries the old code, that case is
@@ -180,6 +189,10 @@ async function saveVendorProducts(
     const propagatedCoaUrl = couponCodeChange
       ? replaceCode(rawEntry.coaUrl, couponCodeChange.from, couponCodeChange.to)
       : rawEntry.coaUrl;
+    const imageUrl = (rawEntry.imageUrl ?? '').trim();
+    if (imageUrl && !isHttpUrl(imageUrl)) {
+      throw new AdminDbError(`Product Image URL must start with http:// or https:// (${rawEntry.compoundName}).`);
+    }
     const urlChangedByCoupon = propagatedProductUrl !== rawEntry.productUrl || propagatedCoaUrl !== rawEntry.coaUrl;
     const entry = urlChangedByCoupon
       ? { ...rawEntry, productUrl: propagatedProductUrl, coaUrl: propagatedCoaUrl }
@@ -212,7 +225,7 @@ async function saveVendorProducts(
         currency: stored.currency,
         inStock: stored.inStock,
         productUrl: entry.productUrl,
-        imageUrl: stored.imageUrl,
+        imageUrl: imageUrl || null,
         labReport: stored.labReport,
         coaUrl: entry.coaUrl || null,
       });
@@ -231,7 +244,7 @@ async function saveVendorProducts(
       currency: 'USD',
       inStock: true,
       productUrl: entry.productUrl,
-      imageUrl: null,
+      imageUrl: imageUrl || null,
       labReport: null,
       coaUrl: entry.coaUrl || null,
     });

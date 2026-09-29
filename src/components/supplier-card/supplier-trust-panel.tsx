@@ -1,8 +1,9 @@
 'use client';
 
-import { type FormEvent, useState } from 'react';
+import { type FormEvent, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { SupplierReview } from '@/lib/schema';
+import { cn } from '@/lib/cn';
 import { formatRating, formatReviewDate } from '@/lib/format';
 import { StarRating } from '@/components/ui/star-rating';
 import {
@@ -22,6 +23,9 @@ import {
 const WEB3FORMS_ACCESS_KEY = 'ee118fde-8201-4c9f-8174-f0895772887d';
 
 const UNLOCK_REDIRECT = '/lab-reports';
+
+/** Reviews visible before the list scrolls. */
+const VISIBLE_REVIEWS = 3;
 
 export interface SupplierLabSummary {
   testCount: number;
@@ -49,6 +53,31 @@ export function SupplierTrustPanel({
   // Lands on /lab-reports already filtered to this vendor.
   const labReportsHref = `${UNLOCK_REDIRECT}?supplier=${encodeURIComponent(supplierName)}`;
   const [state, setState] = useState<'idle' | 'sending' | 'done' | 'error'>('idle');
+  // The unlock box shows for every supplier; the reviews card only when there is something to show.
+  const listRef = useRef<HTMLUListElement>(null);
+  const [listMaxHeight, setListMaxHeight] = useState<number | 'none' | null>(null);
+  const hasReviewSection = reviews.length > 0 || reviewsUrl !== null;
+
+  // Cards differ in height, so the cap is measured: the top of the first
+  // hidden card marks exactly where the fourth visible one ends.
+  useEffect(() => {
+    const list = listRef.current;
+    if (!list) return;
+    const measure = () => {
+      const items = list.children;
+      if (items.length <= VISIBLE_REVIEWS) {
+        setListMaxHeight('none');
+        return;
+      }
+      const firstHidden = items[VISIBLE_REVIEWS] as HTMLElement;
+      const first = items[0] as HTMLElement;
+      setListMaxHeight(firstHidden.offsetTop - first.offsetTop);
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(list);
+    return () => observer.disconnect();
+  }, [reviews]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -94,8 +123,9 @@ export function SupplierTrustPanel({
         {supplierName} reviews and lab report access
       </h2>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid items-stretch gap-6 lg:grid-cols-2">
         {/* ------------------------------------------------------ Reviews */}
+        {hasReviewSection ? (
         <div className="flex flex-col rounded-panel border border-line bg-surface-raised p-5 shadow-card sm:p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-3">
@@ -113,7 +143,14 @@ export function SupplierTrustPanel({
           </div>
 
           {reviews.length > 0 ? (
-            <ul className="mt-5 space-y-3">
+            <ul
+              ref={listRef}
+              // Until measured (first paint) a rem cap stands in for four cards.
+              className="themed-scrollbar mt-5 max-h-[26rem] space-y-3 overflow-y-auto pr-2"
+              style={listMaxHeight === null ? undefined : { maxHeight: listMaxHeight }}
+              tabIndex={0}
+              aria-label={`${supplierName} reviews`}
+            >
               {reviews.map((review, index) => (
                 <li key={review.id ?? `${review.author}-${index}`}>
                   <article className="rounded-card border border-line bg-surface p-4 transition-colors hover:border-accent/40">
@@ -149,41 +186,45 @@ export function SupplierTrustPanel({
             <a
               href={reviewsUrl}
               target="_blank"
-              rel="noopener noreferrer"
+              rel="nofollow noopener noreferrer"
               className="group/all mt-5 inline-flex items-center gap-2 rounded-pill border border-line bg-surface px-4 py-2.5 text-sm font-bold text-content transition-colors hover:border-accent hover:bg-accent-tint hover:text-accent-strong"
             >
               View All Reviews on Trustpilot
               <ExternalIcon className="h-4 w-4 transition-transform group-hover/all:-translate-y-0.5 group-hover/all:translate-x-0.5" />
             </a>
           ) : null}
-
-          <p className="mt-5 border-t border-line pt-4 text-xs text-faint">
-            Reviews are reproduced from the vendor&rsquo;s public Trustpilot profile and are not verified by
-            PepLookup.
-          </p>
         </div>
+        ) : null}
 
         {/* ------------------------------------------------------- Unlock */}
-        <div className="rounded-panel border border-accent/25 bg-accent-tint p-5 shadow-card sm:p-6">
-          <div className="mx-auto flex h-full max-w-md flex-col items-center text-center">
+        <div
+          className={cn(
+            'h-full w-full rounded-panel border border-accent/25 bg-accent-tint p-5 shadow-card sm:p-6',
+            // Alone in the row (no reviews to sit beside): spans the full width.
+            !hasReviewSection && 'lg:col-span-2',
+          )}
+        >
+          <div className="mx-auto flex h-full max-w-md flex-col items-center justify-center text-center">
             <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-pill border border-accent/30 bg-surface-raised text-accent-strong shadow-card sm:h-20 sm:w-20">
               <LockIcon className="h-7 w-7 sm:h-8 sm:w-8" />
             </span>
 
-            <h3 className="mt-5 text-balance text-2xl font-black leading-tight text-content sm:text-3xl">
+            {/* From sm up the title stays on one line: w-max lets it run past the
+                narrow max-w-md column the form sits in; phones still wrap it. */}
+            <h3 className="mt-5 text-balance text-2xl font-black leading-tight text-content sm:w-max sm:whitespace-nowrap sm:text-3xl">
               Unlock {supplierName} peptides
               <span className="mt-1 block text-accent-strong">Analytics &amp; test history</span>
             </h3>
 
             {/* What this vendor actually has on file, straight from /lab-reports. */}
-            {labSummary.labName ? (
-              <dl className="mt-6 w-full text-left">
-                <div className="rounded-card border border-accent/20 bg-surface-raised px-3 py-2.5">
-                  <dt className="text-micro font-bold uppercase text-faint">COA Lab / Provider</dt>
-                  <dd className="mt-0.5 text-sm font-bold text-content">{labSummary.labName}</dd>
-                </div>
-              </dl>
-            ) : null}
+            <dl className="mt-6 w-full text-left">
+              <div className="rounded-card border border-accent/20 bg-surface-raised px-3 py-2.5">
+                <dt className="text-micro font-bold uppercase text-faint">COA Lab / Provider</dt>
+                <dd className="mt-0.5 text-sm font-bold text-content">
+                  {labSummary.labName ?? 'Not published yet'}
+                </dd>
+              </div>
+            </dl>
 
             {labSummary.productNames.length > 0 ? (
               <ul className="mt-2.5 flex flex-wrap justify-center gap-1.5">

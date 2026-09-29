@@ -30,6 +30,10 @@ export const metadata: Metadata = {
   title: { default: `${site.name} | Compare Peptide Prices by Cost per mg`, template: `%s | ${site.name}` },
   description: site.description,
   metadataBase: new URL(`https://${site.domain}`),
+  // Name only: a `url` here makes Next emit <link rel="author" href="…"> as well.
+  authors: [{ name: site.publisher }],
+  creator: site.publisher,
+  publisher: site.publisher,
   icons: {
     icon: '/favicon.png',
     shortcut: '/favicon.png',
@@ -37,10 +41,34 @@ export const metadata: Metadata = {
   },
 };
 
+/** Site-wide structured data naming the author and publisher of every page. */
+const siteJsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Organization',
+      '@id': `https://${site.domain}/#organization`,
+      name: site.publisher,
+      url: `https://${site.domain}`,
+      logo: `https://${site.domain}/favicon.png`,
+    },
+    {
+      '@type': 'WebSite',
+      '@id': `https://${site.domain}/#website`,
+      name: site.name,
+      url: `https://${site.domain}`,
+      description: site.description,
+      author: { '@type': 'Organization', name: site.publisher },
+      publisher: { '@id': `https://${site.domain}/#organization` },
+    },
+  ],
+};
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${archivo.variable} ${jetbrainsMono.variable}`} suppressHydrationWarning>
       <body className="flex min-h-screen flex-col" suppressHydrationWarning>
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(siteJsonLd) }} />
         <NavigationProgress />
         <LoadingScreen />
         {children}

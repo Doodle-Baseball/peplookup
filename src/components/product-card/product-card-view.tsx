@@ -282,7 +282,7 @@ function MiniPriceRow({
         <a
           href={`/go?to=${encodeURIComponent(row.productUrl)}`}
           target="_blank"
-          rel="sponsored noopener"
+          rel="nofollow sponsored noopener"
           aria-label={`View offer from ${row.supplierName}`}
           className="text-muted hover:text-brand"
         >

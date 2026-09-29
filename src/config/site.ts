@@ -3,6 +3,10 @@ export const site = {
   /** Rendered as two tones in the wordmark. */
   nameParts: { lead: 'Pep', tail: 'Lookup' },
 domain: 'www.peplookup.com',
+  /** Named as author and publisher in page metadata and structured data. */
+  publisher: 'Peplookup',
+  /** Free Skool community promoted at /community. */
+  communityUrl: 'https://www.skool.com/peptide-5115/about',
   contactEmail: 'info@peplookup.com',
   /** Display form; `whatsappUrl` below builds the wa.me link from it. */
   whatsapp: '+1 260 218 1154',
@@ -58,7 +62,7 @@ export const primaryNav: readonly NavItem[] = [
       { label: 'All Compounds', href: '/price-checker' },
     ],
   },
-  { label: 'Guides', href: '/guides' },
+  { label: 'Community', href: '/community' },
   {
     label: 'Contact',
     href: '/contact',
@@ -80,6 +84,7 @@ export const footerNav: readonly { heading: string; links: readonly NavChild[] }
       { label: 'Price Checker', href: '/price-checker' },
       { label: 'Watchlist', href: '/watchlist' },
       { label: 'Partners', href: '/partners' },
+      { label: 'Community', href: '/community' },
     ],
   },
   {

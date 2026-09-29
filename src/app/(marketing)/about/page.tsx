@@ -83,7 +83,7 @@ export default async function AboutPage() {
           <a
             href="https://www.skool.com/peptide-5115/about"
             target="_blank"
-            rel="noopener noreferrer"
+            rel="nofollow noopener noreferrer"
             className="btn-3d mt-5 inline-flex items-center gap-2 rounded-chip bg-brand px-6 py-3 text-sm font-bold text-white"
           >
             Join the community
