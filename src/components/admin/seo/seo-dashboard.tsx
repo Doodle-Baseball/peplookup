@@ -1,14 +1,13 @@
 'use client';
 
-import { useMemo, useState, useTransition } from 'react';
+import { useMemo, useState } from 'react';
 import type { SeoEntry, SeoPageKind } from '@/lib/admin/seo';
 import type { SeoRedirect } from '@/lib/seo';
 import { effectiveSeo, seoChecks, seoStatus, type EffectiveSeo, type SeoStatus } from '@/lib/seo-status';
 import type { SeoTaskStatus } from '@/lib/seo';
-import { deleteSeoRedirectAction } from '@/app/admin/(dashboard)/seo/actions';
 import { SeoEditDialog } from '@/components/admin/seo/seo-edit-dialog';
 import { cn } from '@/lib/cn';
-import { ExternalIcon, PencilIcon, SearchIcon, TrashIcon, WarningIcon } from '@/components/icons/icons';
+import { ExternalIcon, PencilIcon, SearchIcon, WarningIcon } from '@/components/icons/icons';
 
 const PAGE_SIZE = 24;
 const VISIBLE_KEYWORDS = 4;
@@ -273,8 +272,6 @@ export function SeoDashboard({
         ) : null}
       </section>
 
-      <RedirectsPanel redirects={redirects} />
-
       {editing ? <SeoEditDialog key={editing.path} entry={editing} onClose={() => setEditingPath(null)} /> : null}
     </div>
   );
@@ -364,74 +361,5 @@ function SeoCard({ row, onEdit, disabled }: { row: Row; onEdit: () => void; disa
         </button>
       </div>
     </li>
-  );
-}
-
-function RedirectsPanel({ redirects }: { redirects: SeoRedirect[] }) {
-  const [pending, startTransition] = useTransition();
-  const [error, setError] = useState<string | null>(null);
-
-  function remove(fromPath: string) {
-    setError(null);
-    startTransition(async () => {
-      const result = await deleteSeoRedirectAction(fromPath);
-      if (result.error) setError(result.error);
-    });
-  }
-
-  return (
-    <section className="rounded-card border border-line bg-surface-raised p-5 sm:p-6">
-      <h2 className="text-base font-black text-content">Redirects</h2>
-      <p className="mt-1 text-sm text-muted">
-        Created automatically when a compound or supplier slug changes, so old links and bookmarks land on the new URL.
-        Delete one only if the old URL should stop working.
-      </p>
-      {error ? (
-        <p role="alert" className="mt-3 text-sm font-semibold text-danger">
-          {error}
-        </p>
-      ) : null}
-
-      {redirects.length === 0 ? (
-        <p className="mt-4 rounded-card border border-dashed border-line p-6 text-center text-sm text-muted">
-          No redirects yet. They appear here after a slug is changed.
-        </p>
-      ) : (
-        <div className="mt-4 overflow-x-auto">
-          <table className="w-full min-w-[36rem] border-collapse text-sm">
-            <thead>
-              <tr className="border-b border-line text-left text-micro font-bold uppercase text-faint">
-                <th scope="col" className="px-3 py-2">Old URL</th>
-                <th scope="col" className="px-3 py-2">Redirects to</th>
-                <th scope="col" className="px-3 py-2">Created</th>
-                <th scope="col" className="px-3 py-2">
-                  <span className="sr-only">Actions</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {redirects.map((redirect) => (
-                <tr key={redirect.fromPath} className="border-b border-line last:border-0">
-                  <td className="px-3 py-2.5 font-mono text-xs text-muted">{redirect.fromPath}</td>
-                  <td className="px-3 py-2.5 font-mono text-xs text-content">{redirect.toPath}</td>
-                  <td className="px-3 py-2.5 text-xs text-muted">{new Date(redirect.createdAt).toLocaleDateString()}</td>
-                  <td className="px-3 py-2.5 text-right">
-                    <button
-                      type="button"
-                      onClick={() => remove(redirect.fromPath)}
-                      disabled={pending}
-                      aria-label={`Delete redirect from ${redirect.fromPath}`}
-                      className="rounded-chip p-1.5 text-muted transition-colors duration-150 hover:bg-danger/10 hover:text-danger disabled:opacity-50"
-                    >
-                      <TrashIcon className="h-4 w-4" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </section>
   );
 }

@@ -24,5 +24,9 @@ export function GET(request: NextRequest) {
 
   // The URL is already resolved from the supplier or offer record. Keeping it
   // intact ensures an admin edit is reflected everywhere immediately.
-  return NextResponse.redirect(target, { status: 307 });
+  const response = NextResponse.redirect(target, { status: 307 });
+  // Header equivalent of rel="nofollow": crawlers that reach /go directly
+  // must not pass authority on to the vendor either.
+  response.headers.set('X-Robots-Tag', 'noindex, nofollow');
+  return response;
 }

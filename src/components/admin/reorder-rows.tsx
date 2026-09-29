@@ -34,7 +34,15 @@ export function ReorderRows({
   disabledReason?: string;
 }) {
   const rows = Children.toArray(children).filter(isValidElement) as ReactElement[];
-  const [order, setOrder] = useState<number[]>(() => slugs.map((_, index) => index));
+  const rowBySlug = new Map(slugs.map((slug, index) => [slug, rows[index]] as const));
+  // The dragged order is kept as slugs and tied to the server order it was
+  // made from. Saving revalidates the page, so `slugs` then arrives already in
+  // the new order; a stored index permutation would be applied to that a
+  // second time and land every row in the wrong place. Once `slugs` changes
+  // the override is simply ignored and the server's order is shown.
+  const slugsKey = slugs.join('|');
+  const [override, setOverride] = useState<{ baseKey: string; slugs: string[] } | null>(null);
+  const order = override && override.baseKey === slugsKey ? override.slugs : slugs;
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [overIndex, setOverIndex] = useState<number | null>(null);
   const [status, setStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
@@ -50,15 +58,15 @@ export function ReorderRows({
     const next = [...order];
     const [moved] = next.splice(from, 1);
     next.splice(to, 0, moved!);
-    const previous = order;
-    setOrder(next);
+    const previous = override;
+    setOverride({ baseKey: slugsKey, slugs: next });
 
     setStatus('saving');
     setError(null);
-    const result = await saveOrder(next.map((index) => slugs[index]!));
+    const result = await saveOrder(next);
     if (result.error) {
       // The DB write didn't happen, so the visible order shouldn't claim otherwise.
-      setOrder(previous);
+      setOverride(previous);
       setStatus('error');
       setError(result.error);
       return;
@@ -97,8 +105,8 @@ export function ReorderRows({
         </tr>
       ) : null}
 
-      {order.map((rowIndex, position) => {
-        const row = rows[rowIndex];
+      {order.map((slug, position) => {
+        const row = rowBySlug.get(slug);
         if (!row) return null;
         const isDragging = dragIndex === position;
         const isOver = overIndex === position && dragIndex !== position;
@@ -123,7 +131,7 @@ export function ReorderRows({
             };
 
         return cloneElement(row, {
-          key: slugs[rowIndex],
+          key: slug,
           ...dragProps,
           className: [
             (row.props as { className?: string }).className ?? '',

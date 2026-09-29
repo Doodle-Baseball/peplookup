@@ -236,6 +236,7 @@ export default async function SupplierPage({
                 <SupplierLogo
                   src={logo}
                   name={supplier.name}
+                  alt={`${seo?.h1 || supplier.name} logo`}
                   size={96}
                   className="h-20 w-20 rounded-card bg-surface shadow-lift sm:h-24 sm:w-24"
                   initialClassName="text-2xl sm:text-3xl"
@@ -273,7 +274,7 @@ export default async function SupplierPage({
                   <a
                     href={`/go?to=${encodeURIComponent(supplier.affiliateUrl)}`}
                     target="_blank"
-                    rel="sponsored noopener"
+                    rel="nofollow sponsored noopener"
                     className="btn-3d group/cta inline-flex min-w-0 flex-1 items-center justify-center gap-2 rounded-pill bg-brand px-6 py-3 text-sm font-bold text-surface transition-colors hover:bg-brand-strong sm:flex-none"
                   >
                     {/* The name is already the heading right above; phones get the short label. */}
@@ -399,7 +400,7 @@ export default async function SupplierPage({
                         <a
                           href={supplier.policyUrls.shipping}
                           target="_blank"
-                          rel="noopener"
+                          rel="nofollow noopener"
                           className={POLICY_LINK_CLASS}
                         >
                           Shipping
@@ -410,7 +411,7 @@ export default async function SupplierPage({
                         <a
                           href={supplier.policyUrls.returns}
                           target="_blank"
-                          rel="noopener"
+                          rel="nofollow noopener"
                           className={POLICY_LINK_CLASS}
                         >
                           Returns
@@ -504,21 +505,19 @@ export default async function SupplierPage({
           )}
         </section>
 
-        {/* Driven by what this vendor actually has, not a hardcoded slug. */}
-        {reviews.length > 0 || supplier.reviewsUrl ? (
-          <SupplierTrustPanel
-            supplierName={supplier.name}
-            supplierSlug={supplier.slug}
-            reviews={reviews}
-            reviewsUrl={supplier.reviewsUrl}
-            reviewRating={supplier.reviewRating}
-            labSummary={labSummary}
-          />
-        ) : null}
-
         {/* About / Why researchers choose / vs other suppliers, editable per
             vendor from the supplier's popup in /admin/seo. */}
         <SupplierContentSections vendorName={supplier.name} content={supplierContent} className="mt-12" />
+
+        {/* Reviews appear only when this vendor has some; the unlock box always shows. */}
+        <SupplierTrustPanel
+          supplierName={supplier.name}
+          supplierSlug={supplier.slug}
+          reviews={reviews}
+          reviewsUrl={supplier.reviewsUrl}
+          reviewRating={supplier.reviewRating}
+          labSummary={labSummary}
+        />
 
         {/* FAQs for this vendor, generated from their own record until a set is
             saved for this path in /admin/seo. */}
@@ -557,6 +556,7 @@ export default async function SupplierPage({
                     <SupplierLogo
                       src={other.logoUrl ?? other.faviconUrl}
                       name={other.name}
+                      alt={`${other.name} logo`}
                       size={56}
                       className="h-14 w-14 rounded-chip shadow-sm transition-transform duration-200 group-hover:scale-105"
                       initialClassName="text-lg"

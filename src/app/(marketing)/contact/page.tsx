@@ -92,7 +92,7 @@ export default async function ContactPage() {
             <a
               href={whatsappUrl}
               target="_blank"
-              rel="noopener noreferrer"
+              rel="nofollow noopener noreferrer"
               className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-brand hover:underline"
             >
               {site.whatsapp}
@@ -113,7 +113,7 @@ export default async function ContactPage() {
             <a
               href="https://www.skool.com/peptide-5115/about"
               target="_blank"
-              rel="noopener noreferrer"
+              rel="nofollow noopener noreferrer"
               className="mt-3 inline-flex items-center gap-1.5 text-sm font-bold text-brand hover:underline"
             >
               Join on Skool

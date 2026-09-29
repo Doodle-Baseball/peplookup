@@ -47,7 +47,7 @@ export function SiteFooter() {
             <a
               href={whatsappUrl}
               target="_blank"
-              rel="noopener noreferrer"
+              rel="nofollow noopener noreferrer"
               className="mt-1 block text-sm font-semibold text-brand-strong hover:underline"
             >
               WhatsApp {site.whatsapp}

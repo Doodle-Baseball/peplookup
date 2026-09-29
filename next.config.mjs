@@ -10,6 +10,10 @@ const nextConfig = {
     // Supplier logos are fetched from vendor domains. Add each host explicitly.
     remotePatterns: [{ protocol: 'https', hostname: '**' }],
   },
+  async redirects() {
+    // Common misspelling of the community page's address.
+    return [{ source: '/comunity', destination: '/community', permanent: true }];
+  },
   experimental: {
     // The compound CSV import posts the whole file through a server action;
     // the 1 MB default is only a few hundred compounds with full content.

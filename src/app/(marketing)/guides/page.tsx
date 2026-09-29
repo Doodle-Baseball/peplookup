@@ -65,14 +65,20 @@ export default async function GuidesPage() {
           </ul>
         </section>
 
-        <dl className="mx-auto mt-10 grid max-w-2xl grid-cols-2 gap-3 sm:grid-cols-3">
-          {stats.map((stat) => (
-            <div key={stat.label} className="rounded-card border border-line bg-surface-raised p-4 text-center">
-              <dt className="eyebrow">{stat.label}</dt>
-              <dd className="mt-1 text-2xl font-black text-content sm:text-3xl">{stat.value}</dd>
-            </div>
-          ))}
-        </dl>
+        {guides.length === 0 ? (
+          <p className="mx-auto mt-10 max-w-2xl rounded-card border border-dashed border-line bg-surface-raised p-10 text-center text-sm text-muted">
+            No guides published yet.
+          </p>
+        ) : (
+          <dl className="mx-auto mt-10 grid max-w-2xl grid-cols-2 gap-3 sm:grid-cols-3">
+            {stats.map((stat) => (
+              <div key={stat.label} className="rounded-card border border-line bg-surface-raised p-4 text-center">
+                <dt className="eyebrow">{stat.label}</dt>
+                <dd className="mt-1 text-2xl font-black text-content sm:text-3xl">{stat.value}</dd>
+              </div>
+            ))}
+          </dl>
+        )}
 
         {featured ? (
           <section aria-labelledby="featured-heading" className="reveal mt-12">

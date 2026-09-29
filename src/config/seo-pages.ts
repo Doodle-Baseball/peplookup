@@ -182,6 +182,14 @@ export const STATIC_SEO_PAGES = [
     description: `How suppliers get listed on ${site.name}, how affiliate relationships work, and why a commission never changes where a supplier ranks.`,
     h1: 'Partners',
   },
+  {
+    path: '/community',
+    name: 'Community',
+    group: 'Company',
+    title: `Peptides Lookup Community | Free Peptide Research Group | ${site.name}`,
+    description: `Join the free Peptides Lookup community on Skool: plain-language peptide education, COA reading, study breakdowns and supplier comparisons. Research use only.`,
+    h1: 'Peptides Skool Community.',
+  },
 ] as const satisfies readonly StaticSeoPage[];
 
 export type StaticSeoPath = (typeof STATIC_SEO_PAGES)[number]['path'];

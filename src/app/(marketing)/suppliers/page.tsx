@@ -19,6 +19,7 @@ import { getSeoOverride, withSeo } from '@/lib/seo';
 import { SupplierSearchBox } from '@/components/supplier-card/supplier-search-box';
 import { SupplierOrderWatcher } from '@/components/supplier-card/supplier-order-watcher';
 import { PageFaqSection } from '@/components/faq/page-faq-section';
+import { SupplierEvaluationGuide } from '@/components/suppliers/supplier-evaluation-guide';
 
 const PAGE = staticSeoPage('/suppliers');
 
@@ -182,7 +183,10 @@ export default async function SuppliersPage({
             {popularSuppliers.length > 0 ? (
               <div className="mt-5 border-t border-line pt-4">
                 <p className="eyebrow">Popular suppliers</p>
-                <ul className="scrollbar-hide mt-3 flex flex-nowrap gap-2 overflow-x-auto pb-1">
+                {/* overflow-x-auto also clips vertically, so the top/side padding gives the
+                    hover lift and the pills' borders room; the negative margin and reduced
+                    mt keep the row exactly where it sat. */}
+                <ul className="scrollbar-hide -mx-1 mt-2 flex flex-nowrap gap-2 overflow-x-auto px-1 pb-1 pt-1">
                   {popularSuppliers.map((supplier) => {
                     const isActive = query.toLowerCase() === supplier.name.toLowerCase();
                     return (
@@ -277,6 +281,9 @@ export default async function SuppliersPage({
           </>
         )}
       </section>
+
+      {/* Same count as the "Suppliers listed" stat above. */}
+      <SupplierEvaluationGuide supplierCount={suppliers.length} />
 
       <section className="mx-auto max-w-shell px-4 pb-12">
         <PageFaqSection path="/suppliers" />

@@ -54,11 +54,17 @@ describe('offerToVendorProductEntry', () => {
       form: 'vial',
       size: '50 mg',
       productUrl: 'https://www.pureamino.com/product/ghk-cu/?ref=PRODUCTS',
+      imageUrl: '',
       coaUrl: '',
       price: '29.99',
       discountCode: '',
       discountPercent: '',
     });
+  });
+
+  it('carries a stored product image link so it can be viewed and edited', () => {
+    const entry = offerToVendorProductEntry(offer({ imageUrl: 'https://example.com/ghk-cu.jpg' }), 'GHK-Cu');
+    expect(entry.imageUrl).toBe('https://example.com/ghk-cu.jpg');
   });
 
   it('round-trips the price to the same cents', () => {

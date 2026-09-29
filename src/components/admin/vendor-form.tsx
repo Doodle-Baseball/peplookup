@@ -131,6 +131,7 @@ export function VendorForm({
   const [selectedProductType, setSelectedProductType] = useState<ProductForm>('vial');
   const [productSizeInput, setProductSizeInput] = useState('');
   const [productUrlInput, setProductUrlInput] = useState('');
+  const [productImageUrlInput, setProductImageUrlInput] = useState('');
   const [coaUrlInput, setCoaUrlInput] = useState('');
   const [productPriceInput, setProductPriceInput] = useState('');
   // Saved listings start in the list as editable rows; edits and removals are
@@ -165,6 +166,7 @@ export function VendorForm({
     setSelectedProductType('vial');
     setProductSizeInput('');
     setProductUrlInput('');
+    setProductImageUrlInput('');
     setCoaUrlInput('');
     setProductPriceInput('');
   };
@@ -189,6 +191,7 @@ export function VendorForm({
       form: selectedProductType,
       size,
       productUrl,
+      imageUrl: productImageUrlInput.trim(),
       coaUrl: coaUrlInput.trim(),
       price: productPrice,
       discountCode: previousEntry?.discountCode ?? '',
@@ -768,6 +771,17 @@ export function VendorForm({
 
             <div className="md:col-span-2">
               <Field
+                label="Product Image URL"
+                name="vendorProductImageUrl"
+                type="url"
+                value={productImageUrlInput}
+                onChange={(e) => setProductImageUrlInput(e.target.value)}
+                placeholder="https://"
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <Field
                 label="COA URL"
                 name="vendorCoaUrl"
                 type="url"
@@ -918,6 +932,7 @@ export function VendorForm({
                         setSelectedProductType(item.form);
                         setProductSizeInput(item.size);
                         setProductUrlInput(item.productUrl);
+                        setProductImageUrlInput(item.imageUrl);
                         setCoaUrlInput(item.coaUrl);
                         setProductPriceInput(item.price);
                         setStepIndex(4);
