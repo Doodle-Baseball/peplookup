@@ -117,7 +117,7 @@ export default async function AdminVendorsPage({
                             <div className="flex min-w-0 items-center gap-3">
                               <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-chip border border-line bg-surface">
                                 {logo ? (
-                                  <Image src={logo} alt="" width={36} height={36} className="h-full w-full object-contain" unoptimized />
+                                  <Image src={logo} alt={`${vendor.name} logo`} width={36} height={36} className="h-full w-full object-contain" unoptimized />
                                 ) : (
                                   <span aria-hidden="true" className="text-sm font-bold text-faint">
                                     {vendor.name.charAt(0)}

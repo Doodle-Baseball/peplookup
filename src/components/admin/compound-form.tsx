@@ -16,7 +16,6 @@ const SECTIONS = [
   { id: 'faqs', title: 'FAQs' },
   { id: 'benefits', title: 'Benefits' },
   { id: 'evidence-interactions', title: 'Evidence & Interactions' },
-  { id: 'dosage', title: 'Dosage' },
 ] as const;
 
 const FAQ_FIELDS: readonly RepeatableField[] = [
@@ -254,33 +253,6 @@ export function CompoundForm({
           fields={INTERACTION_FIELDS}
           defaultItems={research?.interactions.map((item) => ({ name: item.pair, details: item.note ?? '' }))}
         />
-      </FormSection>
-
-      <FormSection id="dosage" step={5} title="Dosage">
-        <Field
-          label="Main Dosage Title"
-          name="dosageTitle"
-          defaultValue={research?.dosageTitle ?? undefined}
-          placeholder="How it is typically studied."
-          hint="Leave blank to use the default heading."
-        />
-        <TextArea
-          label="Dosage Description"
-          name="dosageDescription"
-          defaultValue={research?.dosageIntro ?? undefined}
-          rows={3}
-        />
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field label="Route" name="route" defaultValue={research?.route ?? undefined} placeholder="e.g. Subcutaneous injection" />
-          <Field
-            label="Example Range"
-            name="exampleRange"
-            defaultValue={research?.exampleRange ?? undefined}
-            placeholder="250–500 mcg"
-          />
-          <Field label="Frequency" name="frequency" defaultValue={research?.frequency ?? undefined} placeholder="e.g. Once daily" />
-        </div>
-        <TextArea label="Timing" name="timing" defaultValue={research?.timing ?? undefined} rows={2} />
       </FormSection>
 
       <div className="sticky bottom-0 -mx-6 border-t border-line bg-surface-raised px-6 py-4 shadow-lift sm:mx-0 sm:rounded-card sm:border sm:px-5">

@@ -237,7 +237,7 @@ function MiniPriceRow({
       <div className="flex min-w-0 items-center gap-2.5">
         <span className="flex h-[45px] w-[45px] shrink-0 items-center justify-center overflow-hidden rounded-chip border border-line bg-surface-raised">
           {row.supplierLogo ? (
-            <Image src={row.supplierLogo} alt="" width={45} height={45} className="h-full w-full object-contain" unoptimized />
+            <Image src={row.supplierLogo} alt={`${row.supplierName} logo`} width={45} height={45} className="h-full w-full object-contain" unoptimized />
           ) : (
             <span aria-hidden="true" className="text-xs font-bold text-faint">
               {row.supplierName.charAt(0)}

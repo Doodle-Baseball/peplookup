@@ -56,7 +56,7 @@ export function OfferCard({
           {offer.imageUrl ? (
             <Image
               src={offer.imageUrl}
-              alt=""
+              alt={`${product.name} from ${supplier.name}`}
               width={320}
               height={320}
               className="h-full w-full object-contain transition-transform duration-200 group-hover:scale-105"
@@ -135,7 +135,7 @@ export function OfferCard({
           <>
             <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-chip border border-line bg-surface">
               {logo ? (
-                <Image src={logo} alt="" width={40} height={40} className="h-full w-full object-contain" unoptimized />
+                <Image src={logo} alt={`${supplier.name} logo`} width={40} height={40} className="h-full w-full object-contain" unoptimized />
               ) : (
                 <span aria-hidden="true" className="text-sm font-bold text-faint">
                   {supplier.name.charAt(0)}

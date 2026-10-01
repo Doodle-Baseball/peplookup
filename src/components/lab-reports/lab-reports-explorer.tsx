@@ -149,7 +149,7 @@ export function LabReportsExplorer({
                 >
                   <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-chip border border-line bg-surface shadow-sm">
                     {vendor.logo ? (
-                      <Image src={vendor.logo} alt="" width={48} height={48} className="h-full w-full object-contain" unoptimized />
+                      <Image src={vendor.logo} alt={`${vendor.name} logo`} width={48} height={48} className="h-full w-full object-contain" unoptimized />
                     ) : (
                       <span aria-hidden="true" className="text-base font-bold text-faint">
                         {vendor.name.charAt(0)}
@@ -191,7 +191,7 @@ export function LabReportsExplorer({
                               {row.productImage ? (
                                 <Image
                                   src={row.productImage}
-                                  alt=""
+                                  alt={`${row.productName} product image`}
                                   width={44}
                                   height={44}
                                   className="h-full w-full object-cover"
