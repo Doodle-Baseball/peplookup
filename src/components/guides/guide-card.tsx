@@ -19,6 +19,7 @@ export function GuideCard({ guide }: { guide: Guide }) {
           imageUrl={guide.coverImageUrl}
           icon={guide.icon}
           accent={guide.accent}
+          alt={`${guide.title} cover image`}
           className="card-3d-layer aspect-[16/9] w-full"
         />
         <div className="flex flex-1 flex-col gap-3 p-5">

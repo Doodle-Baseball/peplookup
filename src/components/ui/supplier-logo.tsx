@@ -13,14 +13,14 @@ export function SupplierLogo({
   src,
   name,
   size,
-  alt = '',
+  alt,
   className,
   initialClassName,
 }: {
   src: string | null | undefined;
   name: string;
   size: number;
-  /** Empty by default: the logo usually sits beside the vendor's name, so it is decorative. */
+  /** Defaults to "<name> logo"; pass a custom string only when the page needs different wording. */
   alt?: string;
   className?: string;
   initialClassName?: string;
@@ -46,7 +46,7 @@ export function SupplierLogo({
         <Image
           ref={imageRef}
           src={src}
-          alt={alt}
+          alt={alt ?? `${name} logo`}
           width={size}
           height={size}
           className="h-full w-full object-contain"

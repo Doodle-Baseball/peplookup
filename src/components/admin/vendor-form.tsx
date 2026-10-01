@@ -501,7 +501,7 @@ export function VendorForm({
                 <div className="shrink-0 text-center">
                   <span className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-chip border border-line bg-surface-sunken">
                     {previewSrc ? (
-                      <Image src={previewSrc} alt="" width={44} height={44} className="h-full w-full object-contain" unoptimized />
+                      <Image src={previewSrc} alt="Vendor logo preview" width={44} height={44} className="h-full w-full object-contain" unoptimized />
                     ) : (
                       <span aria-hidden="true" className="text-xs text-faint">
                         ?

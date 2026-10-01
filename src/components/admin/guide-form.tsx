@@ -197,7 +197,7 @@ export function GuideForm({
               imageUrl={trimmedCover || null}
               icon={icon}
               accent={accent}
-              alt=""
+              alt="Guide cover image preview"
               className="mt-1.5 aspect-[16/9] w-full rounded-card border border-line"
             />
             <p className="mt-1.5 text-xs text-muted">

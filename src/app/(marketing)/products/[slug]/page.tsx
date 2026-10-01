@@ -295,12 +295,6 @@ export default async function ProductPage({
   };
 
   const research = product.research;
-  const dosingFacts = [
-    { label: 'Route', value: research.route },
-    { label: 'Example range', value: research.exampleRange },
-    { label: 'Frequency', value: research.frequency },
-    { label: 'Timing', value: research.timing, wide: true },
-  ].filter((fact): fact is { label: string; value: string; wide?: boolean } => Boolean(fact.value));
 
   const genericFaqs = [
     {
@@ -393,7 +387,7 @@ export default async function ProductPage({
           {seo?.h1 || product.name}
         </h1>
         {product.description ?? product.summary ? (
-          <p className="animate-fade-up animate-delay-200 mt-3 max-w-3xl whitespace-pre-line text-base leading-7 text-muted">
+          <p className="animate-fade-up animate-delay-200 mt-3 max-w-4xl whitespace-pre-line text-base leading-7 text-muted">
             {product.description ?? product.summary}
           </p>
         ) : null}
@@ -419,7 +413,6 @@ export default async function ProductPage({
               { id: 'overview', label: 'Overview' },
               { id: 'vendor-listings', label: 'Vendor Listings' },
               { id: 'benefits', label: 'Benefits' },
-              { id: 'dosing', label: 'Dosing' },
               { id: 'evidence', label: 'Evidence' },
               { id: 'interactions', label: 'Interactions' },
               { id: 'faq', label: 'FAQ' },
@@ -634,7 +627,7 @@ export default async function ProductPage({
           </>
         }
       >
-        <p className="mt-4 max-w-3xl whitespace-pre-line text-base leading-7 text-muted">
+        <p className="mt-4 max-w-4xl whitespace-pre-line text-base leading-7 text-muted">
           {product.description ??
             product.summary ??
             `${product.name} is a research compound${
@@ -690,42 +683,6 @@ export default async function ProductPage({
           </ol>
         ) : (
           <EmptyNote>No research benefits have been published for {product.name} yet.</EmptyNote>
-        )}
-      </ContentSection>
-
-      <ContentSection
-        id="dosing"
-        eyebrow="Dosage and protocol"
-        title={
-          research.dosageTitle ? (
-            accentLastWord(research.dosageTitle)
-          ) : (
-            <>
-              How it is typically <span className="text-accent">studied.</span>
-            </>
-          )
-        }
-        intro={
-          research.dosageIntro ??
-          `Dosing protocols for ${product.name} vary by study design and supplier. Always confirm concentration and route against the vendor's own COA and dosing guidance before use.`
-        }
-      >
-        {dosingFacts.length > 0 ? (
-          <dl className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
-            {dosingFacts.map((fact) => (
-              <div
-                key={fact.label}
-                className={cn('rounded-card border border-line bg-surface p-4', fact.wide && 'sm:col-span-3')}
-              >
-                <dt className="eyebrow">{fact.label}</dt>
-                <dd className="mt-2 text-base font-bold leading-6 text-content">{fact.value}</dd>
-              </div>
-            ))}
-          </dl>
-        ) : (
-          <EmptyNote>
-            No dosing protocol has been published for {product.name} yet. Check the vendor&apos;s own guidance and COA.
-          </EmptyNote>
         )}
       </ContentSection>
 

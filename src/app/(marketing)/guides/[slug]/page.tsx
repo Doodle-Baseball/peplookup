@@ -67,7 +67,7 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
           imageUrl={guide.coverImageUrl}
           icon={guide.icon}
           accent={guide.accent}
-          alt=""
+          alt={`${guide.title} cover image`}
           priority
           className="mt-5 aspect-[16/9] w-full rounded-card sm:rounded-panel"
         />

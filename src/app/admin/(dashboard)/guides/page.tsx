@@ -96,6 +96,7 @@ export default async function AdminGuidesPage() {
                     imageUrl={guide.coverImageUrl}
                     icon={guide.icon}
                     accent={guide.accent}
+                    alt={`${guide.title} cover image`}
                     className="h-20 w-full shrink-0 rounded-chip sm:h-16 sm:w-24"
                   />
 
