@@ -28,5 +28,8 @@ export function GET(request: NextRequest) {
   // Header equivalent of rel="nofollow": crawlers that reach /go directly
   // must not pass authority on to the vendor either.
   response.headers.set('X-Robots-Tag', 'noindex, nofollow');
+  // The target is a pure function of the query string, so the CDN can answer a
+  // repeat click (or a crawler following the link) without running this again.
+  response.headers.set('Cache-Control', 'public, s-maxage=3600');
   return response;
 }

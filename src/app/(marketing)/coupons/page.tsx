@@ -20,7 +20,7 @@ export async function generateMetadata(): Promise<Metadata> {
 // The vendor actions already revalidatePath('/coupons') on every edit, so a
 // cached render is corrected the moment a code changes; the window only
 // applies to edits made outside those actions.
-export const revalidate = 300;
+export const revalidate = 1800;
 
 export default async function CouponsPage() {
   const [seo, suppliers, offers] = await Promise.all([

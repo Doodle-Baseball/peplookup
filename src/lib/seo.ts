@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { unstable_cache } from 'next/cache';
 import { getSupabaseServerClient } from '@/lib/supabase/server';
 import { parseNamedMetaTags } from '@/lib/seo-html';
+import { CATALOGUE_REVALIDATE_SECONDS } from '@/lib/cache-ttl';
 
 /** Revalidated by every save in /admin/seo. */
 export const SEO_CACHE_TAG = 'seo';
@@ -150,7 +151,7 @@ const getSeoDataCached = unstable_cache(
     return data;
   },
   ['seo-data'],
-  { revalidate: 300, tags: [SEO_CACHE_TAG] },
+  { revalidate: CATALOGUE_REVALIDATE_SECONDS, tags: [SEO_CACHE_TAG] },
 );
 
 /**

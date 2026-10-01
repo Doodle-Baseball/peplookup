@@ -5,6 +5,7 @@ import { getSupabaseServerClient } from '@/lib/supabase/server';
 import { fetchPageFaqsFromDb, type StoredFaq } from '@/lib/supabase/page-faqs';
 import { DEFAULT_PAGE_FAQS, defaultGuideFaqs, defaultSupplierFaqs, type FaqItem } from '@/data/default-page-faqs';
 import { getGuideBySlug, getSupplier } from '@/lib/repository';
+import { CATALOGUE_REVALIDATE_SECONDS } from '@/lib/cache-ttl';
 
 export const FAQS_CACHE_TAG = 'page-faqs';
 
@@ -24,7 +25,7 @@ const getStoredFaqsCached = unstable_cache(
     return Object.fromEntries(byPath);
   },
   ['page-faqs'],
-  { revalidate: 300, tags: [FAQS_CACHE_TAG] },
+  { revalidate: CATALOGUE_REVALIDATE_SECONDS, tags: [FAQS_CACHE_TAG] },
 );
 
 /** Memoised per request: one page render can ask for FAQs and the schema separately. */
