@@ -14,6 +14,22 @@ const nextConfig = {
     // Common misspelling of the community page's address.
     return [{ source: '/comunity', destination: '/community', permanent: true }];
   },
+  async headers() {
+    // These pages read their filters from the query string, so Next renders them
+    // per request and marks the response `no-store`. They hold no per-visitor
+    // data, so letting the CDN reuse a render for a few minutes means repeat
+    // visits and crawlers don't each run the server. Each distinct query string
+    // is cached on its own, so every filter, sort and tab still renders correctly.
+    const sharedPageCache = [
+      { key: 'Cache-Control', value: 'public, s-maxage=300, stale-while-revalidate=600' },
+    ];
+    return [
+      { source: '/products/:slug', headers: sharedPageCache },
+      { source: '/suppliers', headers: sharedPageCache },
+      { source: '/suppliers/:slug', headers: sharedPageCache },
+      { source: '/lab-reports', headers: sharedPageCache },
+    ];
+  },
   experimental: {
     // The compound CSV import posts the whole file through a server action;
     // the 1 MB default is only a few hundred compounds with full content.

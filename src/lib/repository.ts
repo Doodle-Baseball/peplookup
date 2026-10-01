@@ -20,6 +20,27 @@ import { fetchOffersFromDb } from './supabase/offers';
 import type { Offer, Product, Supplier, SupplierReview } from './schema';
 import { type Listing, mcg } from './price';
 import { cents } from './money';
+import { CATALOGUE_REVALIDATE_SECONDS, OFFERS_REVALIDATE_SECONDS } from './cache-ttl';
+
+/**
+ * Thrown inside a cached read when Supabase could not be reached. Throwing
+ * (rather than returning the fallback) is what keeps `unstable_cache` from
+ * storing the fallback as the answer for the whole cache window, which would
+ * otherwise turn one dropped connection into an hour of empty prices.
+ */
+class SourceUnavailableError extends Error {}
+
+/** Runs a cached read and, only when it reported Supabase as unavailable, answers with the fallback for this request alone. */
+async function readOr<T>(read: () => Promise<T>, fallback: () => T): Promise<T> {
+  try {
+    return await read();
+  } catch (error) {
+    if (error instanceof SourceUnavailableError) return fallback();
+    throw error;
+  }
+}
+
+const seedOffers = (): readonly Offer[] => [...offers];
 
 /**
  * Real crawled offers (currently always empty, see src/data/offers.ts),
@@ -32,12 +53,13 @@ const getAllOffersCached = unstable_cache(
     let dbOffers: readonly Offer[] = [];
     if (client) {
       const fromDb = await fetchOffersFromDb(client);
-      if (fromDb !== null) dbOffers = fromDb;
+      if (fromDb === null) throw new SourceUnavailableError('offers');
+      dbOffers = fromDb;
     }
     return [...offers, ...dbOffers];
   },
   ['all-offers'],
-  { revalidate: 300, tags: ['offers'] },
+  { revalidate: OFFERS_REVALIDATE_SECONDS, tags: ['offers'] },
 );
 
 /**
@@ -49,7 +71,10 @@ const getAllOffersCached = unstable_cache(
 const allOffers = cache(async (): Promise<readonly Offer[]> => {
   // Applied outside the cache so a vendor's published COA links show without
   // waiting for the offers cache to revalidate.
-  const [offers, slugAliases] = await Promise.all([getAllOffersCached(), getSupplierSlugAliases()]);
+  const [offers, slugAliases] = await Promise.all([
+    readOr(getAllOffersCached, seedOffers),
+    getSupplierSlugAliases(),
+  ]);
   return offers.map((offer) => withPublishedCoaLink(offer, slugAliases.get(offer.supplierSlug)));
 });
 
@@ -91,25 +116,31 @@ const getSuppliersCached = unstable_cache(
     const client = getSupabaseServerClient();
     if (client) {
       const fromDb = await fetchSuppliersFromDb(client);
-      if (fromDb !== null) {
-        const mapped = fromDb.map(withDemoData).map(withVendorReviewProfile);
-        // No fallback comparator: sort is stable, so vendors without a saved
-        // position keep the query's own order (newest first) rather than being
-        // reshuffled before anyone has dragged anything.
-        return sortByPosition(mapped);
-      }
+      if (fromDb === null) throw new SourceUnavailableError('suppliers');
+      const mapped = fromDb.map(withDemoData).map(withVendorReviewProfile);
+      // No fallback comparator: sort is stable, so vendors without a saved
+      // position keep the query's own order (newest first) rather than being
+      // reshuffled before anyone has dragged anything.
+      return sortByPosition(mapped);
     }
     return seedSuppliers();
   },
   ['suppliers'],
-  { revalidate: 300, tags: ['suppliers'] },
+  { revalidate: CATALOGUE_REVALIDATE_SECONDS, tags: ['suppliers'] },
 );
 
 export const getSuppliers = cache(async (): Promise<readonly Supplier[]> => {
-  return getSuppliersCached();
+  return readOr(getSuppliersCached, seedSuppliers);
 });
 
 export const getSupplier = cache(async (slug: string): Promise<Supplier | null> => {
+  // A vendor in the (already cached) directory list needs no query of its own;
+  // before this, every supplier page view read its row from Supabase again.
+  // Anything not in that list, an inactive vendor or one added since the list
+  // was cached, still falls through to the direct read below.
+  const listed = (await getSuppliers()).find((supplier) => supplier.slug === slug);
+  if (listed) return listed;
+
   const client = getSupabaseServerClient();
   if (client) {
     const fromDb = await fetchSupplierFromDb(client, slug);
@@ -147,15 +178,15 @@ const getSlugsWithReviewsCached = unstable_cache(
     const client = getSupabaseServerClient();
     if (!client) return [];
     const { data, error } = await client.from('supplier_reviews').select('supplier_slug');
-    if (error || !data) return [];
+    if (error || !data) throw new SourceUnavailableError('supplier-reviews');
     return [...new Set((data as { supplier_slug: string }[]).map((row) => row.supplier_slug))];
   },
   ['supplier-review-slugs'],
-  { revalidate: 300, tags: ['supplier-reviews'] },
+  { revalidate: CATALOGUE_REVALIDATE_SECONDS, tags: ['supplier-reviews'] },
 );
 
 export async function getSupplierSlugsWithReviews(): Promise<ReadonlySet<string>> {
-  return new Set(await getSlugsWithReviewsCached());
+  return new Set(await readOr<readonly string[]>(getSlugsWithReviewsCached, () => []));
 }
 
 /**
@@ -202,6 +233,7 @@ const getGuidesCached = unstable_cache(
   async (): Promise<readonly Guide[]> => {
     const client = getSupabaseServerClient();
     const fromDb = client ? await fetchGuidesFromDb(client) : null;
+    if (client && fromDb === null) throw new SourceUnavailableError('guides');
     if (fromDb === null || fromDb.length === 0) return seedGuides;
 
     const merged = new Map<string, Guide>(seedGuides.map((guide) => [guide.slug, guide]));
@@ -209,11 +241,11 @@ const getGuidesCached = unstable_cache(
     return [...merged.values()].sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
   },
   ['guides'],
-  { revalidate: 300, tags: ['guides'] },
+  { revalidate: CATALOGUE_REVALIDATE_SECONDS, tags: ['guides'] },
 );
 
 export async function getGuides(): Promise<readonly Guide[]> {
-  return getGuidesCached();
+  return readOr(getGuidesCached, () => seedGuides);
 }
 
 export async function getGuideBySlug(slug: string): Promise<Guide | null> {
@@ -225,23 +257,32 @@ const getProductsCached = unstable_cache(
     const client = getSupabaseServerClient();
     if (client) {
       const fromDb = await fetchProductsFromDb(client);
-      if (fromDb !== null) {
-        // Falls back to the curated running order so the site keeps that
-        // sequence until 0013_display_order.sql has populated `position`.
-        return sortByPosition(fromDb.map(withDemoProductContent), byCompoundOrder);
-      }
+      if (fromDb === null) throw new SourceUnavailableError('products');
+      // Falls back to the curated running order so the site keeps that
+      // sequence until 0013_display_order.sql has populated `position`.
+      return sortByPosition(fromDb.map(withDemoProductContent), byCompoundOrder);
     }
     return products.map(withDemoProductContent);
   },
   ['products'],
-  { revalidate: 300, tags: ['products'] },
+  { revalidate: CATALOGUE_REVALIDATE_SECONDS, tags: ['products'] },
 );
 
+const seedProducts = (): readonly Product[] => products.map(withDemoProductContent);
+
 export const getProducts = cache(async (): Promise<readonly Product[]> => {
-  return getProductsCached();
+  return readOr(getProductsCached, seedProducts);
 });
 
 export const getProduct = cache(async (slug: string): Promise<Product | null> => {
+  // The cached catalogue already holds every compound with its research
+  // content, so a compound in it costs no query. Reading one directly took six
+  // Supabase calls (the row plus five content tables) on every page view.
+  // A slug that isn't in the list, e.g. a compound created since it was
+  // cached, still falls through to the direct read below.
+  const listed = (await getProducts()).find((product) => product.slug === slug);
+  if (listed) return listed;
+
   const client = getSupabaseServerClient();
   if (client) {
     const fromDb = await fetchProductFromDb(client, slug);

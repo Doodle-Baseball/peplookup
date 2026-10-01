@@ -11,6 +11,7 @@ import {
 } from '@/lib/supplier-content';
 import type { Offer, Supplier } from '@/lib/schema';
 import { getAllOffers, getSupplier } from '@/lib/repository';
+import { CATALOGUE_REVALIDATE_SECONDS } from '@/lib/cache-ttl';
 
 export const SUPPLIER_CONTENT_CACHE_TAG = 'supplier-page-content';
 
@@ -28,7 +29,7 @@ const getSavedSupplierContent = unstable_cache(
     return bySlug === null ? {} : Object.fromEntries(bySlug);
   },
   ['supplier-page-content'],
-  { revalidate: 300, tags: [SUPPLIER_CONTENT_CACHE_TAG] },
+  { revalidate: CATALOGUE_REVALIDATE_SECONDS, tags: [SUPPLIER_CONTENT_CACHE_TAG] },
 );
 
 /** The three boxes a supplier page renders: saved text where there is some, generated text elsewhere. */

@@ -6,5 +6,12 @@ Allow: /
 # Outbound affiliate/redirect links - no crawl value, keep link equity internal
 Disallow: /go?
  
+# Filtered, sorted and tabbed views of a page repeat the page itself (its canonical
+# is the clean URL) and each one costs a full server render, so crawlers skip them.
+# The clean /products/<slug>, /suppliers/<slug> and /lab-reports URLs stay crawlable.
+Disallow: /products/*?
+Disallow: /suppliers/*pq=
+Disallow: /lab-reports?
+ 
 Sitemap: https://www.peplookup.com/sitemap.xml
  
