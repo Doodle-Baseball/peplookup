@@ -7,15 +7,14 @@ import {
   updateVendor,
   deleteVendor,
   getVendor,
-  getStoredCoupon,
   setVendorActive,
   setVendorFeatured,
   saveVendorReviews,
   refreshAllVendorImages,
   AdminDbError,
 } from '@/lib/admin/vendors';
-import { createOffer, deleteOffer, getOfferRow, listOffersForVendor, updateOffer } from '@/lib/admin/offers';
-import { discountPercentText, offerToVendorProductEntry, type VendorProductEntry } from '@/lib/vendor-products';
+import { createOffer, deleteOffer, getOfferRow, updateOffer } from '@/lib/admin/offers';
+import { discountPercentText, type VendorProductEntry } from '@/lib/vendor-products';
 import type { VendorInput } from '@/lib/supabase/suppliers';
 import {
   accessTypeSchema,
@@ -31,7 +30,6 @@ import { resolveAffiliateUrl } from '@/data/vendor-affiliate-links';
 import { getMappedCell, inferFieldMapping, parseCsvText, type VendorImportField } from '@/lib/vendor-import';
 import { saveDisplayOrder } from '@/lib/admin/display-order';
 import { getRedirectTarget } from '@/lib/seo';
-import { couponCodeFromLinks } from '@/lib/coupon-detect';
 
 export interface VendorFormState {
   error: string | null;
@@ -152,26 +150,16 @@ function isHttpUrl(value: string): boolean {
   }
 }
 
-/** Replaces every literal occurrence of `from` in `url` with `to`, leaving the rest of the URL untouched. */
-function replaceCode(url: string, from: string, to: string): string {
-  return url.includes(from) ? url.split(from).join(to) : url;
-}
-
 /**
  * Applies step 5's product list. New rows are created; saved rows the admin
  * edited are updated, keeping what the form doesn't show (stock, lab
  * report, pack count); saved rows removed from the list are deleted. Saved
- * rows left untouched are not re-written, unless the vendor's coupon code
- * just changed and this row's URL still carries the old code, that case is
- * written too, purely to swap the code in the URL, so a code update reaches
- * every listing that references it, not just the ones the admin happened to
- * touch this session. Returns whether anything changed.
+ * rows left untouched are not re-written. Returns whether anything changed.
  */
 async function saveVendorProducts(
   supplierSlug: string,
   entries: PendingVendorProduct[],
   removedOfferIds: string[],
-  couponCodeChange: { from: string; to: string } | null = null,
 ): Promise<boolean> {
   let changed = false;
 
@@ -182,23 +170,13 @@ async function saveVendorProducts(
     changed = true;
   }
 
-  for (const rawEntry of entries) {
-    const propagatedProductUrl = couponCodeChange
-      ? replaceCode(rawEntry.productUrl, couponCodeChange.from, couponCodeChange.to)
-      : rawEntry.productUrl;
-    const propagatedCoaUrl = couponCodeChange
-      ? replaceCode(rawEntry.coaUrl, couponCodeChange.from, couponCodeChange.to)
-      : rawEntry.coaUrl;
-    const imageUrl = (rawEntry.imageUrl ?? '').trim();
+  for (const entry of entries) {
+    const imageUrl = (entry.imageUrl ?? '').trim();
     if (imageUrl && !isHttpUrl(imageUrl)) {
-      throw new AdminDbError(`Product Image URL must start with http:// or https:// (${rawEntry.compoundName}).`);
+      throw new AdminDbError(`Product Image URL must start with http:// or https:// (${entry.compoundName}).`);
     }
-    const urlChangedByCoupon = propagatedProductUrl !== rawEntry.productUrl || propagatedCoaUrl !== rawEntry.coaUrl;
-    const entry = urlChangedByCoupon
-      ? { ...rawEntry, productUrl: propagatedProductUrl, coaUrl: propagatedCoaUrl }
-      : rawEntry;
 
-    if (entry.offerId && !entry.edited && !urlChangedByCoupon) continue;
+    if (entry.offerId && !entry.edited) continue;
 
     const formResult = productFormSchema.safeParse(entry.form);
     if (!formResult.success) continue;
@@ -277,14 +255,12 @@ function readVendorInput(formData: FormData): VendorInput {
 
   const coaLabName = String(formData.get('coaLabName') ?? '').trim();
   const shippingSpeed = String(formData.get('shippingSpeed') ?? '').trim();
-  // "New Coupon Code" is an update field, not a replacement-by-default: leaving
-  // it blank keeps whatever code was already saved (carried in the hidden
-  // "existingCouponCode" field) rather than clearing it.
-  const existingCouponCode = String(formData.get('existingCouponCode') ?? '').trim();
-  const newCouponCode = String(formData.get('newCouponCode') ?? '').trim();
-  const storedCouponCode = String(formData.get('storedCouponCode') ?? '').trim();
-  const couponCode = newCouponCode || existingCouponCode || storedCouponCode;
+  const couponCode = String(formData.get('couponCode') ?? '').trim();
   const couponPercentOffRaw = String(formData.get('couponPercentOff') ?? '').trim();
+  const couponPercentOff = couponPercentOffRaw ? Number(couponPercentOffRaw) : null;
+  if (couponPercentOff !== null && (!Number.isInteger(couponPercentOff) || couponPercentOff < 1 || couponPercentOff > 100)) {
+    throw new AdminDbError('Discount % must be a whole number from 1 to 100.');
+  }
   const policyShippingUrl = String(formData.get('policyShippingUrl') ?? '').trim();
   const policyReturnsUrl = String(formData.get('policyReturnsUrl') ?? '').trim();
   const reviewsUrl = String(formData.get('reviewsUrl') ?? '').trim();
@@ -319,29 +295,11 @@ function readVendorInput(formData: FormData): VendorInput {
     shippingSpeed: shippingSpeed || null,
     paymentMethods,
     couponCode: couponCode || null,
-    couponPercentOff: couponPercentOffRaw ? Number(couponPercentOffRaw) : null,
+    couponPercentOff,
     policyShippingUrl: policyShippingUrl || null,
     policyReturnsUrl: policyReturnsUrl || null,
     reviewRating: reviewRatingValue,
     reviewsUrl: reviewsUrl || null,
-  };
-}
-
-/**
- * When the vendor's coupon code changes, the same code is very often baked
- * into the affiliate link and policy URLs as a referral parameter; this keeps
- * them in sync with the new code rather than leaving the old one stranded in
- * a URL that no longer matches what the vendor page displays. Only a URL that
- * actually contains the old code is touched, one that never referenced it is
- * left exactly as typed.
- */
-function propagateCouponCodeToVendorUrls(input: VendorInput, from: string, to: string): VendorInput {
-  return {
-    ...input,
-    affiliateUrl: replaceCode(input.affiliateUrl, from, to),
-    homepageUrl: replaceCode(input.homepageUrl, from, to),
-    policyShippingUrl: input.policyShippingUrl ? replaceCode(input.policyShippingUrl, from, to) : input.policyShippingUrl,
-    policyReturnsUrl: input.policyReturnsUrl ? replaceCode(input.policyReturnsUrl, from, to) : input.policyReturnsUrl,
   };
 }
 
@@ -398,11 +356,6 @@ export async function updateVendorAction(
     // absent field means "unchanged", not "off": reading it as off disabled
     // every vendor whenever its form was saved.
     if (!formData.has('isActive')) input = { ...input, isActive: existing.isActive };
-    const existingCouponCode = String(formData.get('existingCouponCode') ?? '').trim();
-    const codeChanged = Boolean(existingCouponCode && input.couponCode && existingCouponCode !== input.couponCode);
-    if (codeChanged) {
-      input = propagateCouponCodeToVendorUrls(input, existingCouponCode, input.couponCode!);
-    }
     await updateVendor(slug, input);
 
     await saveVendorReviews(slug, readVendorReviews(formData));
@@ -411,7 +364,6 @@ export async function updateVendorAction(
       slug,
       readVendorProducts(formData),
       readRemovedVendorProductIds(formData),
-      codeChanged ? { from: existingCouponCode, to: input.couponCode! } : null,
     );
     if (productsChanged) revalidateTag('offers');
   } catch (error) {
@@ -421,95 +373,6 @@ export async function updateVendorAction(
   // No redirect: the admin can save from any step and keep editing in place,
   // rather than being bounced back to the vendor list after every save.
   return { error: null, savedAt: Date.now() };
-}
-
-/** The saved vendor's own fields, unchanged, as the shape `updateVendor` writes. */
-function supplierToVendorInput(vendor: Supplier): VendorInput {
-  return {
-    name: vendor.name,
-    homepageUrl: vendor.homepageUrl,
-    affiliateUrl: vendor.affiliateUrl,
-    description: vendor.description,
-    country: vendor.country,
-    logoUrl: vendor.logoUrl,
-    faviconUrl: vendor.faviconUrl,
-    isActive: vendor.isActive,
-    foundedYear: vendor.foundedYear,
-    accessType: vendor.accessType,
-    supplyCountries: [...vendor.supplyCountries],
-    coaVerificationLevel: vendor.coaVerificationLevel,
-    coaLabName: vendor.coaLabName,
-    shippingSpeed: vendor.shippingSpeed,
-    paymentMethods: [...vendor.paymentMethods],
-    couponCode: vendor.coupon?.code ?? null,
-    couponPercentOff: vendor.coupon?.percentOff ?? null,
-    policyShippingUrl: vendor.policyUrls.shipping,
-    policyReturnsUrl: vendor.policyUrls.returns,
-    reviewRating: vendor.reviewRating,
-    reviewsUrl: vendor.reviewsUrl,
-  };
-}
-
-/**
- * The Coupon / Promo Code section's own Save button: updates just the coupon
- * code and propagates it everywhere the old code was already used (affiliate
- * link, policy URLs, every saved product URL for this vendor), without
- * requiring the rest of the multi-step form to be filled in or submitted.
- */
-export async function updateVendorCouponCodeAction(
-  requestedSlug: string,
-  newCode: string,
-  percentOffText = '',
-): Promise<{ error: string | null; code: string | null }> {
-  try {
-    const vendor = await currentVendor(requestedSlug);
-    const slug = vendor.slug;
-    const stored = await getStoredCoupon(slug);
-
-    // Only a complete saved coupon decides which URLs get the code swapped,
-    // exactly as before; a code saved without a percentage is kept, not swapped.
-    const existingCode = vendor.coupon?.code ?? '';
-    const trimmedNew = newCode.trim();
-    // Blank means "keep the current code"; with none saved, the code already
-    // in the vendor's links is the one being confirmed.
-    const detectedCode = stored.code
-      ? null
-      : couponCodeFromLinks([vendor.affiliateUrl, vendor.policyUrls.shipping, vendor.policyUrls.returns]);
-    const finalCode = trimmedNew || existingCode || stored.code || detectedCode;
-    if (!finalCode) {
-      return { error: 'Enter a coupon code to save.', code: null };
-    }
-
-    const percentText = percentOffText.trim();
-    const percentOff = percentText === '' ? stored.percentOff : Number(percentText);
-    if (percentOff !== null && (!Number.isInteger(percentOff) || percentOff < 1 || percentOff > 100)) {
-      return { error: 'Discount % must be a whole number from 1 to 100.', code: null };
-    }
-
-    const codeChanged = Boolean(existingCode && finalCode !== existingCode);
-    let input = supplierToVendorInput(vendor);
-    input.couponCode = finalCode;
-    input.couponPercentOff = percentOff;
-    if (codeChanged) {
-      input = propagateCouponCodeToVendorUrls(input, existingCode, finalCode);
-    }
-    await updateVendor(slug, input);
-
-    if (codeChanged) {
-      const offers = await listOffersForVendor(slug);
-      const entries = offers.map((offer) => offerToVendorProductEntry(offer, offer.productSlug));
-      const productsChanged = await saveVendorProducts(slug, entries, [], { from: existingCode, to: finalCode });
-      if (productsChanged) revalidateTag('offers');
-    }
-
-    revalidatePublicSupplierPages(slug);
-    return { error: null, code: finalCode };
-  } catch (error) {
-    return {
-      error: error instanceof Error ? error.message : 'Failed to update the coupon code.',
-      code: null,
-    };
-  }
 }
 
 export async function toggleVendorStatusAction(

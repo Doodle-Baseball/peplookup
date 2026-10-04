@@ -68,6 +68,7 @@ export const primaryNav: readonly NavItem[] = [
     href: '/contact',
     childrenHeading: 'Contact',
     children: [
+      { label: 'Vendor Listing', href: '/vendor-listing' },
       { label: 'Contact Us', href: '/contact' },
       { label: 'About', href: '/about' },
       { label: 'FAQs', href: '/faqs' },
@@ -83,7 +84,7 @@ export const footerNav: readonly { heading: string; links: readonly NavChild[] }
       { label: 'Suppliers', href: '/suppliers' },
       { label: 'Price Checker', href: '/price-checker' },
       { label: 'Watchlist', href: '/watchlist' },
-      { label: 'Partners', href: '/partners' },
+      { label: 'Vendor Listing', href: '/vendor-listing' },
       { label: 'Community', href: '/community' },
     ],
   },

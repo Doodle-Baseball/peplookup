@@ -1,6 +1,6 @@
 export const vendorAffiliateLinks: Record<string, string> = {
   'primepepsolutions.com': 'https://primepepsolutions.com/?ref=PEPLOOKUP',
-  'prpeps.com': 'https://prpeps.com?ref=66',
+  'prpeps.com': 'https://prpeps.com/?ref=66&coupon=peplookup',
   'eliteedgebiotech.com': 'https://eliteedgebiotech.com/ref/74/',
   'www.americanpeptides.us': 'https://www.americanpeptides.us/peplookup',
   'ameanopeptides.com': 'https://ameanopeptides.com/?ref=ctehrytt',
@@ -59,7 +59,7 @@ export const vendorAffiliateLinks: Record<string, string> = {
   'peptidelabsinc.com': 'https://peptidelabsinc.com/?aff=3',
   'peptidescanada.store': 'https://peptidescanada.store/?ref=PEPLOOKUP',
   'polarisresearch.com.au': 'https://polarisresearch.com.au/?code=PRODUCTS',
-  'nuvion.health': 'https://nuvion.health/ref/81/',
+  'nuvion.health': 'https://nuvion.health/ref/peplookup/',
   'veridianlabs.co.uk': 'https://veridianlabs.co.uk/?aff=17',
   'vantageaminos.co': 'https://vantageaminos.co/ref/adamdan6688/',
   'rejuven8peptides.com': 'https://rejuven8peptides.com/?aff=peplookup',

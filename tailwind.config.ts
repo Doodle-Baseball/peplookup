@@ -57,7 +57,8 @@ const config: Config = {
       // Exact-pixel gutters requested for the newsletter panel and the boxed footer,
       // kept as tokens (rather than arbitrary `[100px]` values) so they stay reusable.
       // '30' is '100' cut by 70%, for the footer's margin after it read as too wide.
-      spacing: { '30': '30px', '100': '100px' },
+      // 'vial' is the square the compound pages show their vial artwork in.
+      spacing: { '30': '30px', '100': '100px', vial: '336px' },
       fontFamily: {
         sans: ['var(--font-body)', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
         display: ['var(--font-display)', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],

@@ -11,8 +11,15 @@ const nextConfig = {
     remotePatterns: [{ protocol: 'https', hostname: '**' }],
   },
   async redirects() {
-    // Common misspelling of the community page's address.
-    return [{ source: '/comunity', destination: '/community', permanent: true }];
+    return [
+      // Common misspelling of the community page's address.
+      { source: '/comunity', destination: '/community', permanent: true },
+      // The payment thanks page lives at /thanks; /tanks is a likely typo for it.
+      { source: '/vendor-listing/thanks', destination: '/thanks', permanent: true },
+      { source: '/tanks', destination: '/thanks', permanent: true },
+      // The vendor listing page used to live at /partners.
+      { source: '/partners', destination: '/vendor-listing', permanent: true },
+    ];
   },
   async headers() {
     // These pages read their filters from the query string, so Next renders them

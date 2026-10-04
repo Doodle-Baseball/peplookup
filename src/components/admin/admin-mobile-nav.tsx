@@ -13,7 +13,7 @@ import { ArrowLeftIcon, CloseIcon, MenuIcon } from '@/components/icons/icons';
  * MobileNav pattern (slide-in panel, same overlay/close behavior) rather
  * than leaving small screens with no navigation at all.
  */
-export function AdminMobileNav() {
+export function AdminMobileNav({ newVendorRequests = 0 }: { newVendorRequests?: number }) {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -75,7 +75,7 @@ export function AdminMobileNav() {
             </div>
 
             <div className="flex-1 space-y-1 p-3">
-              <AdminNavLinks onNavigate={() => setOpen(false)} />
+              <AdminNavLinks onNavigate={() => setOpen(false)} newVendorRequests={newVendorRequests} />
             </div>
 
             <div className="border-t border-line p-3">

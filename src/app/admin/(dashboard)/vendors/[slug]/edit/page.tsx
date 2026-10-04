@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
 import { getStoredCoupon, getVendor } from '@/lib/admin/vendors';
-import { couponCodeFromLinks } from '@/lib/coupon-detect';
 import { getRedirectTarget } from '@/lib/seo';
 import { listOffersForVendor } from '@/lib/admin/offers';
 import { getProducts, getSupplierReviews } from '@/lib/repository';
@@ -46,11 +45,6 @@ export default async function EditVendorPage({
     getSupplierReviews(vendor).catch(() => []),
     getStoredCoupon(vendor.slug),
   ]);
-  // Only offered when nothing is saved: a saved code always wins.
-  const detectedCouponCode = storedCoupon.code
-    ? null
-    : couponCodeFromLinks([vendor.affiliateUrl, vendor.policyUrls.shipping, vendor.policyUrls.returns]);
-
   const boundAction = updateVendorAction.bind(null, slug);
 
   return (
@@ -61,7 +55,6 @@ export default async function EditVendorPage({
           action={boundAction}
           vendor={vendor}
           storedCoupon={storedCoupon}
-          detectedCouponCode={detectedCouponCode}
           reviews={[...reviews]}
           submitLabel="Save changes"
           products={products.map((product) => ({ slug: product.slug, name: product.name }))}

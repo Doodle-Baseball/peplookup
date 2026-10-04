@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Archivo, JetBrains_Mono } from 'next/font/google';
+import Script from 'next/script';
 import './globals.css';
 import { site } from '@/config/site';
 import { LoadingScreen } from '@/components/layout/loading-screen';
@@ -64,10 +65,20 @@ const siteJsonLd = {
   ],
 };
 
+/** Google Analytics 4 measurement ID. Public by design: it ships to every visitor's browser. */
+const GA_MEASUREMENT_ID = 'G-CTRYVJ794V';
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${archivo.variable} ${jetbrainsMono.variable}`} suppressHydrationWarning>
       <body className="flex min-h-screen flex-col" suppressHydrationWarning>
+        <Script src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`} strategy="afterInteractive" />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', '${GA_MEASUREMENT_ID}');`}
+        </Script>
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(siteJsonLd) }} />
         <NavigationProgress />
         <LoadingScreen />

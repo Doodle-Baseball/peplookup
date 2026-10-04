@@ -175,12 +175,12 @@ export const STATIC_SEO_PAGES = [
     h1: 'Vendor coupon codes.',
   },
   {
-    path: '/partners',
-    name: 'Partners',
+    path: '/vendor-listing',
+    name: 'Vendor Listing',
     group: 'Company',
-    title: `Partners | ${site.name}`,
-    description: `How suppliers get listed on ${site.name}, how affiliate relationships work, and why a commission never changes where a supplier ranks.`,
-    h1: 'Partners',
+    title: `Vendor Listing | ${site.name}`,
+    description: `List your peptide brand on ${site.name}: compare your prices per mg, get a dedicated brand page, and choose Basic or Pro for extra visibility and promotion.`,
+    h1: 'Vendor Listing',
   },
   {
     path: '/community',

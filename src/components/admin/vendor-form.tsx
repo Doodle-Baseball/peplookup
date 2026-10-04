@@ -7,13 +7,12 @@ import {
   useMemo,
   useRef,
   useState,
-  useTransition,
   type FormEvent,
 } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { updateVendorCouponCodeAction, type VendorFormState } from '@/app/admin/(dashboard)/vendors/actions';
+import type { VendorFormState } from '@/app/admin/(dashboard)/vendors/actions';
 import type { Offer, ProductForm, Supplier, SupplierReview } from '@/lib/schema';
 import { COUNTRIES } from '@/lib/countries';
 import { faviconUrl } from '@/lib/favicon';
@@ -81,7 +80,6 @@ export function VendorForm({
   existingProducts,
   initialStep,
   storedCoupon,
-  detectedCouponCode = null,
 }: {
   action: (prevState: VendorFormState, formData: FormData) => Promise<VendorFormState>;
   vendor?: Supplier;
@@ -97,8 +95,6 @@ export function VendorForm({
    * which `vendor.coupon` can't represent. Omitted on the new-vendor form.
    */
   storedCoupon?: { code: string | null; percentOff: number | null };
-  /** A code found in the vendor's saved links when none is saved yet; shown until saved. */
-  detectedCouponCode?: string | null;
 }) {
   const router = useRouter();
   const [rawState, formAction, pending] = useActionState(action, INITIAL_STATE);
@@ -109,18 +105,17 @@ export function VendorForm({
   const [iconUrl, setIconUrl] = useState(vendor?.logoUrl ?? '');
   const [affiliateUrl, setAffiliateUrl] = useState(vendor?.affiliateUrl ?? vendor?.homepageUrl ?? '');
   const [vendorName, setVendorName] = useState(vendor?.name ?? '');
-  const [newCouponCode, setNewCouponCode] = useState('');
   const savedCouponCode = storedCoupon?.code ?? vendor?.coupon?.code ?? null;
   const savedCouponPercentOff = storedCoupon?.percentOff ?? vendor?.coupon?.percentOff ?? null;
+  const [couponCode, setCouponCode] = useState(savedCouponCode ?? '');
   const [couponPercentOff, setCouponPercentOff] = useState(
     savedCouponPercentOff !== null ? String(savedCouponPercentOff) : '',
   );
-  // Keeps the field in step with a fresh save once router.refresh() re-renders with the stored value.
+  // Follows the stored values once router.refresh() re-renders after a save.
   useEffect(() => {
+    setCouponCode(savedCouponCode ?? '');
     setCouponPercentOff(savedCouponPercentOff !== null ? String(savedCouponPercentOff) : '');
-  }, [savedCouponPercentOff]);
-  const [couponSaving, startCouponSave] = useTransition();
-  const [couponSaveMessage, setCouponSaveMessage] = useState<{ tone: 'ok' | 'error'; text: string } | null>(null);
+  }, [savedCouponCode, savedCouponPercentOff]);
   const [csvImportResult, setCsvImportResult] = useState<{ added: number; errors: string[] } | null>(null);
   const productsCsvInputRef = useRef<HTMLInputElement>(null);
   const [stepIndex, setStepIndex] = useState(() =>
@@ -337,12 +332,10 @@ export function VendorForm({
   const stepTitle = STEP_LABELS[stepIndex];
 
   // After a save, refresh this route's server data (fresh vendor, offer ids,
-  // review ids) without navigating away, and clear the "New Coupon Code"
-  // input now that it has become the current one.
+  // review ids) without navigating away.
   useEffect(() => {
     if (!state.savedAt) return;
     router.refresh();
-    setNewCouponCode('');
   }, [state.savedAt, router]);
 
   // Once the refresh above lands, `existingProducts` arrives as a new prop;
@@ -377,27 +370,6 @@ export function VendorForm({
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     startTransition(() => formAction(formData));
-  }
-
-  /**
-   * The Coupon / Promo Code section's own save, independent of the rest of
-   * the form: saves just the code and propagates it across every URL that
-   * already used the old one, without requiring the whole multi-step form to
-   * be submitted. Only meaningful once the vendor exists (has a slug).
-   */
-  function saveCouponCode() {
-    if (!vendor) return;
-    setCouponSaveMessage(null);
-    startCouponSave(async () => {
-      const result = await updateVendorCouponCodeAction(vendor.slug, newCouponCode, couponPercentOff);
-      if (result.error) {
-        setCouponSaveMessage({ tone: 'error', text: result.error });
-        return;
-      }
-      setNewCouponCode('');
-      setCouponSaveMessage({ tone: 'ok', text: `Coupon code saved: ${result.code}. Updating linked URLs…` });
-      router.refresh();
-    });
   }
 
   return (
@@ -516,78 +488,41 @@ export function VendorForm({
 
           <div className="mt-5 rounded-card border border-line bg-surface p-4">
             <p className="text-sm font-black text-content">Coupon / Promo Code</p>
-            <div className="mt-3 grid grid-cols-1 gap-4 md:grid-cols-3">
+            <div className="mt-3 grid grid-cols-1 gap-4 md:grid-cols-2">
               <div>
-                <label className="block text-sm font-semibold text-content">Current/Existing Coupon Code</label>
-                <p className="mt-1.5 w-full truncate rounded-chip border border-line bg-surface-sunken px-3.5 py-2.5 text-sm text-muted">
-                  {savedCouponCode || detectedCouponCode || 'None set'}
-                </p>
-                <p className="mt-1 text-xs text-muted">
-                  {savedCouponCode
-                    ? `The code currently saved for this vendor${
-                        savedCouponPercentOff !== null ? ` (${savedCouponPercentOff}% off)` : ', with no Discount % saved yet'
-                      }.`
-                    : detectedCouponCode
-                      ? 'Found in this vendor’s saved links but not saved yet. Enter the Discount % and click Save to keep it.'
-                      : 'The code currently saved for this vendor.'}
-                </p>
-              </div>
-              <div>
-                <label htmlFor="newCouponCode" className="block text-sm font-semibold text-content">
-                  New Coupon Code
+                <label htmlFor="couponCode" className="block text-sm font-semibold text-content">
+                  Coupon Code
                 </label>
                 <input
-                  id="newCouponCode"
-                  name="newCouponCode"
+                  id="couponCode"
+                  name="couponCode"
                   type="text"
-                  value={newCouponCode}
-                  onChange={(e) => setNewCouponCode(e.target.value)}
-                  placeholder="Enter the new coupon code here."
+                  value={couponCode}
+                  onChange={(e) => setCouponCode(e.target.value)}
+                  placeholder="None set"
                   className="mt-1.5 w-full rounded-chip border border-line bg-surface px-3.5 py-2.5 text-sm text-content outline-none transition-colors"
                 />
-                <p className="mt-1 text-xs text-muted">
-                  Leave blank to keep the current code. Saving updates the affiliate link, shipping and returns
-                  policy URLs, and every saved product and COA URL that already contains the old code.
-                </p>
+                <p className="mt-1 text-xs text-muted">The code saved for this vendor. Edit it here.</p>
               </div>
-              <Field
-                label="Discount %"
-                name="couponPercentOff"
-                type="number"
-                value={couponPercentOff}
-                onChange={(e) => setCouponPercentOff(e.target.value)}
-                placeholder="10"
-              />
+              <div>
+                <label htmlFor="couponPercentOff" className="block text-sm font-semibold text-content">
+                  Discount Off (%)
+                </label>
+                <input
+                  id="couponPercentOff"
+                  name="couponPercentOff"
+                  type="number"
+                  min={1}
+                  max={100}
+                  step={1}
+                  value={couponPercentOff}
+                  onChange={(e) => setCouponPercentOff(e.target.value)}
+                  placeholder="10"
+                  className="mt-1.5 w-full rounded-chip border border-line bg-surface px-3.5 py-2.5 text-sm text-content outline-none transition-colors"
+                />
+                <p className="mt-1 text-xs text-muted">What buyers save when they use this coupon code.</p>
+              </div>
             </div>
-
-            {vendor ? (
-              <div className="mt-4 flex flex-wrap items-center gap-3">
-                <button
-                  type="button"
-                  onClick={saveCouponCode}
-                  disabled={couponSaving || !(newCouponCode.trim() || savedCouponCode || detectedCouponCode)}
-                  className="rounded-chip bg-brand px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-brand-strong disabled:pointer-events-none disabled:opacity-50"
-                >
-                  {couponSaving ? 'Saving…' : 'Save'}
-                </button>
-                {couponSaveMessage ? (
-                  <p
-                    role={couponSaveMessage.tone === 'error' ? 'alert' : 'status'}
-                    className={`text-sm font-semibold ${couponSaveMessage.tone === 'error' ? 'text-danger' : 'text-ok'}`}
-                  >
-                    {couponSaveMessage.text}
-                  </p>
-                ) : null}
-              </div>
-            ) : (
-              <p className="mt-4 text-xs text-muted">Available once the vendor is created. Add it below and save the form first.</p>
-            )}
-
-            <input type="hidden" name="existingCouponCode" value={vendor?.coupon?.code ?? ''} />
-            {/* The stored code even when it has no percentage yet, so saving the
-                form keeps it rather than clearing it. Kept apart from
-                existingCouponCode, which decides which URLs get the code swapped. */}
-            <input type="hidden" name="storedCouponCode" value={savedCouponCode ?? ''} />
           </div>
       </section>
 
