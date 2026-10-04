@@ -407,3 +407,41 @@
   from { transform: translate3d(0, 0, 0) scale(1); }
   to { transform: translate3d(4%, 8%, 0) scale(1.1); }
 }
+
+/* --- Vendor listing ------------------------------------------------------ */
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modal-pop {
+  from { opacity: 0; transform: translateY(24px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes plan-glow {
+  from { box-shadow: 0 0 0 0 rgb(var(--brand) / 0.35); }
+  to { box-shadow: 0 0 0 10px rgb(var(--brand) / 0); }
+}
+
+@keyframes badge-ping {
+  0% { transform: scale(1); opacity: 0.7; }
+  80%, 100% { transform: scale(2.2); opacity: 0; }
+}
+
+@keyframes check-pop {
+  0% { transform: scale(0); opacity: 0; }
+  60% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Decorative motion only: every rule sits behind no-preference, so with
+   reduced motion the content is simply shown in place. */
+@media (prefers-reduced-motion: no-preference) {
+  .animate-fade-in { animation: fade-in 0.2s ease-out both; }
+  .animate-modal-pop { animation: modal-pop 0.32s cubic-bezier(0.16, 1, 0.3, 1) both; }
+  .plan-glow { animation: plan-glow 2.4s ease-out infinite; }
+  .badge-ping { animation: badge-ping 1.6s cubic-bezier(0, 0, 0.2, 1) infinite; }
+  .animate-check-pop { animation: check-pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s both; }
+}

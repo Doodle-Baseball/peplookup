@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import { notFound } from 'next/navigation';
+import Image from 'next/image';
 import Link from 'next/link';
 import {
   getProduct,
@@ -29,6 +30,7 @@ import { SupplierChipsExpandable } from '@/components/product-card/supplier-chip
 import { ListingsLoadMore } from '@/components/product-card/listings-load-more';
 import { JumpToNav } from '@/components/product-card/jump-to-nav';
 import { site } from '@/config/site';
+import { compoundImageSrc } from '@/config/compound-images';
 import { compoundSeoDefaults, pageMetadata } from '@/lib/seo-defaults';
 import { getSeoOverride, withSeo } from '@/lib/seo';
 import type { Offer, Supplier, ProductForm } from '@/lib/schema';
@@ -323,6 +325,8 @@ export default async function ProductPage({
   const faqs =
     research.faq.length > 0 ? research.faq.map((item) => ({ q: item.question, a: item.answer })) : genericFaqs;
 
+  const vialImage = compoundImageSrc(product.slug);
+
   return (
     <div className="mx-auto max-w-shell px-4 py-8 sm:py-10">
       <script
@@ -339,7 +343,7 @@ export default async function ProductPage({
       </Link>
 
       {/* ---------------------------------------------------------------- Hero */}
-      <header id="overview" className={cn(PANEL_CLASS, 'scroll-mt-24 p-5 sm:p-8')}>
+      <header id="overview" className={cn(PANEL_CLASS, 'scroll-mt-24 overflow-x-clip p-5 sm:p-8')}>
         {/* Actions share the row with the pills, not the title block, beside
             the title they squeezed the summary into a narrow column on phones. */}
         <div className="flex items-start justify-between gap-4">
@@ -383,41 +387,57 @@ export default async function ProductPage({
           </div>
         </div>
 
-        <h1 className="animate-fade-up animate-delay-100 mt-4 text-4xl font-black text-content sm:text-5xl">
-          {seo?.h1 || product.name}
-        </h1>
-        {product.description ?? product.summary ? (
-          <p className="animate-fade-up animate-delay-200 mt-3 max-w-4xl whitespace-pre-line text-base leading-7 text-muted">
-            {product.description ?? product.summary}
-          </p>
-        ) : null}
+        {/* With a vial image, the title, summary, stats and jump links share one
+            left column and the vial is laid over the reserved right-hand column,
+            so it can run down beside the stats and the jump links. */}
+        <div className={cn(vialImage && 'relative xl:min-h-vial xl:pr-64')}>
+          {vialImage ? (
+            <div className="animate-fade-up animate-delay-200 mt-4 flex justify-center xl:absolute xl:right-0 xl:top-0 xl:mt-0 xl:w-72">
+              <Image
+                src={vialImage}
+                alt={`${product.name} research vial`}
+                width={336}
+                height={336}
+                priority
+                className="pointer-events-none h-64 w-64 object-contain sm:h-80 sm:w-80 xl:h-vial xl:w-vial xl:max-w-none"
+              />
+            </div>
+          ) : null}
+          <h1 className="animate-fade-up animate-delay-100 mt-4 text-4xl font-black text-content sm:text-5xl">
+            {seo?.h1 || product.name}
+          </h1>
+          {product.description ?? product.summary ? (
+            <p className="animate-fade-up animate-delay-200 mt-3 max-w-4xl whitespace-pre-line text-base leading-7 text-muted">
+              {product.description ?? product.summary}
+            </p>
+          ) : null}
 
-        {hasOffers ? (
-          <dl className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
-            <Stat
-              label="Lowest cost / mg"
-              value={bestOverall ? formatPerMg(bestOverall.perMg, bestOverall.listing.currency) : 'N/A'}
-              hint={bestOverallSupplier ? `at ${bestOverallSupplier.name}` : 'No in-stock listing'}
-              emphasis
+          {hasOffers ? (
+            <dl className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+              <Stat
+                label="Lowest cost / mg"
+                value={bestOverall ? formatPerMg(bestOverall.perMg, bestOverall.listing.currency) : 'N/A'}
+                hint={bestOverallSupplier ? `at ${bestOverallSupplier.name}` : 'No in-stock listing'}
+                emphasis
+              />
+              <Stat label="Vendors listed" value={String(vendorCount)} />
+              <Stat label="In stock" value={`${inStockCount} of ${resolvedOffers.length}`} hint="listings" />
+              <Stat label="COA reports" value={String(offersWithReports.length)} />
+            </dl>
+          ) : null}
+          <div className={cn('mt-6 flex items-center gap-3 pt-4', !vialImage && 'border-t border-line')}>
+            <span className="eyebrow hidden shrink-0 sm:inline">Jump to</span>
+            <JumpToNav
+              items={[
+                { id: 'overview', label: 'Overview' },
+                { id: 'vendor-listings', label: 'Vendor Listings' },
+                { id: 'benefits', label: 'Benefits' },
+                { id: 'evidence', label: 'Evidence' },
+                { id: 'interactions', label: 'Interactions' },
+                { id: 'faq', label: 'FAQ' },
+              ]}
             />
-            <Stat label="Vendors listed" value={String(vendorCount)} />
-            <Stat label="In stock" value={`${inStockCount} of ${resolvedOffers.length}`} hint="listings" />
-            <Stat label="COA reports" value={String(offersWithReports.length)} />
-          </dl>
-        ) : null}
-
-        <div className="mt-6 flex items-center gap-3 border-t border-line pt-4">
-          <span className="eyebrow hidden shrink-0 sm:inline">Jump to</span>
-          <JumpToNav
-            items={[
-              { id: 'overview', label: 'Overview' },
-              { id: 'vendor-listings', label: 'Vendor Listings' },
-              { id: 'benefits', label: 'Benefits' },
-              { id: 'evidence', label: 'Evidence' },
-              { id: 'interactions', label: 'Interactions' },
-              { id: 'faq', label: 'FAQ' },
-            ]}
-          />
+          </div>
         </div>
       </header>
 

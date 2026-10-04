@@ -5,6 +5,7 @@ import {
   SearchIcon,
   StarIcon,
   StoreIcon,
+  WalletIcon,
 } from '@/components/icons/icons';
 
 /** Shared between the desktop sidebar and the mobile slide-in nav so the two never drift apart. */
@@ -15,4 +16,5 @@ export const ADMIN_NAV = [
   { label: 'Reviews', href: '/admin/reviews', icon: StarIcon },
   { label: 'Guides', href: '/admin/guides', icon: DocumentIcon },
   { label: 'SEO', href: '/admin/seo', icon: SearchIcon },
+  { label: 'Vendor Listing', href: '/admin/vendor-listing', icon: WalletIcon },
 ] as const;

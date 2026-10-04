@@ -3,8 +3,14 @@ import { LogoMark } from '@/components/layout/logo-mark';
 import { AdminMobileNav } from '@/components/admin/admin-mobile-nav';
 import { AdminNavLinks } from '@/components/admin/admin-nav-links';
 import { ArrowLeftIcon } from '@/components/icons/icons';
+import { countUnseenRequests } from '@/lib/vendor-listing/requests';
 
-export default function AdminDashboardLayout({ children }: { children: React.ReactNode }) {
+// The sidebar badge counts rows that change independently of any page render.
+export const dynamic = 'force-dynamic';
+
+export default async function AdminDashboardLayout({ children }: { children: React.ReactNode }) {
+  const newVendorRequests = await countUnseenRequests();
+
   return (
     <div className="flex min-h-screen bg-surface">
       {/* Pinned to the viewport: as a full-page-height column, the "View
@@ -18,7 +24,7 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
         </div>
 
         <nav aria-label="Admin" className="min-h-0 flex-1 space-y-1 overflow-y-auto px-3 py-4">
-          <AdminNavLinks />
+          <AdminNavLinks newVendorRequests={newVendorRequests} />
         </nav>
 
         <div className="border-t border-line p-3">
@@ -39,7 +45,7 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
           <Link href="/" aria-label="PepLookup home page" className="flex items-center gap-2 rounded-pill text-base font-black tracking-tight">
             <LogoMark size={26} className="rounded-pill" />
           </Link>
-          <AdminMobileNav />
+          <AdminMobileNav newVendorRequests={newVendorRequests} />
         </div>
 
         {children}
