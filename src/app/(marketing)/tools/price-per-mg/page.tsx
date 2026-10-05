@@ -50,7 +50,7 @@ export default async function PricePerMgToolPage() {
           >
             <span>
               <span className="block text-micro font-bold uppercase tracking-wide text-faint">Browse all suppliers</span>
-              <span className="block text-sm font-black text-content group-hover:text-brand-strong">Every listed vendor</span>
+              <span className="block text-sm font-black text-content group-hover:text-brand-strong">Every listed supplier</span>
             </span>
             <ArrowRightIcon className="h-4 w-4 shrink-0 text-faint transition-colors group-hover:text-brand" />
           </Link>

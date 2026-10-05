@@ -30,7 +30,7 @@ export function VendorFeaturedToggle({ slug, isFeatured }: { slug: string; isFea
         type="button"
         role="switch"
         aria-checked={featured}
-        aria-label={featured ? 'Unmark as featured vendor' : 'Mark as featured vendor'}
+        aria-label={featured ? 'Unmark as featured supplier' : 'Mark as featured supplier'}
         onClick={toggle}
         disabled={pending}
         className={cn(

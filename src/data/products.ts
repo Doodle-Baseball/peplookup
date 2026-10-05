@@ -104,7 +104,7 @@ const seed: z.input<typeof productSchema>[] = [
         'Generally well tolerated across early trial data',
       ].map((title) => ({ title, description: null })),
       dosageIntro:
-        "Research protocols for AOD-9604 commonly reference subcutaneous administration in preclinical and early-phase studies. Confirm concentration and route against the vendor's own COA before use.",
+        "Research protocols for AOD-9604 commonly reference subcutaneous administration in preclinical and early-phase studies. Confirm concentration and route against the supplier's own COA before use.",
       route: 'Subcutaneous injection',
       exampleRange: '250–500 mcg',
       frequency: 'Once daily',

@@ -49,7 +49,7 @@ const customHtml = (label: string) =>
 
 const seoFormSchema = z.object({
   path: z.string().regex(/^\/[a-z0-9/_-]*$/, 'Unknown page.'),
-  kind: z.enum(['static', 'compound', 'supplier', 'guide']),
+  kind: z.enum(['static', 'compound', 'supplier', 'guide', 'coupon', 'review']),
   slug: z.string().trim(),
   newSlug: z.string().trim().toLowerCase(),
   metaTitle: optionalText(200, 'Meta title'),

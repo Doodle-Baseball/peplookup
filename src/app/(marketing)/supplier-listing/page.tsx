@@ -20,7 +20,7 @@ import {
   StoreIcon,
 } from '@/components/icons/icons';
 
-const PAGE = staticSeoPage('/vendor-listing');
+const PAGE = staticSeoPage('/supplier-listing');
 
 export async function generateMetadata(): Promise<Metadata> {
   return withSeo(PAGE.path, pageMetadata(PAGE));
@@ -102,7 +102,7 @@ export default async function VendorListingPage() {
         <header className="mx-auto max-w-3xl text-center">
           <span className="animate-fade-up inline-flex items-center gap-1.5 rounded-pill border border-accent/20 bg-accent-tint px-3.5 py-1.5 text-xs font-bold uppercase tracking-wide text-accent-strong">
             <StoreIcon className="h-3.5 w-3.5" />
-            Vendor Listing
+            Supplier Listing
           </span>
           <h1 className="animate-fade-up animate-delay-100 mt-5 text-3xl font-black leading-tight tracking-tight text-content min-[400px]:text-4xl sm:text-5xl lg:text-6xl">
             {seo?.h1 ? seo.h1 : <>List your brand on <span className="italic text-accent">{site.name}.</span></>}

@@ -3,7 +3,7 @@ import { AdminPageHeader } from '@/components/admin/page-header';
 import { VendorListingBoard } from '@/components/admin/vendor-listing-board';
 import { listRequests, type VendorListingRequest } from '@/lib/vendor-listing/requests';
 
-export const metadata: Metadata = { title: 'Vendor Listing | Admin', robots: { index: false, follow: false } };
+export const metadata: Metadata = { title: 'Supplier Listing | Admin', robots: { index: false, follow: false } };
 
 // Payment status changes outside any page render (webhook, verify button).
 export const dynamic = 'force-dynamic';
@@ -19,7 +19,7 @@ export default async function AdminVendorListingPage() {
 
   return (
     <>
-      <AdminPageHeader title="Vendor Listing" />
+      <AdminPageHeader title="Supplier Listing" />
       <div className="px-4 py-6 sm:px-8 sm:py-8">
         {loadError ? (
           <p role="alert" className="rounded-card border border-danger/30 bg-danger/10 p-4 text-sm font-semibold text-danger">

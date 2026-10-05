@@ -21,6 +21,7 @@ import {
 import { TagListInput } from '@/components/admin/tag-list-input';
 import { characterCount, DESCRIPTION_LENGTH, TITLE_LENGTH } from '@/lib/seo-status';
 import { site } from '@/config/site';
+import { indexableWhenSeoAdded } from '@/lib/seo-indexing';
 import { cn } from '@/lib/cn';
 import { ChevronDownIcon, CloseIcon, WarningIcon } from '@/components/icons/icons';
 import { FaqEditor } from '@/components/admin/seo/faq-editor';
@@ -378,9 +379,24 @@ export function SeoEditDialog({ entry, onClose }: { entry: SeoEntry; onClose: ()
             </Section>
 
             <Section title="Indexing & sharing">
+              {entry.kind === 'coupon' || entry.kind === 'review' ? (
+                <p className="rounded-chip border border-line bg-surface px-3.5 py-2.5 text-xs text-muted">
+                  {entry.kind === 'review' ? 'Review pages' : 'Coupon pages'} are hidden from search engines by default. Save a meta title and meta description, then
+                  tick &ldquo;Allow search engines to index this page&rdquo; to turn indexing on. Untick it any time to turn
+                  it off again.
+                </p>
+              ) : null}
               <div className="flex flex-wrap gap-3">
                 <label className="flex cursor-pointer items-center gap-2 rounded-chip border border-line bg-surface px-3 py-2 text-sm text-content has-[:checked]:border-brand has-[:checked]:bg-brand-soft">
-                  <input type="checkbox" name="robotsIndex" defaultChecked={override?.robotsIndex ?? true} />
+                  <input
+                    type="checkbox"
+                    name="robotsIndex"
+                    defaultChecked={
+                      entry.kind === 'coupon' || entry.kind === 'review'
+                        ? indexableWhenSeoAdded(override)
+                        : (override?.robotsIndex ?? true)
+                    }
+                  />
                   Allow search engines to index this page
                 </label>
                 <label className="flex cursor-pointer items-center gap-2 rounded-chip border border-line bg-surface px-3 py-2 text-sm text-content has-[:checked]:border-brand has-[:checked]:bg-brand-soft">

@@ -410,7 +410,7 @@ export function VendorForm({
               value={vendorName}
               onChange={(e) => setVendorName(e.target.value)}
               required
-              error={state.error?.startsWith('Vendor name') ? 'Vendor name is required.' : undefined}
+              error={state.error?.startsWith('Supplier name') ? 'Supplier name is required.' : undefined}
             />
 
             <div className="md:col-span-2">
@@ -427,7 +427,7 @@ export function VendorForm({
                 placeholder="https://"
                 className="mt-1.5 w-full rounded-chip border border-line bg-surface px-3.5 py-2.5 text-sm text-content outline-none transition-colors"
               />
-              <p className="mt-1 text-xs text-muted">This is the vendor&rsquo;s affiliate website link and is used for redirects.</p>
+              <p className="mt-1 text-xs text-muted">This is the supplier&rsquo;s affiliate website link and is used for redirects.</p>
             </div>
 
             <Select
@@ -473,7 +473,7 @@ export function VendorForm({
                 <div className="shrink-0 text-center">
                   <span className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-chip border border-line bg-surface-sunken">
                     {previewSrc ? (
-                      <Image src={previewSrc} alt="Vendor logo preview" width={44} height={44} className="h-full w-full object-contain" unoptimized />
+                      <Image src={previewSrc} alt="Supplier logo preview" width={44} height={44} className="h-full w-full object-contain" unoptimized />
                     ) : (
                       <span aria-hidden="true" className="text-xs text-faint">
                         ?
@@ -502,7 +502,7 @@ export function VendorForm({
                   placeholder="None set"
                   className="mt-1.5 w-full rounded-chip border border-line bg-surface px-3.5 py-2.5 text-sm text-content outline-none transition-colors"
                 />
-                <p className="mt-1 text-xs text-muted">The code saved for this vendor. Edit it here.</p>
+                <p className="mt-1 text-xs text-muted">The code saved for this supplier. Edit it here.</p>
               </div>
               <div>
                 <label htmlFor="couponPercentOff" className="block text-sm font-semibold text-content">
@@ -906,15 +906,15 @@ export function VendorForm({
         <div className="space-y-5">
           {/* Vendor-level score and the public profile the panel links out to. */}
           <div className="rounded-card border border-line bg-surface p-4">
-            <p className="text-sm font-black text-content">Vendor rating &amp; profile</p>
+            <p className="text-sm font-black text-content">Supplier rating &amp; profile</p>
             <p className="mt-1 text-xs text-muted">
               Shown as the &ldquo;Trust factor&rdquo; badge and the &ldquo;View all reviews&rdquo; link on the
-              vendor&rsquo;s public page.
+              supplier&rsquo;s public page.
             </p>
 
             <div className="mt-4 grid grid-cols-1 gap-5 md:grid-cols-2">
               <Field
-                label="Vendor rating (out of 5)"
+                label="Supplier rating (out of 5)"
                 name="reviewRating"
                 type="number"
                 step="0.1"
@@ -922,7 +922,7 @@ export function VendorForm({
                 max="5"
                 defaultValue={vendor?.reviewRating !== null && vendor?.reviewRating !== undefined ? String(vendor.reviewRating) : undefined}
                 placeholder="4.8"
-                hint="Leave empty if the vendor has no score yet."
+                hint="Leave empty if the supplier has no score yet."
               />
               <Field
                 label="Trustpilot link"
@@ -930,7 +930,7 @@ export function VendorForm({
                 type="url"
                 defaultValue={vendor?.reviewsUrl ?? undefined}
                 placeholder="https://www.trustpilot.com/review/example.com"
-                hint="Full URL to the vendor's public reviews profile."
+                hint="Full URL to the supplier's public reviews profile."
               />
             </div>
           </div>
@@ -1019,7 +1019,7 @@ export function VendorForm({
 
           <div className="rounded-card border border-dashed border-line bg-surface p-4">
             <p className="text-[10px] font-bold uppercase tracking-wide text-faint">
-              Reviews on the vendor page ({reviews.length})
+              Reviews on the supplier page ({reviews.length})
             </p>
 
             {reviews.length === 0 ? (

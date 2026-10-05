@@ -8,7 +8,7 @@ import { AdminPageHeader } from '@/components/admin/page-header';
 import { VendorForm } from '@/components/admin/vendor-form';
 import { updateVendorAction } from '../../actions';
 
-export const metadata: Metadata = { title: 'Edit vendor | Admin', robots: { index: false, follow: false } };
+export const metadata: Metadata = { title: 'Edit supplier | Admin', robots: { index: false, follow: false } };
 
 export default async function EditVendorPage({
   params,

@@ -121,7 +121,7 @@ export default async function LabReportsPage({
           )}
         </h1>
         <p className="mx-auto mt-4 max-w-xl text-sm text-muted sm:text-base">
-          Independent third-party lab results from verified vendors, covering purity, concentration and identity
+          Independent third-party lab results from verified suppliers, covering purity, concentration and identity
           testing for the peptides listed on this site.
         </p>
 
@@ -134,7 +134,7 @@ export default async function LabReportsPage({
           ) : null}
           <span className="text-center">
             <span className="block text-2xl font-black text-content">{vendorGroups.length}</span>
-            <span className="block text-micro font-bold uppercase tracking-wide text-faint">Vendors</span>
+            <span className="block text-micro font-bold uppercase tracking-wide text-faint">Suppliers</span>
           </span>
           <span className="text-center">
             <span className="block text-2xl font-black text-content">{testsTotal}</span>
@@ -143,28 +143,28 @@ export default async function LabReportsPage({
         </div>
       </section>
 
+      <section className="mt-10">
+        {vendorGroups.length === 0 ? (
+          <div className="rounded-card border border-dashed border-line bg-surface-raised p-10 text-center text-sm text-muted">
+            <FlaskIcon className="mx-auto h-6 w-6 text-faint" />
+            <p className="mt-3">No lab reports recorded yet. Verified COA results appear here once a supplier's tests are on file.</p>
+          </div>
+        ) : (
+          <LabReportsExplorer vendors={vendorGroups} quickSearchTerms={quickSearchTerms} initialQuery={initialQuery} />
+        )}
+      </section>
+
       <section className="mt-10 rounded-panel border border-line bg-surface-raised p-5 shadow-card sm:p-8">
         <h2 className="text-lg font-black text-content sm:text-xl">
           COA <span className="text-brand">Lab Reports</span>
         </h2>
         <p className="mt-3 text-sm leading-relaxed text-muted sm:text-base">
-          Every report below links to a certificate of analysis published by the vendor or produced
+          Every report below links to a certificate of analysis published by the supplier or produced
           by a third-party testing laboratory on their behalf. {site.name} does not run tests or
           rehost documents. You always read the original, and a report&rsquo;s presence here means
-          only that the vendor made it accessible, not that its claims have been independently verified
+          only that the supplier made it accessible, not that its claims have been independently verified
           by us.
         </p>
-      </section>
-
-      <section className="mt-10">
-        {vendorGroups.length === 0 ? (
-          <div className="rounded-card border border-dashed border-line bg-surface-raised p-10 text-center text-sm text-muted">
-            <FlaskIcon className="mx-auto h-6 w-6 text-faint" />
-            <p className="mt-3">No lab reports recorded yet. Verified COA results appear here once a vendor's tests are on file.</p>
-          </div>
-        ) : (
-          <LabReportsExplorer vendors={vendorGroups} quickSearchTerms={quickSearchTerms} initialQuery={initialQuery} />
-        )}
       </section>
 
       <section className="mt-10 rounded-panel border border-line bg-surface-raised p-5 shadow-card sm:p-8">

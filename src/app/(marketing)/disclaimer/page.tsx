@@ -96,7 +96,7 @@ const SECTIONS: LegalSection[] = [
     body: (
       <p>
         Product descriptions, pricing, availability and claims are supplied by independent third-party
-        vendors. {site.name} makes no representation or warranty regarding product quality, purity or
+        suppliers. {site.name} makes no representation or warranty regarding product quality, purity or
         safety; the accuracy of a supplier&rsquo;s claims; a supplier&rsquo;s compliance with applicable
         law; or shipping practices and timelines. Any dispute concerning a purchase should be directed to
         the supplier, not to {site.name}.

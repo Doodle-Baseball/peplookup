@@ -96,10 +96,10 @@ export function BulkVendorImport() {
                     onClick={downloadTemplate}
                     className="rounded-chip border border-line bg-surface px-4 py-2 text-sm font-bold text-content transition-colors hover:border-brand hover:text-brand"
                   >
-                    Download vendors CSV template
+                    Download suppliers CSV template
                   </button>
                   <span className="text-xs text-muted">
-                    Every column in place, with one example row. Vendor name and affiliate link are required.
+                    Every column in place, with one example row. Supplier name and affiliate link are required.
                   </span>
                 </div>
               </div>
@@ -146,7 +146,7 @@ export function BulkVendorImport() {
                   disabled={pending || !csvText.trim()}
                   className="rounded-chip bg-brand px-5 py-2.5 text-sm font-bold text-white disabled:opacity-60"
                 >
-                  {pending ? 'Importing…' : 'Import vendors'}
+                  {pending ? 'Importing…' : 'Import suppliers'}
                 </button>
               </div>
             </form>

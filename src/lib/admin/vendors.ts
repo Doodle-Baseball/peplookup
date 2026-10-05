@@ -70,7 +70,7 @@ export async function getVendor(slug: string): Promise<Supplier | null> {
 /** Generates a unique slug from the vendor name, appending -2, -3, … on collision. */
 async function uniqueSlugFor(name: string, client = requireClient()): Promise<string> {
   const base = slugify(name);
-  if (!base) throw new AdminDbError('Vendor name must contain at least one letter or number.');
+  if (!base) throw new AdminDbError('Supplier name must contain at least one letter or number.');
   let candidate = base;
   let suffix = 2;
   for (;;) {
@@ -96,7 +96,7 @@ export async function createVendor(input: VendorInput): Promise<Supplier> {
   const { error } = await client.from('suppliers').insert(row);
   if (error) throw new AdminDbError(error.message);
   const created = await fetchSupplierFromDb(client, slug);
-  if (!created) throw new AdminDbError('Vendor was created but could not be re-read.');
+  if (!created) throw new AdminDbError('Supplier was created but could not be re-read.');
   return created;
 }
 
@@ -130,7 +130,7 @@ export async function saveVendorReviews(slug: string, reviews: SupplierReview[])
     // submission over it. Only an admin who actually entered reviews needs to know.
     if (reviews.length === 0) return;
     throw new AdminDbError(
-      `The vendor saved, but its reviews could not be written. Run supabase/migrations/0011_supplier_reviews.sql in the Supabase SQL editor. (${
+      `The supplier saved, but its reviews could not be written. Run supabase/migrations/0011_supplier_reviews.sql in the Supabase SQL editor. (${
         error instanceof Error ? error.message : 'unknown error'
       })`,
     );
@@ -149,7 +149,7 @@ export async function setVendorFeatured(slug: string, isFeatured: boolean): Prom
   if (error) {
     if (error.message.includes('is_featured') || error.message.includes('schema cache')) {
       throw new AdminDbError(
-        'Featured vendors need the is_featured column. Run supabase/migrations/0015_supplier_featured.sql in the Supabase SQL editor, then try again.',
+        'Featured suppliers need the is_featured column. Run supabase/migrations/0015_supplier_featured.sql in the Supabase SQL editor, then try again.',
       );
     }
     throw new AdminDbError(error.message);

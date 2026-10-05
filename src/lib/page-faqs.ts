@@ -3,8 +3,18 @@ import { cache } from 'react';
 import { unstable_cache } from 'next/cache';
 import { getSupabaseServerClient } from '@/lib/supabase/server';
 import { fetchPageFaqsFromDb, type StoredFaq } from '@/lib/supabase/page-faqs';
-import { DEFAULT_PAGE_FAQS, defaultGuideFaqs, defaultSupplierFaqs, type FaqItem } from '@/data/default-page-faqs';
+import {
+  DEFAULT_PAGE_FAQS,
+  defaultCouponFaqs,
+  defaultGuideFaqs,
+  defaultReviewFaqs,
+  defaultSupplierFaqs,
+  type FaqItem,
+} from '@/data/default-page-faqs';
 import { getGuideBySlug, getSupplier } from '@/lib/repository';
+import { supplierSlugFromCouponPath } from '@/lib/coupon-pages';
+import { ratingSourceLabel, supplierSlugFromReviewsPath } from '@/lib/review-pages';
+import { formatReviewCount } from '@/lib/format';
 import { CATALOGUE_REVALIDATE_SECONDS } from '@/lib/cache-ttl';
 
 export const FAQS_CACHE_TAG = 'page-faqs';
@@ -47,6 +57,25 @@ async function defaultFaqsFor(path: string): Promise<readonly FaqItem[]> {
   if (supplierSlug) {
     const supplier = await getSupplier(supplierSlug);
     if (supplier) return defaultSupplierFaqs(supplier);
+  }
+
+  const couponSupplierSlug = supplierSlugFromCouponPath(path);
+  if (couponSupplierSlug) {
+    const supplier = await getSupplier(couponSupplierSlug);
+    if (supplier?.coupon) return defaultCouponFaqs({ name: supplier.name, coupon: supplier.coupon });
+  }
+
+  const reviewsSupplierSlug = supplierSlugFromReviewsPath(path);
+  if (reviewsSupplierSlug) {
+    const supplier = await getSupplier(reviewsSupplierSlug);
+    if (supplier) {
+      return defaultReviewFaqs({
+        name: supplier.name,
+        reviewRating: supplier.reviewRating,
+        reviewCountText: formatReviewCount(supplier.reviewCount),
+        sourceLabel: ratingSourceLabel(supplier.reviewsUrl),
+      });
+    }
   }
 
   const guideSlug = path.startsWith('/guides/') ? path.slice('/guides/'.length) : null;

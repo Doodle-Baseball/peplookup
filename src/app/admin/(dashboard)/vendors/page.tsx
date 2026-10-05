@@ -12,7 +12,7 @@ import { VendorDeleteButton } from './vendor-delete-button';
 import { SearchIcon, PencilIcon, ExternalIcon, WarningIcon } from '@/components/icons/icons';
 import { LiveSearchInput } from '@/components/ui/live-search-input';
 
-export const metadata: Metadata = { title: 'Vendors | Admin', robots: { index: false, follow: false } };
+export const metadata: Metadata = { title: 'Suppliers | Admin', robots: { index: false, follow: false } };
 
 export default async function AdminVendorsPage({
   searchParams,
@@ -27,12 +27,12 @@ export default async function AdminVendorsPage({
   try {
     vendors = await listVendors(query);
   } catch (error) {
-    loadError = error instanceof AdminDbError ? error.message : 'Failed to load vendors.';
+    loadError = error instanceof AdminDbError ? error.message : 'Failed to load suppliers.';
   }
 
   return (
     <>
-      <AdminPageHeader title="Vendors" />
+      <AdminPageHeader title="Suppliers" />
       <div className="px-4 py-6 sm:px-8 sm:py-8">
         <p className="text-sm text-muted">Create and manage marketplace suppliers</p>
 
@@ -40,7 +40,7 @@ export default async function AdminVendorsPage({
           <div className="mt-6 flex items-start gap-3 rounded-card border border-danger/30 bg-danger/5 p-5">
             <WarningIcon className="mt-0.5 h-5 w-5 shrink-0 text-danger" />
             <div>
-              <p className="text-sm font-bold text-content">Vendors table isn&rsquo;t ready</p>
+              <p className="text-sm font-bold text-content">Suppliers table isn&rsquo;t ready</p>
               <p className="mt-1 text-sm text-muted">{loadError}</p>
               <Link href="/admin" className="mt-2 inline-block text-sm font-semibold text-brand hover:underline">
                 See setup instructions on the Overview page →
@@ -51,12 +51,12 @@ export default async function AdminVendorsPage({
           <div className="mt-6 rounded-card border border-line bg-surface-raised">
             <div className="flex flex-col gap-3 border-b border-line p-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:p-5">
               <p className="text-lg font-black text-content">
-                {vendors.length} vendor{vendors.length === 1 ? '' : 's'}
+                {vendors.length} supplier{vendors.length === 1 ? '' : 's'}
               </p>
               <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
                 <form className="w-full sm:w-auto" action="/admin/vendors">
                   <label htmlFor="q" className="sr-only">
-                    Search vendors
+                    Search suppliers
                   </label>
                   <div className="search-field flex items-center gap-2 border px-3 py-2">
                     <SearchIcon className="h-4 w-4 shrink-0 text-faint" />
@@ -64,7 +64,7 @@ export default async function AdminVendorsPage({
                       id="q"
                       name="q"
                       defaultValue={query}
-                      placeholder="Search vendors…"
+                      placeholder="Search suppliers…"
                       className="w-full min-w-0 bg-transparent text-sm text-content outline-none placeholder:text-faint sm:w-48"
                     />
                   </div>
@@ -73,7 +73,7 @@ export default async function AdminVendorsPage({
                   href="/admin/vendors/new"
                   className="rounded-chip bg-brand px-4 py-2.5 text-center text-sm font-bold text-white hover:bg-brand-strong"
                 >
-                  Add vendor
+                  Add supplier
                 </Link>
                 <BulkVendorImport />
               </div>
@@ -81,7 +81,7 @@ export default async function AdminVendorsPage({
 
             {vendors.length === 0 ? (
               <p className="p-10 text-center text-sm text-muted">
-                {query ? `No vendors match "${query}".` : 'No vendors yet. Add the first one.'}
+                {query ? `No suppliers match "${query}".` : 'No suppliers yet. Add the first one.'}
               </p>
             ) : (
               <div className="overflow-x-auto">

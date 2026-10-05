@@ -159,8 +159,8 @@ export default async function AdminDashboardPage() {
           <div className="mt-3 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             <SectionCard
               icon={<StoreIcon className="h-5 w-5" />}
-              title="Vendors"
-              description={`${suppliers.length} vendor${suppliers.length === 1 ? '' : 's'}: add, edit, deactivate or remove marketplace suppliers${schemaReady ? '. Changes go live immediately.' : '.'}`}
+              title="Suppliers"
+              description={`${suppliers.length} supplier${suppliers.length === 1 ? '' : 's'}: add, edit, deactivate or remove marketplace suppliers${schemaReady ? '. Changes go live immediately.' : '.'}`}
               primary={{ label: 'Manage all', href: '/admin/vendors' }}
               secondary={{ label: 'Add new', href: '/admin/vendors/new' }}
             />

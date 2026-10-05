@@ -21,7 +21,7 @@ export async function generateMetadata(): Promise<Metadata> {
 const TICKER: readonly string[] = [
   'Research use only',
   'Cost per mg, normalised',
-  'COA-verified vendors',
+  'COA-verified suppliers',
   'Live price tracking',
   'No sponsored rankings',
 ];

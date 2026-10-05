@@ -119,7 +119,7 @@ export default async function AdminCompoundsPage({
                       </th>
                       <th scope="col" className="px-5 py-3">Name</th>
                       <th scope="col" className="px-5 py-3">Doses</th>
-                      <th scope="col" className="px-5 py-3">Vendors</th>
+                      <th scope="col" className="px-5 py-3">Suppliers</th>
                       <th scope="col" className="px-5 py-3">COA</th>
                       <th scope="col" className="px-5 py-3">Compound</th>
                       <th scope="col" className="px-5 py-3">

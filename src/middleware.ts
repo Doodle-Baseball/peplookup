@@ -36,7 +36,9 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  // Excludes static assets and Next internals, a redirect lookup on every
-  // JS chunk and image request would be pure overhead.
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\..*).*)'],
+  // Only the paths this middleware acts on: the admin guard, and the three
+  // sections whose slugs can be renamed (and so have redirect rows). Every
+  // other request, including static assets and Next internals, skips it, so a
+  // redirect lookup is never spent on a page that cannot have one.
+  matcher: ['/admin/:path*', '/products/:path*', '/suppliers/:path*', '/guides/:path*'],
 };

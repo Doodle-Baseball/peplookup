@@ -7,7 +7,7 @@ export default function AdminStockPage() {
   return (
     <ComingSoonPage
       title="Stock"
-      description="Editing vendor offers (price, vial size, stock status) from here is planned next. Offers currently come from the crawler."
+      description="Editing supplier offers (price, vial size, stock status) from here is planned next. Offers currently come from the crawler."
     />
   );
 }

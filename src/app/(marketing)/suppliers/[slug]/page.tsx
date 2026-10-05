@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import type { ReactNode } from 'react';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -10,54 +9,33 @@ import {
   getProducts,
   getSupplierReviews,
 } from '@/lib/repository';
-import { shippingSteps } from '@/lib/format';
 import { cn } from '@/lib/cn';
 import { site } from '@/config/site';
 import { pageMetadata, supplierSeoDefaults } from '@/lib/seo-defaults';
 import { getSeoOverride, withSeo } from '@/lib/seo';
 import { Badge } from '@/components/ui/badge';
 import { CopyCode } from '@/components/ui/copy-code';
-import { Pagination } from '@/components/ui/pagination';
-import { Popover } from '@/components/ui/popover';
 import { ShareButton } from '@/components/ui/share-button';
 import { SupplierLogo } from '@/components/ui/supplier-logo';
 import { PatternBackdrop } from '@/components/layout/pattern-backdrop';
-import { OfferCard } from '@/components/offer-card/offer-card';
 import { FavoriteButton } from '@/components/supplier-card/favorite-button';
-import { ShippingModalContent } from '@/components/supplier-card/shipping-modal-content';
-import { PaymentModalContent } from '@/components/supplier-card/payment-modal-content';
 import { SupplierTrustPanel } from '@/components/supplier-card/supplier-trust-panel';
+import { StoreDetailsSection } from '@/components/supplier-card/store-details-section';
+import { SupplierCatalogSection } from '@/components/supplier-card/supplier-catalog-section';
 import {
   ArrowLeftIcon,
   ArrowRightIcon,
-  BoxIcon,
   CheckBadgeIcon,
-  ChevronRightIcon,
-  DocumentIcon,
   ExternalIcon,
   FlaskIcon,
-  SearchIcon,
   TagIcon,
-  TruckIcon,
-  WalletIcon,
 } from '@/components/icons/icons';
-import type { Offer } from '@/lib/schema';
-import { LiveSearchInput } from '@/components/ui/live-search-input';
 import { PageFaqSection } from '@/components/faq/page-faq-section';
 import { SupplierContentSections } from '@/components/supplier-content/supplier-content-sections';
 import { getSupplierContent } from '@/lib/supplier-content-store';
 
-/** Product Catalog tiles per page, 2 rows of the 3-column grid. */
-const CATALOG_PAGE_SIZE = 6;
 /** How many other vendors show in "Explore more vendors". */
 const EXPLORE_VENDOR_COUNT = 6;
-
-/** Store-detail cards lift and pick up the accent on hover, the same motion as the directory cards. */
-const STORE_CARD_CLASS =
-  'group flex h-full min-w-0 items-start gap-3 rounded-card border border-line bg-surface-raised p-5 text-left shadow-card transition-all duration-150 hover:-translate-y-1 hover:border-accent/40 hover:shadow-lift';
-
-const POLICY_LINK_CLASS =
-  'inline-flex items-center gap-1.5 rounded-pill border border-line bg-surface px-3 py-1.5 text-xs font-bold uppercase text-content transition-colors hover:border-accent hover:text-accent-strong';
 
 export async function generateStaticParams() {
   const suppliers = await getSuppliers();
@@ -73,56 +51,6 @@ export async function generateMetadata({
   const supplier = await getSupplier(slug);
   if (!supplier) return { title: 'Supplier not found' };
   return withSeo(`/suppliers/${supplier.slug}`, pageMetadata(supplierSeoDefaults(supplier)));
-}
-
-function StoreDetail({
-  icon,
-  label,
-  children,
-  action,
-}: {
-  icon: ReactNode;
-  label: string;
-  children: ReactNode;
-  action?: string;
-}) {
-  return (
-    <>
-      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-chip bg-accent-tint text-accent-strong transition-transform duration-150 group-hover:scale-110">
-        {icon}
-      </span>
-      <span className="block min-w-0 flex-1">
-        <span className="eyebrow block">{label}</span>
-        <span className="mt-1.5 block text-sm font-bold leading-6 text-content">{children}</span>
-        {action ? (
-          <span className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-accent">
-            {action}
-            <ChevronRightIcon className="h-3.5 w-3.5 transition-transform duration-150 group-hover:translate-x-1" />
-          </span>
-        ) : null}
-      </span>
-    </>
-  );
-}
-
-/** Steps shown on the card before "View details"; the popup lists them all. */
-const SHIPPING_CARD_STEPS = 1;
-
-/** The shipping card's body: just the first step of the supplier's shipping note, then how many more the popup has. */
-function ShippingSummary({ steps }: { steps: string[] }) {
-  const shown = steps.slice(0, SHIPPING_CARD_STEPS);
-  const more = steps.length - shown.length;
-  return (
-    <span className="block space-y-1">
-      {shown.map((step) => (
-        <span key={step} className="flex items-start gap-2 font-semibold">
-          <span aria-hidden="true" className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
-          {step}
-        </span>
-      ))}
-      {more > 0 ? <span className="block text-xs font-semibold text-muted">+{more} more</span> : null}
-    </span>
-  );
 }
 
 export default async function SupplierPage({
@@ -155,18 +83,6 @@ export default async function SupplierPage({
   // Offers whose product no longer resolves are dropped rather than shown
   // with a missing name.
   const resolvedOffers = offers.filter((o) => productsBySlug.has(o.productSlug));
-  const catalogueOffers = catalogueQuery
-    ? resolvedOffers.filter((o) =>
-        productsBySlug.get(o.productSlug)!.name.toLowerCase().includes(catalogueQuery.toLowerCase()),
-      )
-    : resolvedOffers;
-
-  const pageCount = Math.max(1, Math.ceil(catalogueOffers.length / CATALOG_PAGE_SIZE));
-  const currentPage = Math.min(Math.max(1, Number(pageParam) || 1), pageCount);
-  const pagedOffers = catalogueOffers.slice(
-    (currentPage - 1) * CATALOG_PAGE_SIZE,
-    currentPage * CATALOG_PAGE_SIZE,
-  );
 
   const otherSuppliers = allSuppliers
     .filter((s) => s.slug !== supplier.slug)
@@ -184,10 +100,6 @@ export default async function SupplierPage({
   };
 
   const logo = supplier.logoUrl ?? supplier.faviconUrl;
-  const hasShippingInfo = supplier.shippingCost.kind !== 'unknown' || supplier.shippingSpeed !== null;
-  const hasPaymentInfo = supplier.paymentMethods.length > 0;
-  const hasPolicies = Boolean(supplier.policyUrls.shipping || supplier.policyUrls.returns);
-  const storeCardCount = [hasShippingInfo, hasPaymentInfo, hasPolicies].filter(Boolean).length;
 
   // Only facts we actually hold for this vendor, no placeholder scores.
   const glance: { label: string; value: string; hint?: string }[] = [
@@ -219,7 +131,7 @@ export default async function SupplierPage({
           className="group animate-fade-up mb-6 inline-flex items-center gap-1.5 text-sm font-semibold text-muted transition-colors hover:text-accent"
         >
           <ArrowLeftIcon className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
-          All vendors
+          All suppliers
         </Link>
 
         {/* ------------------------------------------------------------ Hero */}
@@ -280,7 +192,7 @@ export default async function SupplierPage({
                     {/* The name is already the heading right above; phones get the short label. */}
                     <span className="truncate">
                       <span className="sm:hidden">Visit Site</span>
-                      <span className="hidden sm:inline">View {supplier.name}</span>
+                      <span className="hidden sm:inline">Shop {supplier.name}</span>
                     </span>
                     <ExternalIcon className="h-4 w-4 shrink-0 transition-transform group-hover/cta:-translate-y-0.5 group-hover/cta:translate-x-0.5" />
                   </a>
@@ -341,169 +253,18 @@ export default async function SupplierPage({
         </section>
 
         {/* ---------------------------------------------------- Store details */}
-        {storeCardCount > 0 ? (
-          <section aria-labelledby="store-details-heading" className="reveal mt-12">
-            <p className="eyebrow">Before you order</p>
-            <h2 id="store-details-heading" className="mt-2 text-2xl font-black text-content sm:text-3xl">
-              Shipping, payment <span className="text-accent">&amp; policies.</span>
-            </h2>
-
-            <div
-              className={cn(
-                'mt-5 grid grid-cols-1 gap-4',
-                storeCardCount === 3 && 'md:grid-cols-3',
-                storeCardCount === 2 && 'md:grid-cols-2',
-              )}
-            >
-              {hasShippingInfo ? (
-                <Popover
-                  title="Shipping Information"
-                  triggerClassName={STORE_CARD_CLASS}
-                  trigger={
-                    <StoreDetail icon={<TruckIcon className="h-5 w-5" />} label="Shipping" action="View details">
-                      <ShippingSummary steps={shippingSteps(supplier.shippingSpeed)} />
-                    </StoreDetail>
-                  }
-                >
-                  <ShippingModalContent
-                    supplierName={supplier.name}
-                    affiliateUrl={supplier.affiliateUrl}
-                    shippingCost={supplier.shippingCost}
-                    shippingSpeed={supplier.shippingSpeed}
-                  />
-                </Popover>
-              ) : null}
-
-              {hasPaymentInfo ? (
-                <Popover
-                  title="Payment Methods"
-                  triggerClassName={STORE_CARD_CLASS}
-                  trigger={
-                    <StoreDetail icon={<WalletIcon className="h-5 w-5" />} label="Payment methods" action="View details">
-                      {supplier.paymentMethods.join(', ')}
-                    </StoreDetail>
-                  }
-                >
-                  <PaymentModalContent
-                    supplierName={supplier.name}
-                    affiliateUrl={supplier.affiliateUrl}
-                    paymentMethods={supplier.paymentMethods}
-                  />
-                </Popover>
-              ) : null}
-
-              {hasPolicies ? (
-                <div className={STORE_CARD_CLASS}>
-                  <StoreDetail icon={<DocumentIcon className="h-5 w-5" />} label="Store policies">
-                    <span className="mt-1 flex flex-wrap gap-2">
-                      {supplier.policyUrls.shipping ? (
-                        <a
-                          href={supplier.policyUrls.shipping}
-                          target="_blank"
-                          rel="nofollow noopener"
-                          className={POLICY_LINK_CLASS}
-                        >
-                          Shipping
-                          <ExternalIcon className="h-3 w-3" />
-                        </a>
-                      ) : null}
-                      {supplier.policyUrls.returns ? (
-                        <a
-                          href={supplier.policyUrls.returns}
-                          target="_blank"
-                          rel="nofollow noopener"
-                          className={POLICY_LINK_CLASS}
-                        >
-                          Returns
-                          <ExternalIcon className="h-3 w-3" />
-                        </a>
-                      ) : null}
-                    </span>
-                  </StoreDetail>
-                </div>
-              ) : null}
-            </div>
-          </section>
-        ) : null}
+        <StoreDetailsSection supplier={supplier} className="mt-12" />
 
         {/* ---------------------------------------------------------- Catalog */}
-        <section
-          aria-labelledby="catalog-heading"
-          className="reveal mt-12 rounded-panel border border-line bg-surface-raised p-5 shadow-card sm:p-8"
-        >
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <p className="eyebrow">Product catalog</p>
-              <h2 id="catalog-heading" className="mt-2 text-2xl font-black text-content sm:text-3xl">
-                Products from <span className="text-accent">{supplier.name}.</span>
-              </h2>
-            </div>
-            {resolvedOffers.length > 0 ? (
-              <span className="inline-flex items-center gap-1.5 rounded-pill bg-accent-tint px-3 py-1.5 text-sm font-bold text-accent-strong">
-                <BoxIcon className="h-4 w-4" />
-                {resolvedOffers.length} listed
-              </span>
-            ) : null}
-          </div>
-
-          {resolvedOffers.length === 0 ? (
-            <p className="mt-6 rounded-card border border-dashed border-line bg-surface p-10 text-center text-sm text-muted">
-              No prices recorded for {supplier.name} yet. Listings appear here once the crawler reads
-              them from the vendor&rsquo;s live product pages.
-            </p>
-          ) : (
-            <>
-              <form action={`/suppliers/${supplier.slug}`} className="mt-6">
-                <label htmlFor="pq" className="sr-only">
-                  Search within {supplier.name} catalog
-                </label>
-                <div className="search-field flex items-center gap-3 border px-4 py-3">
-                  <SearchIcon className="h-5 w-5 shrink-0 text-accent" />
-                  <LiveSearchInput
-                    id="pq"
-                    name="pq"
-                    defaultValue={catalogueQuery}
-                    placeholder={`Search within ${supplier.name} catalog`}
-                    className="min-w-0 flex-1 bg-transparent text-sm text-content outline-none placeholder:text-faint"
-                  />
-                </div>
-              </form>
-
-              {catalogueOffers.length === 0 ? (
-                <p className="mt-4 rounded-card border border-dashed border-line bg-surface p-10 text-center text-sm text-muted">
-                  No products match &ldquo;{catalogueQuery}&rdquo;.
-                </p>
-              ) : (
-                <>
-                  <ul key={`${catalogueQuery}-${currentPage}`} className="animate-fade-up mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    {pagedOffers.map((offer: Offer) => (
-                      <OfferCard
-                        key={offer.id ?? `${offer.productSlug}-${offer.form}-${offer.vialSize}-${offer.vialCount}`}
-                        offer={offer}
-                        product={productsBySlug.get(offer.productSlug)!}
-                        supplier={supplier}
-                        headingEntity="product"
-                        layout="grid"
-                      />
-                    ))}
-                  </ul>
-
-                  <Pagination
-                    label="Product catalog pages"
-                    currentPage={currentPage}
-                    pageCount={pageCount}
-                    hrefForPage={(page) =>
-                      `/suppliers/${supplier.slug}?${new URLSearchParams({
-                        ...(catalogueQuery ? { pq: catalogueQuery } : {}),
-                        page: String(page),
-                      })}`
-                    }
-                  />
-                </>
-              )}
-            </>
-          )}
-        </section>
+        <SupplierCatalogSection
+          supplier={supplier}
+          offers={resolvedOffers}
+          productsBySlug={productsBySlug}
+          basePath={`/suppliers/${supplier.slug}`}
+          query={catalogueQuery}
+          pageParam={pageParam}
+          className="mt-12"
+        />
 
         {/* About / Why researchers choose / vs other suppliers, editable per
             vendor from the supplier's popup in /admin/seo. */}
@@ -530,7 +291,7 @@ export default async function SupplierPage({
               <div>
                 <p className="eyebrow">Keep comparing</p>
                 <h2 id="explore-heading" className="mt-2 text-2xl font-black text-content sm:text-3xl">
-                  Explore more <span className="text-accent">vendors.</span>
+                  Explore more <span className="text-accent">suppliers.</span>
                 </h2>
               </div>
               <Link

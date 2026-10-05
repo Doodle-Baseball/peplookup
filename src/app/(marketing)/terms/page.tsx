@@ -114,8 +114,8 @@ const SECTIONS: LegalSection[] = [
           Some outbound links are affiliate links, meaning we may earn a commission if you buy through them at
           no extra cost to you. A commission never changes the price you pay and never changes where a supplier
           appears in a comparison; ranking follows the numbers alone. See the{' '}
-          <Link href="/vendor-listing" className="font-semibold text-accent hover:underline">
-            vendor listing page
+          <Link href="/supplier-listing" className="font-semibold text-accent hover:underline">
+            supplier listing page
           </Link>{' '}
           for how those relationships work.
         </p>

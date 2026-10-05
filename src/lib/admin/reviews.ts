@@ -144,7 +144,7 @@ export async function importVendorReviews(
         matchedBy: null,
         reviewCount: row.reviews.length,
         status: 'no-vendor',
-        detail: 'No vendor with this name or website. Add the vendor, then re-import.',
+        detail: 'No supplier with this name or website. Add the supplier, then re-import.',
       });
       continue;
     }

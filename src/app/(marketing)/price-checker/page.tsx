@@ -46,17 +46,6 @@ export default async function PriceCheckerPage() {
           Live per-mg pricing for every compound, normalised across every verified supplier so you
           can compare like for like.
         </p>
-        <div className="mx-auto mt-6 max-w-2xl rounded-card border border-line bg-surface-raised p-5 shadow-card sm:p-6">
-          <h2 className="text-center text-lg font-black text-content">
-            Peptide <span className="text-accent">Price Checker</span>
-          </h2>
-          <p className="mt-3 text-center text-sm leading-relaxed text-muted sm:text-base">
-            Search for any compound below to see its per-milligram pricing across every tracked
-            supplier. Use the sort and filter controls to narrow results by form, stock status,
-            or price range. Every price links to the vendor&rsquo;s own product page where you
-            can verify availability and purchase directly. {site.name} never handles the order.
-          </p>
-        </div>
       </div>
 
       {cardData.length === 0 ? (
@@ -70,6 +59,18 @@ export default async function PriceCheckerPage() {
       )}
 
       <div className="mx-auto max-w-shell px-4">
+        <div className="mx-auto mt-14 max-w-2xl rounded-card border border-line bg-surface-raised p-5 shadow-card sm:p-6">
+          <h2 className="text-center text-lg font-black text-content">
+            Peptide <span className="text-accent">Price Checker</span>
+          </h2>
+          <p className="mt-3 text-center text-sm leading-relaxed text-muted sm:text-base">
+            Search for any compound below to see its per-milligram pricing across every tracked
+            supplier. Use the sort and filter controls to narrow results by form, stock status,
+            or price range. Every price links to the supplier&rsquo;s own product page where you
+            can verify availability and purchase directly. {site.name} never handles the order.
+          </p>
+        </div>
+
         <PageFaqSection path="/price-checker" className="mt-14 mb-10" />
       </div>
     </>
