@@ -71,7 +71,7 @@ export function VendorSelect({
         className="mt-1.5 flex w-full items-center justify-between gap-2 rounded-chip border border-line bg-surface px-3.5 py-2.5 text-left text-sm text-content outline-none transition-colors hover:border-brand/50 focus:border-brand"
       >
         <span className={selected ? 'text-content' : 'text-faint'}>
-          {selected ? selected.name : vendors.length === 0 ? 'No vendors yet' : 'Select a vendor…'}
+          {selected ? selected.name : vendors.length === 0 ? 'No suppliers yet' : 'Select a supplier…'}
         </span>
         <ChevronDownIcon className="h-4 w-4 shrink-0 text-faint" />
       </button>
@@ -84,7 +84,7 @@ export function VendorSelect({
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search vendors…"
+              placeholder="Search suppliers…"
               autoFocus
               className="w-full bg-transparent text-sm text-content outline-none placeholder:text-faint"
             />
@@ -123,7 +123,7 @@ export function VendorSelect({
               </li>
             ))}
             {filtered.length === 0 ? (
-              <li className="px-3 py-2 text-sm text-faint">No vendors match &ldquo;{query}&rdquo;.</li>
+              <li className="px-3 py-2 text-sm text-faint">No suppliers match &ldquo;{query}&rdquo;.</li>
             ) : null}
           </ul>
         </div>

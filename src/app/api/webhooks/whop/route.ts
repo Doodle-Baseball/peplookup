@@ -67,7 +67,7 @@ export async function POST(request: Request) {
           ? await findPendingRequestByEmail(payment.buyerEmail, plan)
           : null;
     if (!match) {
-      console.warn(`[whop-webhook] Payment ${payment.paymentId} did not match a pending vendor request.`);
+      console.warn(`[whop-webhook] Payment ${payment.paymentId} did not match a pending supplier request.`);
       return NextResponse.json({ received: true, matched: false });
     }
 

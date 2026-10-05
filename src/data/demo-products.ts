@@ -51,7 +51,7 @@ const DEMO_CONTENT: Record<string, DemoProductContent> = {
         },
       ],
       dosageIntro:
-        "Research protocols for CJC-1295 (No DAC) commonly reference small subcutaneous doses timed to create distinct GH pulses. Confirm concentration and route against the vendor's own COA before use.",
+        "Research protocols for CJC-1295 (No DAC) commonly reference small subcutaneous doses timed to create distinct GH pulses. Confirm concentration and route against the supplier's own COA before use.",
       route: 'Subcutaneous injection',
       exampleRange: '100 mcg per administration',
       frequency: '1–3 times daily in published protocols',

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useId, useRef, useState, useTransition } from 'react';
-import { submitVendorApplication } from '@/app/(marketing)/vendor-listing/actions';
+import { submitVendorApplication } from '@/app/(marketing)/supplier-listing/actions';
 import type { VendorListingPlan } from '@/config/vendor-listing';
 import {
   fieldErrorsFrom,

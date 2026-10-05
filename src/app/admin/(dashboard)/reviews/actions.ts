@@ -9,6 +9,7 @@ import {
   type ReviewImportOutcome,
 } from '@/lib/admin/reviews';
 import { parseVendorReviewsCsv } from '@/lib/review-import';
+import { reviewsPagePath } from '@/lib/review-pages';
 import { supplierReviewSchema } from '@/lib/schema';
 
 export interface AddReviewState {
@@ -31,8 +32,10 @@ function revalidateReviewSurfaces(slug?: string) {
   revalidateTag('supplier-reviews');
   revalidateTag('suppliers');
   revalidatePath('/admin/reviews');
+  revalidatePath('/admin/reviews/add');
   revalidatePath('/suppliers');
   if (slug) {
+    revalidatePath(reviewsPagePath(slug));
     revalidatePath(`/suppliers/${slug}`);
     revalidatePath(`/admin/vendors/${slug}/edit`);
   }
@@ -43,7 +46,7 @@ export async function addReviewAction(
   formData: FormData,
 ): Promise<AddReviewState> {
   const slug = String(formData.get('vendorSlug') ?? '').trim();
-  if (!slug) return { error: 'Choose a vendor first.', success: null };
+  if (!slug) return { error: 'Choose a supplier first.', success: null };
 
   const parsed = supplierReviewSchema.safeParse({
     author: String(formData.get('author') ?? '').trim(),
@@ -62,7 +65,7 @@ export async function addReviewAction(
   try {
     const total = await addReviewToVendor(slug, parsed.data);
     revalidateReviewSurfaces(slug);
-    return { error: null, success: `Review added. This vendor now has ${total}.` };
+    return { error: null, success: `Review added. This supplier now has ${total}.` };
   } catch (error) {
     return { error: error instanceof Error ? error.message : 'Failed to add the review.', success: null };
   }
@@ -97,7 +100,7 @@ export async function importReviewsCsvAction(
     const parsed = parseVendorReviewsCsv(csvText);
     if (parsed.length === 0) {
       return {
-        error: 'No vendor rows were found. The sheet needs a header row and at least one vendor.',
+        error: 'No supplier rows were found. The sheet needs a header row and at least one supplier.',
         success: null,
         outcomes: [],
       };
@@ -115,8 +118,8 @@ export async function importReviewsCsvAction(
     return {
       error: null,
       success:
-        `Imported ${imported} review${imported === 1 ? '' : 's'} across ${matched} vendor${matched === 1 ? '' : 's'}.` +
-        (unmatched > 0 ? ` ${unmatched} row${unmatched === 1 ? '' : 's'} had no matching vendor.` : ''),
+        `Imported ${imported} review${imported === 1 ? '' : 's'} across ${matched} supplier${matched === 1 ? '' : 's'}.` +
+        (unmatched > 0 ? ` ${unmatched} row${unmatched === 1 ? '' : 's'} had no matching supplier.` : ''),
       outcomes,
     };
   } catch (error) {

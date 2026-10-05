@@ -3,10 +3,19 @@ import { getSupabaseServerClient } from '@/lib/supabase/server';
 import { fetchProductIdentitiesFromDb } from '@/lib/supabase/products';
 import { fetchSuppliersFromDb } from '@/lib/supabase/suppliers';
 import { STATIC_SEO_PAGES } from '@/config/seo-pages';
-import { getAllOffers, getGuides, getSuppliers } from '@/lib/repository';
+import {
+  getAllOffers,
+  getGuides,
+  getSupplier,
+  getSupplierSlugsWithReviews,
+  getSuppliers,
+  supplierHasReviews,
+} from '@/lib/repository';
 import {
   compoundSeoDefaults,
+  couponPageSeoDefaults,
   guideSeoDefaults,
+  reviewsPageSeoDefaults,
   supplierSeoDefaults,
   type SeoDefaults,
 } from '@/lib/seo-defaults';
@@ -20,7 +29,17 @@ import {
 } from '@/lib/seo';
 import { AdminDbError } from '@/lib/admin/vendors';
 import { fetchPageFaqsFromDb } from '@/lib/supabase/page-faqs';
-import { DEFAULT_PAGE_FAQS, defaultGuideFaqs, defaultSupplierFaqs, type FaqItem } from '@/data/default-page-faqs';
+import {
+  DEFAULT_PAGE_FAQS,
+  defaultCouponFaqs,
+  defaultGuideFaqs,
+  defaultReviewFaqs,
+  defaultSupplierFaqs,
+  type FaqItem,
+} from '@/data/default-page-faqs';
+import { supplierSlugFromCouponPath } from '@/lib/coupon-pages';
+import { ratingSourceLabel, supplierSlugFromReviewsPath } from '@/lib/review-pages';
+import { formatReviewCount } from '@/lib/format';
 import { listSavedSupplierContent } from '@/lib/admin/supplier-content';
 import {
   defaultSupplierContent,
@@ -31,7 +50,7 @@ import {
 
 const SEO_MIGRATION = 'supabase/migrations/0010_seo_management.sql';
 
-export type SeoPageKind = 'static' | 'compound' | 'supplier' | 'guide';
+export type SeoPageKind = 'static' | 'compound' | 'supplier' | 'guide' | 'coupon' | 'review';
 // Static pages (including the home page) are deliberately excluded: they have
 // no slug of their own to rename.
 export type RenamableKind = Extract<SeoPageKind, 'compound' | 'supplier' | 'guide'>;
@@ -112,7 +131,7 @@ function defaultsOnly(defaults: SeoDefaults): SeoDefaults {
 
 export async function getSeoDashboardData(): Promise<SeoDashboardData> {
   const client = requireClient();
-  const [compounds, suppliers, pages, redirects, guides, offers, savedSupplierContent, publicSuppliers] = await Promise.all([
+  const [compounds, suppliers, pages, redirects, guides, offers, savedSupplierContent, publicSuppliers, slugsWithReviews] = await Promise.all([
     fetchProductIdentitiesFromDb(client),
     fetchSuppliersFromDb(client, { includeInactive: true }),
     client.from('seo_pages').select('*'),
@@ -121,6 +140,7 @@ export async function getSeoDashboardData(): Promise<SeoDashboardData> {
     getAllOffers(),
     listSavedSupplierContent(),
     getSuppliers(),
+    getSupplierSlugsWithReviews(),
   ]);
   if (!compounds) throw new AdminDbError('The products table could not be read.');
   if (!suppliers) throw new AdminDbError('The suppliers table could not be read.');
@@ -145,6 +165,23 @@ export async function getSeoDashboardData(): Promise<SeoDashboardData> {
     if (path.startsWith('/suppliers/')) {
       const supplier = supplierBySlug.get(path.slice('/suppliers/'.length));
       if (supplier) return defaultSupplierFaqs(supplier);
+    }
+    const couponSlug = supplierSlugFromCouponPath(path);
+    if (couponSlug) {
+      const supplier = supplierBySlug.get(couponSlug);
+      if (supplier?.coupon) return defaultCouponFaqs({ name: supplier.name, coupon: supplier.coupon });
+    }
+    const reviewsSlug = supplierSlugFromReviewsPath(path);
+    if (reviewsSlug) {
+      const supplier = publicSupplierBySlug.get(reviewsSlug) ?? supplierBySlug.get(reviewsSlug);
+      if (supplier) {
+        return defaultReviewFaqs({
+          name: supplier.name,
+          reviewRating: supplier.reviewRating,
+          reviewCountText: formatReviewCount(supplier.reviewCount),
+          sourceLabel: ratingSourceLabel(supplier.reviewsUrl),
+        });
+      }
     }
     const guide = guideByPath.get(path);
     if (guide) return defaultGuideFaqs(guide);
@@ -186,6 +223,25 @@ export async function getSeoDashboardData(): Promise<SeoDashboardData> {
     ...[...suppliers]
       .sort(byName)
       .map((supplier) => toEntry('supplier', 'Suppliers', supplier.name, supplier.slug, supplierSeoDefaults(supplier))),
+    // One page per vendor that has a code. Listed from the public supplier
+    // records, the same ones the live pages are served from.
+    ...[...publicSuppliers]
+      .filter((supplier) => supplier.coupon !== null)
+      .sort(byName)
+      .map((supplier) =>
+        toEntry(
+          'coupon',
+          'Coupon pages',
+          `${supplier.name} coupon code`,
+          supplier.slug,
+          couponPageSeoDefaults(supplier, supplier.coupon!),
+        ),
+      ),
+    // One reviews page per vendor that has reviews; a vendor with none has no page.
+    ...[...publicSuppliers]
+      .filter((supplier) => supplierHasReviews(supplier, slugsWithReviews))
+      .sort(byName)
+      .map((supplier) => toEntry('review', 'Review pages', `${supplier.name} reviews`, supplier.slug, reviewsPageSeoDefaults(supplier))),
   ];
 
   return {
@@ -202,6 +258,14 @@ export async function assertSeoPageExists(kind: SeoPageKind, path: string): Prom
   const exists = await (async () => {
     if (kind === 'static') return STATIC_SEO_PAGES.some((page) => page.path === path);
     if (kind === 'guide') return (await getGuides()).some((guide) => `/guides/${guide.slug}` === path);
+    if (kind === 'coupon') {
+      const supplierSlug = supplierSlugFromCouponPath(path);
+      return supplierSlug !== null && Boolean((await getSupplier(supplierSlug))?.coupon);
+    }
+    if (kind === 'review') {
+      const supplierSlug = supplierSlugFromReviewsPath(path);
+      return supplierSlug !== null && Boolean(await getSupplier(supplierSlug));
+    }
 
     const prefix = SLUG_PREFIX[kind];
     if (!path.startsWith(prefix)) return false;

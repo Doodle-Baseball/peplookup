@@ -50,30 +50,49 @@ export const DEFAULT_PAGE_FAQS: Readonly<Record<string, readonly FaqItem[]>> = {
     },
     {
       question: 'What do the star ratings represent?',
-      answer: `A rating is the vendor's aggregate score from public review sources, shown only where we hold one. Vendors without a score simply do not display one rather than defaulting to zero, so an absent rating means "not yet recorded", not "rated poorly".`,
+      answer: `A rating is the supplier's aggregate score from public review sources, shown only where we hold one. Suppliers without a score simply do not display one rather than defaulting to zero, so an absent rating means "not yet recorded", not "rated poorly".`,
     },
     {
       question: 'How often is supplier information updated?',
-      answer: `Listings are refreshed as vendor catalogues change, and every price carries its own "seen" timestamp. If you spot something out of date or wrong, tell us through the contact page and we will recheck it.`,
+      answer: `Listings are refreshed as supplier catalogues change, and every price carries its own "seen" timestamp. If you spot something out of date or wrong, tell us through the contact page and we will recheck it.`,
     },
     {
       question: 'Can I filter suppliers by what matters to me?',
-      answer: `Yes. Use the search field to find a vendor by name, and the directory cards to compare product counts, shipping terms, payment options and active discount codes. Opening a supplier's page shows their full catalogue with per-listing pricing.`,
+      answer: `Yes. Use the search field to find a supplier by name, and the directory cards to compare product counts, shipping terms, payment options and active discount codes. Opening a supplier's page shows their full catalogue with per-listing pricing.`,
+    },
+  ],
+
+  '/reviews': [
+    {
+      question: 'Where do the ratings on this page come from?',
+      answer: `Each rating is the supplier's aggregate score from the public review source linked on its reviews page, shown only where we hold one. ${site.name} does not collect or verify reviews itself, so a supplier without a rating shows "not rated yet" rather than a made-up score.`,
+    },
+    {
+      question: 'Does a high rating mean the products are good?',
+      answer: `Not on its own. A rating reflects customers' experience with service, shipping and support, which is useful context but not a measure of product quality. Read the lab reports and certificates of analysis on each supplier's page alongside it.`,
+    },
+    {
+      question: 'How is the order of suppliers decided?',
+      answer: `The default order follows rating, then the number of reviews, then name. It never follows commission: ranking is by the numbers shown on the cards, and there is no paid placement.`,
+    },
+    {
+      question: 'A review or rating looks out of date. What should I do?',
+      answer: `Ratings are read from the supplier's public review page and can change at any time. Open the source link on the supplier's reviews page for the live figure, and tell us through the contact page if something here looks wrong so we can recheck it.`,
     },
   ],
 
   '/coupons': [
     {
       question: 'How do I use a coupon code from this page?',
-      answer: `Tap the code to copy it, then paste it into the discount or promo field at checkout on the supplier's own site. Codes are applied by the vendor, not by ${site.name}, so the discount appears in their checkout rather than here.`,
+      answer: `Tap the code to copy it, then paste it into the discount or promo field at checkout on the supplier's own site. Codes are applied by the supplier, not by ${site.name}, so the discount appears in their checkout rather than here.`,
     },
     {
       question: 'Are the prices on the site already discounted?',
-      answer: `Where a vendor runs a sitewide code, product prices across the site are shown with that discount applied, and the code is displayed alongside so you know which one earns that price. You still have to enter the code at checkout for it to take effect.`,
+      answer: `Where a supplier runs a sitewide code, product prices across the site are shown with that discount applied, and the code is displayed alongside so you know which one earns that price. You still have to enter the code at checkout for it to take effect.`,
     },
     {
       question: 'Why is a code not working?',
-      answer: `Codes expire, get withdrawn, or carry conditions the vendor sets, such as first-time customers only, minimum order values or exclusions on certain products. We track codes as vendors publish them, but the vendor controls whether a code is live. Let us know and we will recheck it.`,
+      answer: `Codes expire, get withdrawn, or carry conditions the supplier sets, such as first-time customers only, minimum order values or exclusions on certain products. We track codes as suppliers publish them, but the supplier controls whether a code is live. Let us know and we will recheck it.`,
     },
     {
       question: 'Do you get paid when I use a code?',
@@ -81,7 +100,7 @@ export const DEFAULT_PAGE_FAQS: Readonly<Record<string, readonly FaqItem[]>> = {
     },
     {
       question: 'How are the coupons ordered?',
-      answer: `By default the largest discount leads. Because many vendors run the same headline percentage, you can also sort by catalogue size or alphabetically to find a code from a vendor that actually stocks what you are comparing.`,
+      answer: `By default the largest discount leads. Because many suppliers run the same headline percentage, you can also sort by catalogue size or alphabetically to find a code from a supplier that actually stocks what you are comparing.`,
     },
   ],
 
@@ -100,7 +119,7 @@ export const DEFAULT_PAGE_FAQS: Readonly<Record<string, readonly FaqItem[]>> = {
     },
     {
       question: 'Why do some listings have no report?',
-      answer: `Because the vendor has not published one we can open, or the link they published does not resolve to a certificate. We show "Report Pending" rather than implying a document exists. An absent COA is information worth weighing.`,
+      answer: `Because the supplier has not published one we can open, or the link they published does not resolve to a certificate. We show "Report Pending" rather than implying a document exists. An absent COA is information worth weighing.`,
     },
     {
       question: 'Does a COA guarantee what is in the vial I receive?',
@@ -134,15 +153,15 @@ export const DEFAULT_PAGE_FAQS: Readonly<Record<string, readonly FaqItem[]>> = {
   '/price-checker': [
     {
       question: 'How is the price checker different from the supplier directory?',
-      answer: `The supplier directory shows each vendor's full profile, including shipping terms, payment methods, review ratings and coupon codes. The price checker focuses on per-compound pricing: it groups every listing for a single compound across all tracked suppliers so you can compare cost per milligram in one view.`,
+      answer: `The supplier directory shows each supplier's full profile, including shipping terms, payment methods, review ratings and coupon codes. The price checker focuses on per-compound pricing: it groups every listing for a single compound across all tracked suppliers so you can compare cost per milligram in one view.`,
     },
     {
       question: 'How often are prices updated?',
-      answer: `Every listing carries the time its price was last observed. Prices are refreshed as vendor catalogues change, and the timestamp is the honest limit of what we can promise: the figure was correct when we recorded it, not necessarily at the moment you read it. Confirm the current price on the vendor's own page before ordering.`,
+      answer: `Every listing carries the time its price was last observed. Prices are refreshed as supplier catalogues change, and the timestamp is the honest limit of what we can promise: the figure was correct when we recorded it, not necessarily at the moment you read it. Confirm the current price on the supplier's own page before ordering.`,
     },
     {
       question: 'What does the strikethrough price mean?',
-      answer: `A strikethrough price is the vendor's original list price before a sitewide coupon code is applied. The lower figure next to it is the price after the discount. Both are shown so you can see exactly how much the code saves. You still need to enter the code at the vendor's checkout for the discount to take effect.`,
+      answer: `A strikethrough price is the supplier's original list price before a sitewide coupon code is applied. The lower figure next to it is the price after the discount. Both are shown so you can see exactly how much the code saves. You still need to enter the code at the supplier's checkout for the discount to take effect.`,
     },
   ],
 
@@ -157,7 +176,7 @@ export const DEFAULT_PAGE_FAQS: Readonly<Record<string, readonly FaqItem[]>> = {
     },
     {
       question: 'Does the calculation include shipping or discounts?',
-      answer: `The calculator works from the price you enter, so it includes whatever you type. Listings on the site show cost per milligram based on the observed price, with a vendor's sitewide coupon applied where one exists. Shipping is shown separately on supplier cards because it varies by destination and order value.`,
+      answer: `The calculator works from the price you enter, so it includes whatever you type. Listings on the site show cost per milligram based on the observed price, with a supplier's sitewide coupon applied where one exists. Shipping is shown separately on supplier cards because it varies by destination and order value.`,
     },
     {
       question: 'How do I handle blends and multi-compound listings?',
@@ -165,7 +184,7 @@ export const DEFAULT_PAGE_FAQS: Readonly<Record<string, readonly FaqItem[]>> = {
     },
     {
       question: 'Is a lower price per mg always the better buy?',
-      answer: `No. It is one input. Verification, whether a certificate of analysis exists for that batch, stock status, shipping terms and vendor track record all matter alongside price. The cheapest figure on a page is not automatically the right choice.`,
+      answer: `No. It is one input. Verification, whether a certificate of analysis exists for that batch, stock status, shipping terms and supplier track record all matter alongside price. The cheapest figure on a page is not automatically the right choice.`,
     },
   ],
 
@@ -271,7 +290,7 @@ export function defaultGuideFaqs(guide: {
         }
       : {
           question: 'Where can I see this applied to real listings?',
-          answer: `The suppliers directory and lab reports page show these concepts applied to actual vendor listings and certificates, rather than in the abstract.`,
+          answer: `The suppliers directory and lab reports page show these concepts applied to actual supplier listings and certificates, rather than in the abstract.`,
         },
     {
       question: "I have a question this guide doesn't answer. What now?",
@@ -308,23 +327,94 @@ export function defaultSupplierFaqs(supplier: {
         ? `How long does ${name} take to ship?`
         : `What are ${name}'s shipping terms?`,
       answer: supplier.shippingSpeed
-        ? `${name} states: ${supplier.shippingSpeed}. Shipping terms are set and fulfilled by the vendor, not by ${site.name}, and can change without notice, so confirm current terms at their checkout${supplier.country ? `. Orders ship from ${supplier.country}` : ''}.`
-        : `${name} has not published shipping terms we can quote here. Shipping is arranged entirely by the vendor, so check their own shipping page or checkout for current costs and delivery times${supplier.country ? `. The vendor operates from ${supplier.country}` : ''}.`,
+        ? `${name} states: ${supplier.shippingSpeed}. Shipping terms are set and fulfilled by the supplier, not by ${site.name}, and can change without notice, so confirm current terms at their checkout${supplier.country ? `. Orders ship from ${supplier.country}` : ''}.`
+        : `${name} has not published shipping terms we can quote here. Shipping is arranged entirely by the supplier, so check their own shipping page or checkout for current costs and delivery times${supplier.country ? `. The supplier operates from ${supplier.country}` : ''}.`,
     },
     {
       question: `What payment methods does ${name} accept?`,
       answer:
         supplier.paymentMethods.length > 0
-          ? `${name} lists: ${supplier.paymentMethods.join(', ')}. Payment is handled entirely on the vendor's own site; ${site.name} never processes payments or handles payment details.`
-          : `${name} has not published a payment-method list we can quote here. Payment options appear at their checkout and are handled entirely by the vendor; ${site.name} never processes payments or handles payment details.`,
+          ? `${name} lists: ${supplier.paymentMethods.join(', ')}. Payment is handled entirely on the supplier's own site; ${site.name} never processes payments or handles payment details.`
+          : `${name} has not published a payment-method list we can quote here. Payment options appear at their checkout and are handled entirely by the supplier; ${site.name} never processes payments or handles payment details.`,
     },
     {
       question: supplier.coupon
         ? `Is there a discount code for ${name}?`
         : `How current are the ${name} prices shown here?`,
       answer: supplier.coupon
-        ? `Yes. The code ${supplier.coupon.code} is listed for ${supplier.coupon.percentOff}% off, and prices shown on this site already reflect it. You still need to enter the code at ${name}'s checkout for the discount to apply. Codes are set by the vendor and can expire or carry conditions.`
+        ? `Yes. The code ${supplier.coupon.code} is listed for ${supplier.coupon.percentOff}% off, and prices shown on this site already reflect it. You still need to enter the code at ${name}'s checkout for the discount to apply. Codes are set by the supplier and can expire or carry conditions.`
         : `Each listing carries the time its price was last observed. That is the honest limit of what we can promise: the figure was correct when recorded, not necessarily right now. Confirm the current price on ${name}'s own product page before buying.`,
+    },
+  ];
+}
+
+/**
+ * FAQs for a vendor's coupon page. Only called for vendors that have a code, so
+ * the answers can name it. Nothing here claims a condition we haven't confirmed:
+ * where we hold no rule we say the vendor sets it.
+ */
+export function defaultCouponFaqs(supplier: {
+  name: string;
+  coupon: { code: string; percentOff: number };
+}): FaqItem[] {
+  const { name, coupon } = supplier;
+
+  return [
+    {
+      question: `What is the ${name} coupon code?`,
+      answer: `The code ${site.name} lists for ${name} is ${coupon.code}, for ${coupon.percentOff}% off eligible orders. Codes are set by the supplier, so confirm the discount in ${name}'s cart before you pay.`,
+    },
+    {
+      question: `How do I use the ${name} promo code?`,
+      answer: `Open ${name}'s store, add products to your cart, then paste ${coupon.code} into the promo, discount or coupon field at checkout. Check that the order summary shows the saving before you complete the purchase.`,
+    },
+    {
+      question: `Why isn't my ${name} code working?`,
+      answer: `Suppliers can change, limit or withdraw a code at any time. It may carry conditions such as a minimum order, first-time-customer status or excluded products, and some codes can't be combined with other offers. Check the exact wording at ${name}'s checkout, and let us know if ${coupon.code} stops working so we can recheck it.`,
+    },
+    {
+      question: `Are the ${name} prices on ${site.name} already discounted?`,
+      answer: `Where a listing has no sale price of its own, the prices ${site.name} shows for ${name} already reflect the ${coupon.percentOff}% code, with the original price alongside. You still have to enter ${coupon.code} at ${name}'s checkout for the discount to apply.`,
+    },
+    {
+      question: `Does ${site.name} get paid when I use the ${name} code?`,
+      answer: `Possibly. Some links to ${name} are affiliate links, meaning ${site.name} may earn a commission if you buy through them, at no extra cost to you. It does not change your price or which codes we list.`,
+    },
+  ];
+}
+
+/**
+ * FAQs for a vendor's reviews page. Built from the vendor's own record so each
+ * answer names what we actually hold (the rating, its source, the lab count)
+ * and says so plainly where we hold nothing.
+ */
+export function defaultReviewFaqs(supplier: {
+  name: string;
+  reviewRating: number | null;
+  reviewCountText: string | null;
+  sourceLabel: string;
+}): FaqItem[] {
+  const { name } = supplier;
+
+  return [
+    {
+      question: `What is ${name}'s overall rating?`,
+      answer:
+        supplier.reviewRating !== null
+          ? `${name} is rated ${supplier.reviewRating.toFixed(1)} out of 5${supplier.reviewCountText ? ` from ${supplier.reviewCountText} reviews` : ''} on ${supplier.sourceLabel}. Ratings change as new reviews arrive, so open the source for the live figure.`
+          : `We don't hold a rating for ${name} yet, so none is shown here rather than an estimate. If a public review page exists for ${name}, let us know and we will add it.`,
+    },
+    {
+      question: `Where do the ${name} reviews come from?`,
+      answer: `They are drawn from ${supplier.sourceLabel}, summarised and linked to their source. ${site.name} does not write, edit or verify reviews, and does not sell ${name}'s products.`,
+    },
+    {
+      question: `Does a good rating mean ${name}'s products are lab-verified?`,
+      answer: `No. A review rating describes customer experience, not product testing. Check ${name}'s lab reports and the certificates of analysis linked from its listings, and remember a certificate describes one batch.`,
+    },
+    {
+      question: `Can I buy from ${name} through ${site.name}?`,
+      answer: `No. ${site.name} is a comparison tool. Orders are placed on ${name}'s own site, under its terms, and some links to it are affiliate links, which never change the price you pay or the rating shown.`,
     },
   ];
 }

@@ -29,7 +29,7 @@ export function AllVendors({ suppliers }: { suppliers: readonly Supplier[] }) {
         <div>
           <p className="eyebrow">The directory</p>
           <h2 className="mt-3 text-[clamp(2rem,5vw,3.25rem)] font-black leading-[0.95] text-content">
-            All <span className="text-accent">vendors.</span>
+            All <span className="text-accent">suppliers.</span>
           </h2>
         </div>
         <p className="font-mono text-xs uppercase tracking-[0.15em] text-muted">{sorted.length} listed</p>
@@ -47,8 +47,8 @@ export function AllVendors({ suppliers }: { suppliers: readonly Supplier[] }) {
         // text at once, not just the one actually under the pointer.
         <details className="group/vendors">
           <summary className="mx-auto mt-5 flex w-fit cursor-pointer list-none items-center gap-2 rounded-pill border border-line bg-surface-raised px-5 py-2.5 text-sm font-bold text-content shadow-card transition-colors hover:border-brand">
-            <span className="group-open/vendors:hidden">Show all {sorted.length} vendors</span>
-            <span className="hidden group-open/vendors:inline">Show fewer vendors</span>
+            <span className="group-open/vendors:hidden">Show all {sorted.length} suppliers</span>
+            <span className="hidden group-open/vendors:inline">Show fewer suppliers</span>
             <ChevronDownIcon className="h-4 w-4 transition-transform group-open/vendors:rotate-180" />
           </summary>
           <VendorGrid suppliers={collapsed} className="mt-5" />

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import type { Supplier } from '@/lib/schema';
+import { couponPagePath } from '@/lib/coupon-pages';
 import { ArrowRightIcon, CheckIcon, CopyIcon, ExternalIcon, SearchIcon } from '@/components/icons/icons';
 
 /** Every supplier shown here is guaranteed by the page to carry a coupon. */
@@ -92,14 +93,14 @@ export function CouponBrowser({ vendors }: { vendors: CouponVendor[] }) {
         <div className="flex min-w-0 flex-1 items-center gap-3 rounded-pill border border-line bg-surface-raised px-5 py-3.5 shadow-card">
           <SearchIcon className="h-5 w-5 shrink-0 text-faint" />
           <label htmlFor="coupon-search" className="sr-only">
-            Search vendors and coupon codes
+            Search suppliers and coupon codes
           </label>
           <input
             id="coupon-search"
             type="search"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search a vendor or code…"
+            placeholder="Search a supplier or code…"
             className="min-w-0 flex-1 bg-transparent text-base text-content outline-none placeholder:text-faint focus-visible:ring-0"
           />
           {query ? (
@@ -132,13 +133,13 @@ export function CouponBrowser({ vendors }: { vendors: CouponVendor[] }) {
 
       <p className="mt-3 text-sm text-muted" aria-live="polite">
         <span className="font-bold text-content">{filtered.length}</span>{' '}
-        {filtered.length === 1 ? 'vendor' : 'vendors'} with an active code
+        {filtered.length === 1 ? 'supplier' : 'suppliers'} with an active code
         {query ? ` matching “${query}”` : ''}
       </p>
 
       {filtered.length === 0 ? (
         <p className="mt-8 rounded-card border border-dashed border-line p-10 text-center text-sm text-muted">
-          No vendor or code matches “{query}”.
+          No supplier or code matches “{query}”.
         </p>
       ) : (
         <ul className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -148,7 +149,11 @@ export function CouponBrowser({ vendors }: { vendors: CouponVendor[] }) {
               className="flex flex-col rounded-card border border-line bg-surface-raised p-6 shadow-card transition-all hover:-translate-y-0.5 hover:border-brand hover:shadow-lift"
             >
               <div className="flex items-start justify-between gap-3">
-                <h2 className="text-xl font-black leading-tight text-content">{vendor.name}</h2>
+                <h2 className="text-xl font-black leading-tight text-content">
+                  <Link href={couponPagePath(vendor.slug)} className="transition-colors hover:text-brand">
+                    {vendor.name}
+                  </Link>
+                </h2>
                 <span className="shrink-0 rounded-pill bg-coupon-tint px-3 py-1 text-xs font-bold text-coupon-ink">
                   {vendor.coupon.percentOff}% Off Sitewide
                 </span>
@@ -173,7 +178,7 @@ export function CouponBrowser({ vendors }: { vendors: CouponVendor[] }) {
                   <ExternalIcon className="h-4 w-4" />
                 </a>
                 <Link
-                  href={`/suppliers/${vendor.slug}`}
+                  href={couponPagePath(vendor.slug)}
                   className="inline-flex items-center gap-1 text-sm font-bold text-brand-strong transition-colors hover:text-brand"
                 >
                   Full details

@@ -92,10 +92,10 @@ export function sendNewRequestEmail(request: VendorListingRequest): Promise<bool
   return send({
     to: adminRecipient(),
     replyTo: request.email,
-    subject: `New vendor listing request: ${request.organizationName} (${request.requestId})`,
+    subject: `New supplier listing request: ${request.organizationName} (${request.requestId})`,
     html: layout(
-      'New vendor listing request',
-      'Someone just submitted the vendor application form. They are being sent to checkout now; you will get a second email when payment is confirmed.',
+      'New supplier listing request',
+      'Someone just submitted the supplier application form. They are being sent to checkout now; you will get a second email when payment is confirmed.',
       detailsTable(request),
     ),
   });
@@ -109,7 +109,7 @@ export function sendPaymentConfirmedAdminEmail(request: VendorListingRequest): P
     subject: `Payment received: ${request.organizationName} (${request.requestId})`,
     html: layout(
       'Payment confirmed',
-      'Whop confirmed this payment. The vendor is ready to be added to the site.',
+      'Whop confirmed this payment. The supplier is ready to be added to the site.',
       detailsTable(request),
     ),
   });
@@ -121,7 +121,7 @@ export function sendPaymentConfirmedApplicantEmail(request: VendorListingRequest
   return send({
     to: request.email,
     replyTo: contact.email,
-    subject: `We received your vendor listing request (${request.requestId})`,
+    subject: `We received your supplier listing request (${request.requestId})`,
     html: layout(
       'Thank you, your payment was received',
       `Your request ID is <strong>${escapeHtml(request.requestId)}</strong>. ${escapeHtml(contact.name)} will contact you within ${contact.responseWindow} to set up your listing. Questions in the meantime? Write to <a href="mailto:${contact.email}">${contact.email}</a>.`,

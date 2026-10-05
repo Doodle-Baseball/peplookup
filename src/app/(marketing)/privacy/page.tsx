@@ -128,7 +128,7 @@ const SECTIONS: LegalSection[] = [
       <>
         <p>
           Outbound links to suppliers pass through a redirect on this site before forwarding you to the
-          vendor. The redirect exists to attach our affiliate reference and to keep links maintainable, and
+          supplier. The redirect exists to attach our affiliate reference and to keep links maintainable, and
           it does not require or record any personal information about you.
         </p>
         <p>

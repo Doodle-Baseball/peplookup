@@ -239,7 +239,7 @@ function readVendorInput(formData: FormData): VendorInput {
   const country = String(formData.get('country') ?? '').trim();
   const logoUrl = String(formData.get('logoUrl') ?? '').trim();
 
-  if (!name) throw new AdminDbError('Vendor name is required.');
+  if (!name) throw new AdminDbError('Supplier name is required.');
   if (!affiliateUrl) throw new AdminDbError('Affiliate Website Link is required.');
 
   const foundedYearRaw = String(formData.get('foundedYear') ?? '').trim();
@@ -268,7 +268,7 @@ function readVendorInput(formData: FormData): VendorInput {
   const reviewRatingRaw = String(formData.get('reviewRating') ?? '').trim();
   const reviewRatingValue = reviewRatingRaw ? Number(reviewRatingRaw) : null;
   if (reviewRatingValue !== null && (!Number.isFinite(reviewRatingValue) || reviewRatingValue < 0 || reviewRatingValue > 5)) {
-    throw new AdminDbError('Vendor rating must be a number between 0 and 5.');
+    throw new AdminDbError('Supplier rating must be a number between 0 and 5.');
   }
 
   const paymentMethods = String(formData.get('paymentMethods') ?? '')
@@ -313,7 +313,7 @@ async function currentVendor(slug: string): Promise<Supplier> {
   if (vendor) return vendor;
   const renamedTo = await getRedirectTarget(`/suppliers/${slug}`);
   const renamed = renamedTo?.startsWith('/suppliers/') ? await getVendor(renamedTo.slice('/suppliers/'.length)) : null;
-  if (!renamed) throw new AdminDbError('Vendor not found.');
+  if (!renamed) throw new AdminDbError('Supplier not found.');
   return renamed;
 }
 
@@ -336,7 +336,7 @@ export async function createVendorAction(
       revalidateTag('offers');
     }
   } catch (error) {
-    return { error: error instanceof Error ? error.message : 'Failed to create vendor.' };
+    return { error: error instanceof Error ? error.message : 'Failed to create supplier.' };
   }
   revalidatePublicSupplierPages(createdVendorSlug);
   redirect(`/admin/vendors/${createdVendorSlug}/edit?step=${currentStep}`);
@@ -367,7 +367,7 @@ export async function updateVendorAction(
     );
     if (productsChanged) revalidateTag('offers');
   } catch (error) {
-    return { error: error instanceof Error ? error.message : 'Failed to update vendor.' };
+    return { error: error instanceof Error ? error.message : 'Failed to update supplier.' };
   }
   revalidatePublicSupplierPages(slug);
   // No redirect: the admin can save from any step and keep editing in place,
@@ -473,12 +473,12 @@ export async function bulkImportVendorsAction(
   try {
     const csvText = String(formData.get('csvText') ?? '').trim();
     if (!csvText) {
-      return { error: 'Upload a CSV file to import vendors.', success: null, imported: 0 };
+      return { error: 'Upload a CSV file to import suppliers.', success: null, imported: 0 };
     }
 
     const rows = parseCsvText(csvText);
     if (rows.length < 2) {
-      return { error: 'The CSV file must include a header row and at least one vendor row.', success: null, imported: 0 };
+      return { error: 'The CSV file must include a header row and at least one supplier row.', success: null, imported: 0 };
     }
 
     const headers = rows[0] ?? [];
@@ -494,18 +494,18 @@ export async function bulkImportVendorsAction(
     }
 
     if (createdVendorNames.length === 0) {
-      return { error: 'No valid vendor rows were found. Check the CSV headers and mapped columns.', success: null, imported: 0 };
+      return { error: 'No valid supplier rows were found. Check the CSV headers and mapped columns.', success: null, imported: 0 };
     }
 
     revalidatePublicSupplierPages();
     return {
       error: null,
-      success: `Imported ${createdVendorNames.length} vendor${createdVendorNames.length === 1 ? '' : 's'} successfully.`,
+      success: `Imported ${createdVendorNames.length} supplier${createdVendorNames.length === 1 ? '' : 's'} successfully.`,
       imported: createdVendorNames.length,
     };
   } catch (error) {
     return {
-      error: error instanceof Error ? error.message : 'Failed to import vendors.',
+      error: error instanceof Error ? error.message : 'Failed to import suppliers.',
       success: null,
       imported: 0,
     };
@@ -529,7 +529,7 @@ export async function deleteVendorAction(slug: string): Promise<{ error: string 
   try {
     await deleteVendor(slug);
   } catch (error) {
-    return { error: error instanceof Error ? error.message : 'Failed to delete vendor.' };
+    return { error: error instanceof Error ? error.message : 'Failed to delete supplier.' };
   }
   revalidatePublicSupplierPages(slug);
   return { error: null };

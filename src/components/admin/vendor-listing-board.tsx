@@ -253,7 +253,7 @@ function RequestCard({
               className="btn-3d inline-flex items-center gap-2 rounded-chip bg-brand px-4 py-2 text-sm font-bold text-white"
             >
               <GlobeIcon className="h-4 w-4" />
-              Add this vendor
+              Add this supplier
             </Link>
             <button
               type="button"
@@ -347,11 +347,11 @@ export function VendorListingBoard({ requests }: { requests: BoardRequest[] }) {
       {visible.length === 0 ? (
         <div className="rounded-panel border border-dashed border-line bg-surface-raised px-6 py-14 text-center">
           <p className="text-base font-black text-content">
-            {requests.length === 0 ? 'No vendor requests yet' : 'Nothing matches this filter'}
+            {requests.length === 0 ? 'No supplier requests yet' : 'Nothing matches this filter'}
           </p>
           <p className="mt-1 text-sm text-muted">
             {requests.length === 0
-              ? 'Applications from the Vendor Listing page will appear here as soon as they are submitted.'
+              ? 'Applications from the Supplier Listing page will appear here as soon as they are submitted.'
               : 'Try another filter.'}
           </p>
         </div>

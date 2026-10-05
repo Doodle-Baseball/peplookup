@@ -5,6 +5,7 @@ import './globals.css';
 import { site } from '@/config/site';
 import { LoadingScreen } from '@/components/layout/loading-screen';
 import { NavigationProgress } from '@/components/layout/navigation-progress';
+import { OutboundLinkTracker } from '@/components/layout/outbound-link-tracker';
 
 /**
  * Self-hosted at build time rather than fetched from fonts.googleapis.com: a
@@ -81,6 +82,7 @@ gtag('config', '${GA_MEASUREMENT_ID}');`}
         </Script>
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(siteJsonLd) }} />
         <NavigationProgress />
+        <OutboundLinkTracker />
         <LoadingScreen />
         {children}
       </body>

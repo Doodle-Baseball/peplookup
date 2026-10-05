@@ -42,7 +42,7 @@ export function AdminNavLinks({
             {item.href === '/admin/vendor-listing' && newVendorRequests > 0 ? (
               <span
                 role="status"
-                aria-label={`${newVendorRequests} new vendor listing ${newVendorRequests === 1 ? 'request' : 'requests'}`}
+                aria-label={`${newVendorRequests} new supplier listing ${newVendorRequests === 1 ? 'request' : 'requests'}`}
                 className="relative ml-auto flex h-5 min-w-5 items-center justify-center"
               >
                 <span aria-hidden="true" className="badge-ping absolute inset-0 rounded-pill bg-danger" />

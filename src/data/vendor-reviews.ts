@@ -62,7 +62,7 @@ export const VENDOR_REVIEW_PROFILES: readonly VendorReviewProfile[] = [
         author: "Robert Boyd",
         rating: 1,
         reviewedAt: "2026-08-22",
-        body: "The reviewer arrived through a TikTok link and reported an unsatisfactory experience with the order, warning others to research the vendor first.",
+        body: "The reviewer arrived through a TikTok link and reported an unsatisfactory experience with the order, warning others to research the supplier first.",
       },
     ],
   },
@@ -126,7 +126,7 @@ export const VENDOR_REVIEW_PROFILES: readonly VendorReviewProfile[] = [
         author: "Karyn Allison McPherson",
         rating: 5,
         reviewedAt: "2026-07-20",
-        body: "A five-star rating was submitted on Trustpilot without accompanying written comments, reflecting a positive overall experience with the vendor.",
+        body: "A five-star rating was submitted on Trustpilot without accompanying written comments, reflecting a positive overall experience with the supplier.",
       },
       {
         author: "Cheryl Mahady",
@@ -260,7 +260,7 @@ export const VENDOR_REVIEW_PROFILES: readonly VendorReviewProfile[] = [
         author: "Patrick Rougeau",
         rating: 5,
         reviewedAt: "2026-06-24",
-        body: "Great service noted by the reviewer, who reported a smooth ordering process and a positive overall experience with the vendor.",
+        body: "Great service noted by the reviewer, who reported a smooth ordering process and a positive overall experience with the supplier.",
       },
     ],
   },
@@ -286,7 +286,7 @@ export const VENDOR_REVIEW_PROFILES: readonly VendorReviewProfile[] = [
         author: "Anna Gee",
         rating: 5,
         reviewedAt: "2026-07-26",
-        body: "The reviewer left a five-star rating on Trustpilot without additional comments, reflecting clear satisfaction with the vendor.",
+        body: "The reviewer left a five-star rating on Trustpilot without additional comments, reflecting clear satisfaction with the supplier.",
       },
       {
         author: "Cheryl Mahady",
@@ -554,7 +554,7 @@ export const VENDOR_REVIEW_PROFILES: readonly VendorReviewProfile[] = [
         author: "robbie phillips",
         rating: 5,
         reviewedAt: "2026-09-07",
-        body: "Described simply as a great vendor, with the reviewer reporting a smooth order and a positive overall experience.",
+        body: "Described simply as a great supplier, with the reviewer reporting a smooth order and a positive overall experience.",
       },
       {
         author: "Judy Gellis",
@@ -878,7 +878,7 @@ export const VENDOR_REVIEW_PROFILES: readonly VendorReviewProfile[] = [
         author: "Rose",
         rating: 5,
         reviewedAt: "2025-01-20",
-        body: "The order process was easy and straightforward, and the reviewer reported a positive overall experience with the vendor.",
+        body: "The order process was easy and straightforward, and the reviewer reported a positive overall experience with the supplier.",
       },
       {
         author: "Julia ELLIS",

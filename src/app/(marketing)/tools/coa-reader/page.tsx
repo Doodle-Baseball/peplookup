@@ -198,7 +198,7 @@ export default async function CoaReaderGuidePage() {
           <Link href="/lab-reports" className="font-bold text-brand hover:underline">
             lab reports directory
           </Link>{' '}
-          links directly to vendor-published certificates, and every supplier profile notes whether
+          links directly to supplier-published certificates, and every supplier profile notes whether
           a COA is on file for each listing. Together, these tools help you cross-check claims
           rather than accepting them at face value.
         </p>

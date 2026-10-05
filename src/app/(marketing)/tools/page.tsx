@@ -49,7 +49,7 @@ const TOOLS: ToolCard[] = [
     title: 'Price Checker',
     description:
       'Compare up to 4 research peptides side by side: cost per mg, dosage options, supplier ratings, and COA verification in one view.',
-    bullets: ['Side-by-side comparison', '$/mg across vendors', 'Real supplier listings'],
+    bullets: ['Side-by-side comparison', '$/mg across suppliers', 'Real supplier listings'],
     cta: 'Check Prices',
     icon: <ListIcon className="h-6 w-6" />,
     accent: 'coupon',
@@ -92,7 +92,7 @@ const TOOLS: ToolCard[] = [
     label: 'COA Reader & Guide',
     title: 'COA Reader & Guide',
     description:
-      'Learn how to read a certificate of analysis, identify red flags, and verify HPLC, mass spec, and contaminant data on any vendor COA.',
+      'Learn how to read a certificate of analysis, identify red flags, and verify HPLC, mass spec, and contaminant data on any supplier COA.',
     bullets: ['Field-by-field breakdown', 'Red/green flag checklist', 'Lab-verified listings'],
     cta: 'Verify a COA',
     icon: <DocumentIcon className="h-6 w-6" />,

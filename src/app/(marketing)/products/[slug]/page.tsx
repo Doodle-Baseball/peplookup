@@ -420,7 +420,7 @@ export default async function ProductPage({
                 hint={bestOverallSupplier ? `at ${bestOverallSupplier.name}` : 'No in-stock listing'}
                 emphasis
               />
-              <Stat label="Vendors listed" value={String(vendorCount)} />
+              <Stat label="Suppliers listed" value={String(vendorCount)} />
               <Stat label="In stock" value={`${inStockCount} of ${resolvedOffers.length}`} hint="listings" />
               <Stat label="COA reports" value={String(offersWithReports.length)} />
             </dl>
@@ -430,7 +430,7 @@ export default async function ProductPage({
             <JumpToNav
               items={[
                 { id: 'overview', label: 'Overview' },
-                { id: 'vendor-listings', label: 'Vendor Listings' },
+                { id: 'vendor-listings', label: 'Supplier Listings' },
                 { id: 'benefits', label: 'Benefits' },
                 { id: 'evidence', label: 'Evidence' },
                 { id: 'interactions', label: 'Interactions' },
@@ -448,7 +448,7 @@ export default async function ProductPage({
         className={cn(PANEL_CLASS, 'mt-6 scroll-mt-24 overflow-hidden')}
       >
         <div className="p-5 sm:p-8">
-          <p className="eyebrow">Vendor listings</p>
+          <p className="eyebrow">Supplier listings</p>
           <h2 id="vendor-listings-heading" className="mt-3 text-3xl font-black text-content sm:text-4xl">
             Compare <span className="text-accent">{product.name}</span> prices.
           </h2>
@@ -529,8 +529,8 @@ export default async function ProductPage({
             </>
           ) : (
             <p className="mt-6 rounded-card border border-dashed border-line bg-surface p-8 text-center text-sm text-muted sm:p-10">
-              No vendor prices recorded for {product.name} yet. Listings appear here once the crawler
-              reads them from a live vendor page.
+              No supplier prices recorded for {product.name} yet. Listings appear here once the crawler
+              reads them from a live supplier page.
             </p>
           )}
         </div>
@@ -1056,7 +1056,7 @@ function TestsPanel({
           REPORT_GRID_CLASS,
         )}
       >
-        <span>Vendor</span>
+        <span>Supplier</span>
         <span>Product</span>
         <span>Dosage</span>
         <span className="text-right">Report</span>

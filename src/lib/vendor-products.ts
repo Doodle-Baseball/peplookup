@@ -158,7 +158,7 @@ export function parseVendorProductsCsv(
 
       const product = byName.get(compoundText.toLowerCase()) ?? bySlug.get(compoundText);
       if (!compoundText) errors.push('Compound is required.');
-      else if (!product) errors.push(`Unknown compound "${compoundText}". Use the exact name from this vendor's compound list.`);
+      else if (!product) errors.push(`Unknown compound "${compoundText}". Use the exact name from this supplier's compound list.`);
 
       const form = normalizeVendorProductForm(typeText);
       if (!typeText) errors.push('Type is required.');

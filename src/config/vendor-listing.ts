@@ -58,7 +58,7 @@ export const VENDOR_LISTING_PLANS: readonly VendorListingPlan[] = [
 
 export function vendorListingPlan(id: VendorListingPlanId): VendorListingPlan {
   const plan = VENDOR_LISTING_PLANS.find((candidate) => candidate.id === id);
-  if (!plan) throw new Error(`Unknown vendor listing plan "${id}".`);
+  if (!plan) throw new Error(`Unknown supplier listing plan "${id}".`);
   return plan;
 }
 

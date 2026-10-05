@@ -97,6 +97,12 @@ export const ExternalIcon = (p: IconProps) => (
   </Icon>
 );
 
+export const ActivityIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+  </Icon>
+);
+
 export const ArrowRightIcon = (p: IconProps) => (
   <Icon {...p}>
     <path d="M5 12h14M13 6l6 6-6 6" />

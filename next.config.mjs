@@ -6,9 +6,13 @@ const nextConfig = {
   // object; the bare `false` this used to be was rejected as invalid config and
   // silently ignored.
   devIndicators: { appIsrStatus: false, buildActivity: false },
+  // Header Next adds to every response; nothing reads it.
+  poweredByHeader: false,
   images: {
     // Supplier logos are fetched from vendor domains. Add each host explicitly.
     remotePatterns: [{ protocol: 'https', hostname: '**' }],
+    // Optimised images are re-checked after 60s by default; these files change rarely, so keep them for 30 days.
+    minimumCacheTTL: 60 * 60 * 24 * 30,
   },
   async redirects() {
     return [
@@ -17,8 +21,12 @@ const nextConfig = {
       // The payment thanks page lives at /thanks; /tanks is a likely typo for it.
       { source: '/vendor-listing/thanks', destination: '/thanks', permanent: true },
       { source: '/tanks', destination: '/thanks', permanent: true },
-      // The vendor listing page used to live at /partners.
-      { source: '/partners', destination: '/vendor-listing', permanent: true },
+      // The supplier listing page used to live at /partners and at /vendor-listing.
+      { source: '/partners', destination: '/supplier-listing', permanent: true },
+      { source: '/vendor-listing', destination: '/supplier-listing', permanent: true },
+      // Vendor coupon and reviews pages live under /coupons and /reviews; these were their addresses at the site root first.
+      { source: '/:slug-coupon-code', destination: '/coupons/:slug-coupon-code', permanent: true },
+      { source: '/:slug-reviews', destination: '/reviews/:slug-reviews', permanent: true },
     ];
   },
   async headers() {
@@ -30,11 +38,17 @@ const nextConfig = {
     const sharedPageCache = [
       { key: 'Cache-Control', value: 'public, s-maxage=300, stale-while-revalidate=600' },
     ];
+    // Files served straight from /public are revalidated on every request by default; these change rarely.
+    const staticAssetCache = [{ key: 'Cache-Control', value: 'public, max-age=2592000, stale-while-revalidate=86400' }];
     return [
       { source: '/products/:slug', headers: sharedPageCache },
       { source: '/suppliers', headers: sharedPageCache },
       { source: '/suppliers/:slug', headers: sharedPageCache },
       { source: '/lab-reports', headers: sharedPageCache },
+      { source: '/coupons/:slug', headers: sharedPageCache },
+      { source: '/reviews/:slug', headers: sharedPageCache },
+      { source: '/compounds-images/:path*', headers: staticAssetCache },
+      { source: '/favicon.png', headers: staticAssetCache },
     ];
   },
   experimental: {

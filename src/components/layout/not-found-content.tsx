@@ -20,7 +20,7 @@ const DESTINATIONS: { href: string; label: string; hint: string; icon: React.Rea
   {
     href: '/suppliers',
     label: 'Supplier directory',
-    hint: 'Compare vendors, shipping and verification',
+    hint: 'Compare suppliers, shipping and verification',
     icon: <StoreIcon className="h-5 w-5" />,
   },
   {
@@ -32,7 +32,7 @@ const DESTINATIONS: { href: string; label: string; hint: string; icon: React.Rea
   {
     href: '/lab-reports',
     label: 'Lab reports',
-    hint: 'Third-party COA results by vendor',
+    hint: 'Third-party COA results by supplier',
     icon: <FlaskIcon className="h-5 w-5" />,
   },
   {
@@ -67,12 +67,12 @@ export function NotFoundContent() {
 
         <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-muted">
           The link may be out of date, or the page may have been renamed. Nothing on {site.name} is gone for
-          good. Search for a compound or vendor below, or pick up from one of the sections.
+          good. Search for a compound or supplier below, or pick up from one of the sections.
         </p>
 
         <form action="/price-checker" method="get" role="search" className="mx-auto mt-8 max-w-lg">
           <label htmlFor="not-found-search" className="sr-only">
-            Search compounds and vendors
+            Search compounds and suppliers
           </label>
           <div className="search-field flex items-center gap-3 border px-4 py-3">
             <SearchIcon className="h-5 w-5 shrink-0 text-accent" />
@@ -80,7 +80,7 @@ export function NotFoundContent() {
               id="not-found-search"
               name="q"
               type="search"
-              placeholder="Search a compound or vendor…"
+              placeholder="Search a compound or supplier…"
               className="min-w-0 flex-1 bg-transparent text-sm text-content outline-none placeholder:text-faint"
             />
             <button

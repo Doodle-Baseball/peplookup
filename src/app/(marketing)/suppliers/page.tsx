@@ -137,12 +137,12 @@ export default async function SuppliersPage({
               seo.h1
             ) : (
               <>
-                Find the Best <span className="text-accent">Peptide Suppliers.</span>
+                Find the Best <span className="block text-accent">Peptide Suppliers.</span>
               </>
             )}
           </h1>
           <p className="animate-fade-up animate-delay-200 mx-auto mt-5 max-w-2xl text-base leading-7 text-muted sm:text-lg">
-            Compare prices, shipping, payment options and verification grades from listed vendors.
+            Compare prices, shipping, payment options and verification grades from listed suppliers.
           </p>
 
           <dl

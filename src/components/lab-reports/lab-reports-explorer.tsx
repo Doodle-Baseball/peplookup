@@ -93,7 +93,7 @@ export function LabReportsExplorer({
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search substance or vendor…"
+            placeholder="Search substance or supplier…"
             className="w-full bg-transparent text-sm text-content outline-none placeholder:text-faint"
           />
         </div>
@@ -124,7 +124,7 @@ export function LabReportsExplorer({
       <div className="mt-6 space-y-3">
         {filtered.length === 0 ? (
           <p className="rounded-card border border-dashed border-line bg-surface-raised p-10 text-center text-sm text-muted">
-            No vendors or substances match &ldquo;{query}&rdquo;.
+            No suppliers or substances match &ldquo;{query}&rdquo;.
           </p>
         ) : (
           visible.map((vendor) => {
@@ -276,7 +276,7 @@ export function LabReportsExplorer({
             onClick={() => setVisibleCount(filtered.length)}
             className="rounded-chip border border-line bg-surface px-6 py-3 text-sm font-bold text-content transition-colors hover:border-brand hover:bg-brand-soft hover:text-brand-strong"
           >
-            Load more vendors
+            Load more suppliers
           </button>
         </div>
       ) : null}

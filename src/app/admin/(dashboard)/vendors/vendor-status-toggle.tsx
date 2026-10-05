@@ -22,7 +22,7 @@ export function VendorStatusToggle({ slug, isActive }: { slug: string; isActive:
       type="button"
       role="switch"
       aria-checked={active}
-      aria-label={active ? 'Deactivate vendor' : 'Activate vendor'}
+      aria-label={active ? 'Deactivate supplier' : 'Activate supplier'}
       onClick={toggle}
       disabled={pending}
       className={cn(

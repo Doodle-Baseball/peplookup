@@ -53,8 +53,8 @@ export function SupplierContentEditor({
     <div className="space-y-4">
       <p className="text-xs text-muted">
         {saved
-          ? 'This page is showing your saved text. Clear a field, or restore the generated text, to go back to the version built from the vendor’s data.'
-          : 'This page is showing text generated from the vendor’s own data. Edit any field to replace it.'}{' '}
+          ? 'This page is showing your saved text. Clear a field, or restore the generated text, to go back to the version built from the supplier’s data.'
+          : 'This page is showing text generated from the supplier’s own data. Edit any field to replace it.'}{' '}
         Saved with <span className="font-semibold text-content">Save changes</span> below.
       </p>
 

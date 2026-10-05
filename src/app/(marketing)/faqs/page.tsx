@@ -73,7 +73,7 @@ const FAQ_GROUPS: readonly { title: string; faqs: readonly Faq[] }[] = [
       {
         question: 'What information is shown for each supplier?',
         answer:
-          'Supplier profiles bring together what is available for each vendor: lab verification status, published COAs, shipping details, payment methods, coupons and policies. A listing is not an endorsement, so review a supplier\'s COAs and policies before ordering.',
+          'Supplier profiles bring together what is available for each supplier: lab verification status, published COAs, shipping details, payment methods, coupons and policies. A listing is not an endorsement, so review a supplier\'s COAs and policies before ordering.',
       },
       {
         question: 'What is a COA and why does it matter?',

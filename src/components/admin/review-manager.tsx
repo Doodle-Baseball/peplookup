@@ -27,7 +27,7 @@ const FALLBACK_STATUS = { label: 'Failed', className: 'bg-danger/10 text-danger'
 
 const STATUS_STYLES: Record<string, { label: string; className: string }> = {
   imported: { label: 'Imported', className: 'bg-ok/10 text-ok' },
-  'no-vendor': { label: 'No vendor', className: 'bg-warn/10 text-warn' },
+  'no-vendor': { label: 'No supplier', className: 'bg-warn/10 text-warn' },
   'no-reviews': { label: 'No reviews', className: 'bg-surface-sunken text-muted' },
   failed: { label: 'Failed', className: 'bg-danger/10 text-danger' },
 };
@@ -77,7 +77,7 @@ export function ReviewManager({ vendors }: { vendors: VendorReviewSummary[] }) {
     <div className="space-y-8">
       <dl className="grid grid-cols-2 gap-4 sm:grid-cols-3">
         <div className="rounded-card border border-line bg-surface-raised p-5">
-          <dt className="text-micro font-bold uppercase text-faint">Vendors</dt>
+          <dt className="text-micro font-bold uppercase text-faint">Suppliers</dt>
           <dd className="mt-1 text-3xl font-black text-content">{vendors.length}</dd>
         </div>
         <div className="rounded-card border border-accent/30 bg-accent-tint p-5">
@@ -94,13 +94,13 @@ export function ReviewManager({ vendors }: { vendors: VendorReviewSummary[] }) {
       <section className="rounded-card border border-line bg-surface-raised p-4 sm:p-6">
         <h2 className="text-sm font-black uppercase tracking-wide text-content">Add a review</h2>
         <p className="mt-1 text-sm text-muted">
-          Pick the vendor, then enter the review exactly as it was published. It is appended to the end of
-          that vendor&rsquo;s list; reorder or edit from the vendor&rsquo;s own edit page.
+          Pick the supplier, then enter the review exactly as it was published. It is appended to the end of
+          that supplier&rsquo;s list; reorder or edit from the supplier&rsquo;s own edit page.
         </p>
 
         <form action={addAction} className="mt-5 space-y-5">
           <div className="max-w-md">
-            <VendorSelect label="Vendor" name="vendorSlug" vendors={vendorOptions} />
+            <VendorSelect label="Supplier" name="vendorSlug" vendors={vendorOptions} />
           </div>
 
           <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
@@ -166,9 +166,9 @@ export function ReviewManager({ vendors }: { vendors: VendorReviewSummary[] }) {
           <div>
             <h2 className="text-sm font-black uppercase tracking-wide text-content">Bulk import from CSV</h2>
             <p className="mt-1 max-w-2xl text-sm text-muted">
-              One row per vendor, with up to five reviews per row. Vendors are matched by name, then by
-              website, so a sheet that lists a vendor under a different display name still lands correctly.
-              A vendor&rsquo;s existing reviews are replaced by what the sheet carries for it.
+              One row per supplier, with up to five reviews per row. Suppliers are matched by name, then by
+              website, so a sheet that lists a supplier under a different display name still lands correctly.
+              A supplier&rsquo;s existing reviews are replaced by what the sheet carries for it.
             </p>
           </div>
           <button
@@ -265,7 +265,7 @@ export function ReviewManager({ vendors }: { vendors: VendorReviewSummary[] }) {
       {/* ------------------------------------------------ Who has reviews now */}
       <section className="rounded-card border border-line bg-surface-raised p-4 sm:p-6">
         <h2 className="text-sm font-black uppercase tracking-wide text-content">
-          Vendors with reviews ({withReviews.length})
+          Suppliers with reviews ({withReviews.length})
         </h2>
         {withReviews.length === 0 ? (
           <p className="mt-3 text-sm text-muted">

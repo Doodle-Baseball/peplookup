@@ -170,12 +170,12 @@ function aboutBody(supplier: SupplierFacts, stats: SupplierMarketStats): string 
     `${name} is a research peptide supplier listed in the ${site.name} directory${origin.length > 0 ? `, ${origin.join(' and ')}` : ''}.`,
     stats.listingCount > 0
       ? `We currently track ${plural(stats.listingCount, 'listing')} from ${name} across ${plural(stats.compoundCount, 'compound')}, and ${stats.inStockCount} of them were in stock when their prices were last checked.`
-      : `We have not recorded any prices from ${name} yet; listings appear here once they are read from the vendor's live product pages.`,
+      : `We have not recorded any prices from ${name} yet; listings appear here once they are read from the supplier's live product pages.`,
     `Every price is read from ${name}'s own product pages and converted to cost per milligram, so a single vial and a multi-vial kit can be compared on the same scale as every other supplier.`,
     stats.labDocumentCount > 0
       ? `${plural(stats.labDocumentCount, 'listing')} ${stats.labDocumentCount === 1 ? 'links' : 'link'} to a certificate of analysis${supplier.coaLabName ? ` from ${supplier.coaLabName}` : ''}, which you can open from the listing itself.`
       : `${name} has no certificates of analysis on file with us yet, so purity claims for its products cannot be checked here.`,
-    `${site.name} does not sell ${name}'s products: every order is placed on the vendor's own site, and everything listed is sold for laboratory research use only.`,
+    `${site.name} does not sell ${name}'s products: every order is placed on the supplier's own site, and everything listed is sold for laboratory research use only.`,
   ].join(' ');
 }
 
@@ -222,7 +222,7 @@ function compareBody(supplier: SupplierFacts, stats: SupplierMarketStats): strin
       ? `${site.name} tracks ${plural(stats.otherVendorCount, 'other supplier')} with listed prices, and every ranking uses cost per milligram rather than headline price, because pack sizes differ.`
       : `Every ranking on ${site.name} uses cost per milligram rather than headline price, because pack sizes differ between suppliers.`,
     `Out-of-stock listings are excluded before ranking.`,
-    `Prices move often, so open any compound's comparison page to see where ${name} sits against every other vendor today.`,
+    `Prices move often, so open any compound's comparison page to see where ${name} sits against every other supplier today.`,
   ].join(' ');
 }
 

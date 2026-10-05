@@ -24,7 +24,7 @@ export function SupplierEvaluationGuide({ supplierCount }: { supplierCount: numb
           <div className="space-y-4 lg:col-span-2">
             <p className="text-base leading-7 text-muted sm:text-lg sm:leading-8">
               Cost per milligram matters more than the headline price, since pack sizes vary widely between
-              vendors. Beyond price, check whether a certificate of analysis is published for the specific product
+              suppliers. Beyond price, check whether a certificate of analysis is published for the specific product
               and batch, confirm the shipping origin and typical delivery window, note which payment methods are
               accepted, and check for an active discount code before ordering.
             </p>

@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import type { SeoEntry, SeoPageKind } from '@/lib/admin/seo';
 import type { SeoRedirect } from '@/lib/seo';
 import { effectiveSeo, seoChecks, seoStatus, type EffectiveSeo, type SeoStatus } from '@/lib/seo-status';
+import { indexableWhenSeoAdded } from '@/lib/seo-indexing';
 import type { SeoTaskStatus } from '@/lib/seo';
 import { SeoEditDialog } from '@/components/admin/seo/seo-edit-dialog';
 import { cn } from '@/lib/cn';
@@ -25,6 +26,8 @@ const KIND_TABS: readonly { value: KindFilter; label: string }[] = [
   { value: 'compound', label: 'Compounds' },
   { value: 'supplier', label: 'Suppliers' },
   { value: 'guide', label: 'Guides' },
+  { value: 'coupon', label: 'Coupon pages' },
+  { value: 'review', label: 'Review pages' },
 ];
 
 const KIND_LABEL: Record<SeoPageKind, string> = {
@@ -32,6 +35,8 @@ const KIND_LABEL: Record<SeoPageKind, string> = {
   compound: 'Compound',
   supplier: 'Supplier',
   guide: 'Guide',
+  coupon: 'Coupon page',
+  review: 'Review page',
 };
 
 const TASK_STATUS_LABEL: Record<SeoTaskStatus, string> = {
@@ -97,7 +102,10 @@ export function SeoDashboard({
   const rows = useMemo<Row[]>(
     () =>
       entries.map((entry) => {
-        const seo = effectiveSeo(entry.defaults, entry.override);
+        const baseSeo = effectiveSeo(entry.defaults, entry.override);
+        // Coupon and review pages are noindex until SEO details are saved and indexing is switched on.
+        const hiddenByDefault = entry.kind === 'coupon' || entry.kind === 'review';
+        const seo = hiddenByDefault ? { ...baseSeo, robotsIndex: indexableWhenSeoAdded(entry.override) } : baseSeo;
         const checks = seoChecks(seo);
         const taskStatus = entry.override?.taskStatus ?? null;
         return {
@@ -114,7 +122,7 @@ export function SeoDashboard({
   );
 
   const kindCounts = useMemo(() => {
-    const counts: Record<KindFilter, number> = { all: rows.length, static: 0, compound: 0, supplier: 0, guide: 0 };
+    const counts: Record<KindFilter, number> = { all: rows.length, static: 0, compound: 0, supplier: 0, guide: 0, coupon: 0, review: 0 };
     for (const row of rows) counts[row.entry.kind] += 1;
     return counts;
   }, [rows]);
