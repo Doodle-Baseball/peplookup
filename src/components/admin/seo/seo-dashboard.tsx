@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import type { SeoEntry, SeoPageKind } from '@/lib/admin/seo';
 import type { SeoRedirect } from '@/lib/seo';
-import { effectiveSeo, seoChecks, seoStatus, type EffectiveSeo, type SeoStatus } from '@/lib/seo-status';
+import { effectiveSeo, seoChecks, seoStatus, taskStatusLabel, type EffectiveSeo, type SeoStatus } from '@/lib/seo-status';
 import { indexableWhenSeoAdded } from '@/lib/seo-indexing';
 import type { SeoTaskStatus } from '@/lib/seo';
 import { SeoEditDialog } from '@/components/admin/seo/seo-edit-dialog';
@@ -37,12 +37,6 @@ const KIND_LABEL: Record<SeoPageKind, string> = {
   guide: 'Guide',
   coupon: 'Coupon page',
   review: 'Review page',
-};
-
-const TASK_STATUS_LABEL: Record<SeoTaskStatus, string> = {
-  'needs-work': 'Needs work',
-  pending: 'Pending',
-  done: 'Done',
 };
 
 interface Row {
@@ -115,7 +109,7 @@ export function SeoDashboard({
           passed: checks.filter((check) => check.passed).length,
           total: checks.length,
           taskStatus,
-          taskStatusLabel: taskStatus ? TASK_STATUS_LABEL[taskStatus] : null,
+          taskStatusLabel: taskStatus ? taskStatusLabel(taskStatus, entry.kind) : null,
         };
       }),
     [entries],
@@ -215,7 +209,7 @@ export function SeoDashboard({
               <option value="all">All</option>
               <option value="needs-work">Needs work</option>
               <option value="pending">Pending</option>
-              <option value="done">Done</option>
+              <option value="done">Done / Optimized</option>
             </select>
           </label>
         </div>
@@ -297,7 +291,10 @@ function SeoCard({ row, onEdit, disabled }: { row: Row; onEdit: () => void; disa
             <span className="rounded-pill bg-surface-sunken px-2 py-0.5 text-micro font-bold uppercase text-muted">
               {KIND_LABEL[entry.kind]}
             </span>
-            {entry.override ? (
+            {/* Coupon and review pages report the result once their saved SEO passes every check. */}
+            {(entry.kind === 'coupon' || entry.kind === 'review') && row.status === 'optimized' ? (
+              <span className="rounded-pill bg-ok/10 px-2 py-0.5 text-micro font-bold uppercase text-ok">Optimized</span>
+            ) : entry.override ? (
               <span className="rounded-pill bg-info/10 px-2 py-0.5 text-micro font-bold uppercase text-info">Customized</span>
             ) : null}
           </div>

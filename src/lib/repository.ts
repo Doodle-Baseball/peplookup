@@ -153,6 +153,24 @@ export const getSupplier = cache(async (slug: string): Promise<Supplier | null> 
 });
 
 /**
+ * Stored reviews for one supplier. Keyed by slug (unstable_cache adds the
+ * arguments to the key) and tagged like the review-slug list below, so every
+ * admin write that drops that tag drops these too. Before this each supplier
+ * and reviews page view ran its own query for rows that rarely change.
+ */
+const getStoredSupplierReviewsCached = unstable_cache(
+  async (supplierSlug: string): Promise<readonly SupplierReview[]> => {
+    const client = getSupabaseServerClient();
+    if (!client) return [];
+    const fromDb = await fetchSupplierReviewsFromDb(client, supplierSlug);
+    if (fromDb === null) throw new SourceUnavailableError('supplier-reviews');
+    return fromDb;
+  },
+  ['supplier-reviews-by-supplier'],
+  { revalidate: CATALOGUE_REVALIDATE_SECONDS, tags: ['supplier-reviews'] },
+);
+
+/**
  * Individually-attributed reviews for one supplier, in the order the admin
  * arranged them. Falls back to the Trustpilot set supplied for this vendor
  * when the table holds nothing for it yet, so reviews show before anyone
@@ -162,8 +180,10 @@ export const getSupplier = cache(async (slug: string): Promise<Supplier | null> 
 export async function getSupplierReviews(
   supplier: Pick<Supplier, 'slug' | 'name' | 'homepageUrl'>,
 ): Promise<readonly SupplierReview[]> {
-  const client = getSupabaseServerClient();
-  const fromDb = client ? await fetchSupplierReviewsFromDb(client, supplier.slug) : null;
+  const fromDb = await readOr<readonly SupplierReview[] | null>(
+    () => getStoredSupplierReviewsCached(supplier.slug),
+    () => null,
+  );
   if (fromDb && fromDb.length > 0) return fromDb;
   return findVendorReviewProfile(supplier.name, supplier.homepageUrl)?.reviews ?? [];
 }
@@ -307,6 +327,19 @@ export async function getOffersForSupplier(supplierSlug: string): Promise<readon
 
 export async function countProductsForSupplier(supplierSlug: string): Promise<number> {
   return (await allOffers()).filter((o) => o.supplierSlug === supplierSlug).length;
+}
+
+/**
+ * Listings per supplier in one pass over the offer list. Callers that need a
+ * count for many suppliers use this instead of {@link countProductsForSupplier}
+ * in a loop, which re-scanned every offer once per supplier.
+ */
+export async function countProductsBySupplier(): Promise<ReadonlyMap<string, number>> {
+  const counts = new Map<string, number>();
+  for (const offer of await allOffers()) {
+    counts.set(offer.supplierSlug, (counts.get(offer.supplierSlug) ?? 0) + 1);
+  }
+  return counts;
 }
 
 /** Adapt a stored offer into the shape the price math consumes. */

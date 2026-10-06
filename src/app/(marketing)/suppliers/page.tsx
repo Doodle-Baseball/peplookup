@@ -3,7 +3,6 @@ import Link from 'next/link';
 import {
   getSuppliers,
   getAllOffers,
-  countProductsForSupplier,
   getSupplierSlugsWithReviews,
   orderSuppliersForDisplay,
 } from '@/lib/repository';
@@ -80,8 +79,6 @@ export default async function SuppliersPage({
   const currentPage = Math.min(Math.max(1, Number(pageParam) || 1), pageCount);
   const firstIndex = (currentPage - 1) * SUPPLIERS_PER_PAGE;
   const pageSuppliers = filtered.slice(firstIndex, firstIndex + SUPPLIERS_PER_PAGE);
-  // Product counts only for the cards on this page, not every supplier that matched.
-  const counts = await Promise.all(pageSuppliers.map((s) => countProductsForSupplier(s.slug)));
   const popularSuppliers = suppliers.slice(0, POPULAR_SUPPLIER_COUNT);
   const labVerifiedCount = suppliers.filter((s) => s.labVerified).length;
   const couponCount = suppliers.filter((s) => s.coupon !== null).length;
@@ -268,7 +265,7 @@ export default async function SuppliersPage({
                   className="animate-fade-up"
                   style={{ animationDelay: `${Math.min(index, MAX_STAGGERED_CARDS) * 60}ms` }}
                 >
-                  <SupplierCard supplier={supplier} productCount={counts[index] ?? 0} />
+                  <SupplierCard supplier={supplier} productCount={listingCountBySlug.get(supplier.slug) ?? 0} />
                 </li>
               ))}
             </ul>

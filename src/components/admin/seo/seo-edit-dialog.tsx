@@ -19,7 +19,7 @@ import {
   type SeoSaveState,
 } from '@/app/admin/(dashboard)/seo/actions';
 import { TagListInput } from '@/components/admin/tag-list-input';
-import { characterCount, DESCRIPTION_LENGTH, TITLE_LENGTH } from '@/lib/seo-status';
+import { characterCount, DESCRIPTION_LENGTH, TITLE_LENGTH, taskStatusLabel } from '@/lib/seo-status';
 import { site } from '@/config/site';
 import { indexableWhenSeoAdded } from '@/lib/seo-indexing';
 import { cn } from '@/lib/cn';
@@ -29,11 +29,7 @@ import { SupplierContentEditor } from '@/components/admin/seo/supplier-content-e
 
 const INITIAL_STATE: SeoSaveState = { error: null, fieldErrors: {}, savedAt: null };
 
-const TASK_STATUS_OPTIONS: readonly { value: SeoTaskStatus; label: string }[] = [
-  { value: 'needs-work', label: 'Needs work' },
-  { value: 'pending', label: 'Pending' },
-  { value: 'done', label: 'Done' },
-];
+const TASK_STATUS_VALUES: readonly SeoTaskStatus[] = ['needs-work', 'pending', 'done'];
 
 /** Same colour language the dashboard cards use for these three states. */
 const TASK_STATUS_STYLE: Record<SeoTaskStatus, { field: string; dot: string }> = {
@@ -51,7 +47,7 @@ const TASK_STATUS_STYLE: Record<SeoTaskStatus, { field: string; dot: string }> =
  * "Needs work" in the dropdown, since that's the honest starting state for
  * SEO on a page nobody has reviewed yet.
  */
-function TaskStatusDropdown({ path, initial }: { path: string; initial: SeoTaskStatus | null }) {
+function TaskStatusDropdown({ path, kind, initial }: { path: string; kind: string; initial: SeoTaskStatus | null }) {
   const [value, setValue] = useState<SeoTaskStatus>(initial ?? 'needs-work');
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -102,9 +98,9 @@ function TaskStatusDropdown({ path, initial }: { path: string; initial: SeoTaskS
             style.field,
           )}
         >
-          {TASK_STATUS_OPTIONS.map((option) => (
-            <option key={option.value} value={option.value} className="bg-surface text-content">
-              {option.label}
+          {TASK_STATUS_VALUES.map((option) => (
+            <option key={option} value={option} className="bg-surface text-content">
+              {taskStatusLabel(option, kind)}
             </option>
           ))}
         </select>
@@ -252,7 +248,7 @@ export function SeoEditDialog({ entry, onClose }: { entry: SeoEntry; onClose: ()
 
           <div className="space-y-6 px-6 py-6">
             <Section title="Workflow status" description="A note for the admin only. Saved immediately, separate from the fields below.">
-              <TaskStatusDropdown path={entry.path} initial={override?.taskStatus ?? null} />
+              <TaskStatusDropdown path={entry.path} kind={entry.kind} initial={override?.taskStatus ?? null} />
             </Section>
 
             {renamableKind ? (
@@ -372,7 +368,7 @@ export function SeoEditDialog({ entry, onClose }: { entry: SeoEntry; onClose: ()
               <TagListInput
                 label="Page keywords"
                 name="keywords"
-                defaultValue={override?.keywords ?? []}
+                defaultValue={override?.keywords.length ? override.keywords : (entry.defaults.keywords ?? [])}
                 placeholder="e.g. bpc-157,tb-500,dsip"
               />
               <FieldError message={errors.keywords} />

@@ -11,17 +11,20 @@ const mocks = vi.hoisted(() => ({
   fetchSupplierFromDb: vi.fn(),
   fetchOffersFromDb: vi.fn(),
   fetchGuidesFromDb: vi.fn(),
+  fetchSupplierReviewsFromDb: vi.fn(),
 }));
 
 // Behaves like Next's data cache for the one thing these tests care about: a
-// value that resolves is remembered, one that throws is not.
+// value that resolves is remembered per set of arguments, one that throws is not.
 vi.mock('next/cache', () => ({
-  unstable_cache: <T>(read: () => Promise<T>) => {
-    let stored: { value: T } | null = null;
-    return async () => {
-      if (stored) return stored.value;
-      const value = await read();
-      stored = { value };
+  unstable_cache: <Args extends unknown[], T>(read: (...args: Args) => Promise<T>) => {
+    const stored = new Map<string, { value: T }>();
+    return async (...args: Args) => {
+      const key = JSON.stringify(args);
+      const hit = stored.get(key);
+      if (hit) return hit.value;
+      const value = await read(...args);
+      stored.set(key, { value });
       return value;
     };
   },
@@ -37,7 +40,7 @@ vi.mock('../supabase/suppliers', () => ({
 }));
 vi.mock('../supabase/offers', () => ({ fetchOffersFromDb: mocks.fetchOffersFromDb }));
 vi.mock('../supabase/guides', () => ({ fetchGuidesFromDb: mocks.fetchGuidesFromDb }));
-vi.mock('../supabase/supplier-reviews', () => ({ fetchSupplierReviewsFromDb: vi.fn() }));
+vi.mock('../supabase/supplier-reviews', () => ({ fetchSupplierReviewsFromDb: mocks.fetchSupplierReviewsFromDb }));
 vi.mock('@/lib/seo', () => ({ getSupplierSlugAliases: async () => new Map<string, string[]>() }));
 
 const dbProduct: Product = { ...seedProducts[0]!, slug: 'db-compound', name: 'From the database' };
@@ -73,6 +76,7 @@ beforeEach(() => {
     mocks.fetchSupplierFromDb,
     mocks.fetchOffersFromDb,
     mocks.fetchGuidesFromDb,
+    mocks.fetchSupplierReviewsFromDb,
   ]) {
     mock.mockReset();
   }
@@ -156,5 +160,56 @@ describe('looking up one compound or vendor', () => {
 
     expect((await repository.getSupplier('paused-vendor'))?.name).toBe('Paused Vendor');
     expect(mocks.fetchSupplierFromDb).toHaveBeenCalledWith(mocks.client, 'paused-vendor');
+  });
+});
+
+describe('counting listings per vendor', () => {
+  it('groups every offer by vendor in one pass, matching the per-vendor count', async () => {
+    const repository = await freshRepository();
+    mocks.fetchOffersFromDb.mockResolvedValue([
+      dbOffer,
+      { ...dbOffer, form: 'capsule' },
+      { ...dbOffer, supplierSlug: 'other-vendor' },
+    ]);
+
+    const counts = await repository.countProductsBySupplier();
+    expect(counts.get('db-vendor')).toBe(await repository.countProductsForSupplier('db-vendor'));
+    expect(counts.get('db-vendor')).toBe(2);
+    expect(counts.get('other-vendor')).toBe(1);
+    expect(counts.get('no-listings')).toBeUndefined();
+  });
+});
+
+describe('reading the stored reviews of a vendor', () => {
+  const supplier = { slug: 'db-vendor', name: 'Database Vendor', homepageUrl: 'https://db-vendor.example' };
+  const stored = [{ id: 'r1', author: 'A. Reader', rating: 5, body: 'Arrived quickly.', reviewedAt: null }];
+
+  it('asks the database once per vendor however many page views follow', async () => {
+    const repository = await freshRepository();
+    mocks.fetchSupplierReviewsFromDb.mockResolvedValue(stored);
+
+    expect(await repository.getSupplierReviews(supplier)).toEqual(stored);
+    expect(await repository.getSupplierReviews(supplier)).toEqual(stored);
+    expect(mocks.fetchSupplierReviewsFromDb).toHaveBeenCalledTimes(1);
+
+    await repository.getSupplierReviews({ ...supplier, slug: 'another-vendor' });
+    expect(mocks.fetchSupplierReviewsFromDb).toHaveBeenCalledTimes(2);
+    expect(mocks.fetchSupplierReviewsFromDb).toHaveBeenLastCalledWith(mocks.client, 'another-vendor');
+  });
+
+  it('does not store a failed read, so the next view asks again', async () => {
+    const repository = await freshRepository();
+    mocks.fetchSupplierReviewsFromDb.mockResolvedValueOnce(null);
+    expect(await repository.getSupplierReviews(supplier)).toEqual([]);
+
+    mocks.fetchSupplierReviewsFromDb.mockResolvedValueOnce(stored);
+    expect(await repository.getSupplierReviews(supplier)).toEqual(stored);
+  });
+
+  it('reads as no reviews without a database connection', async () => {
+    const repository = await freshRepository();
+    mocks.client = null;
+    expect(await repository.getSupplierReviews(supplier)).toEqual([]);
+    expect(mocks.fetchSupplierReviewsFromDb).not.toHaveBeenCalled();
   });
 });

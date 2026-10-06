@@ -41,14 +41,25 @@ const supplierHostRowSchema = z.object({
 
 type VendorIndex = ReturnType<typeof buildVendorHostIndex>;
 let vendorIndexCache: { index: VendorIndex; loadedAt: number } | null = null;
+let vendorIndexLoad: Promise<VendorIndex> | null = null;
 
 /**
  * Held in module memory (not unstable_cache): every click would otherwise cost
  * a suppliers query, and vendors change rarely enough that a few minutes of
  * staleness only means a brand-new vendor is attributed a little late.
+ *
+ * Clicks that arrive while the index is being read (a cold start, or the
+ * moment it expires) share that one read instead of each issuing their own.
  */
 async function vendorIndex(): Promise<VendorIndex> {
   if (vendorIndexCache && Date.now() - vendorIndexCache.loadedAt < VENDOR_INDEX_TTL_MS) return vendorIndexCache.index;
+  vendorIndexLoad ??= loadVendorIndex().finally(() => {
+    vendorIndexLoad = null;
+  });
+  return vendorIndexLoad;
+}
+
+async function loadVendorIndex(): Promise<VendorIndex> {
   const { data, error } = await requireClient().from('suppliers').select('slug, name, homepage_url, affiliate_url');
   if (error) {
     // Attribution is best-effort: keep serving the last index, or record the click unattributed.

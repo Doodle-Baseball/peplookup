@@ -126,7 +126,13 @@ function toSeoError(error: { message: string; code?: string }): AdminDbError {
 }
 
 function defaultsOnly(defaults: SeoDefaults): SeoDefaults {
-  return { path: defaults.path, title: defaults.title, description: defaults.description, h1: defaults.h1 };
+  return {
+    path: defaults.path,
+    title: defaults.title,
+    description: defaults.description,
+    h1: defaults.h1,
+    ...(defaults.keywords ? { keywords: defaults.keywords } : {}),
+  };
 }
 
 export async function getSeoDashboardData(): Promise<SeoDashboardData> {

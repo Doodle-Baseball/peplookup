@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ExternalIcon, GlobeIcon } from '@/components/icons/icons';
 import { cn } from '@/lib/cn';
 import { timeAgo } from '@/lib/format';
@@ -12,7 +12,13 @@ import {
   type TrafficSnapshot,
 } from '@/lib/traffic/snapshot';
 
-const POLL_INTERVAL_MS = 3000;
+const POLL_INTERVAL_MS = 15000;
+/**
+ * A request still running after this is abandoned. Without it, one request
+ * that never settles (a dropped connection) would hold the in-flight slot and
+ * every later poll would be skipped, freezing the dashboard for good.
+ */
+const REQUEST_TIMEOUT_MS = 10000;
 /** How long a freshly arrived click stays highlighted in the live feed. */
 const FRESH_HIGHLIGHT_MS = 6000;
 
@@ -129,63 +135,156 @@ export function TrafficDashboard({
   const [nowMs, setNowMs] = useState(() => Date.now());
   const [freshIds, setFreshIds] = useState<ReadonlySet<number>>(new Set());
   const knownIds = useRef<Set<number> | null>(initial ? new Set(initial.recent.map((click) => click.id)) : null);
-  const inFlight = useRef<AbortController | null>(null);
+  const highlightTimers = useRef<Set<number>>(new Set());
 
-  const load = useCallback(async (forRange: TrafficRange) => {
-    inFlight.current?.abort();
-    const controller = new AbortController();
-    inFlight.current = controller;
-    try {
-      const response = await fetch(`/api/admin/traffic?range=${forRange}`, { cache: 'no-store', signal: controller.signal });
-      const body: unknown = await response.json().catch(() => null);
-      if (!response.ok) {
-        const message =
-          typeof body === 'object' && body !== null && 'error' in body && typeof body.error === 'string'
-            ? body.error
-            : 'Traffic could not be loaded.';
-        setError(message);
+  // The whole polling lifecycle for one range lives in this single effect, so its cleanup is the only place that
+  // has to stop it: changing range or unmounting aborts the request, clears the interval and removes the listener.
+  useEffect(() => {
+    let isActive = true;
+    let inFlight: AbortController | null = null;
+    let pollTimer: number | null = null;
+    let requestTimer: number | null = null;
+
+    const clearRequestTimer = () => {
+      if (requestTimer === null) return;
+      window.clearTimeout(requestTimer);
+      requestTimer = null;
+    };
+
+    const refresh = async () => {
+      if (inFlight) return;
+      const controller = new AbortController();
+      inFlight = controller;
+      let timedOut = false;
+      requestTimer = window.setTimeout(() => {
+        timedOut = true;
+        controller.abort();
+      }, REQUEST_TIMEOUT_MS);
+      // A response that was aborted or superseded must never reach state, even if it resolves late.
+      const isStale = () => !isActive || controller.signal.aborted;
+      // The one abort worth telling the admin about: their own request gave up, not a range change or leaving the page.
+      const reportTimeout = () => {
+        if (isActive && timedOut) setError('Connection lost. Retrying…');
+      };
+      try {
+        const response = await fetch(`/api/admin/traffic?range=${range}`, { cache: 'no-store', signal: controller.signal });
+        const body: unknown = await response.json().catch(() => null);
+        if (isStale()) {
+          reportTimeout();
+          return;
+        }
+        if (!response.ok) {
+          const message =
+            typeof body === 'object' && body !== null && 'error' in body && typeof body.error === 'string'
+              ? body.error
+              : 'Traffic could not be loaded.';
+          setError(message);
+          return;
+        }
+        const next = body as TrafficSnapshot;
+        const known = knownIds.current;
+        // Nothing is "fresh" on the first load: only clicks that arrive while this page is open should flash.
+        const arrived = known ? next.recent.filter((click) => !known.has(click.id)).map((click) => click.id) : [];
+        knownIds.current = new Set(next.recent.map((click) => click.id));
+        setSnapshot(next);
+        setError(null);
+        if (arrived.length > 0) {
+          setFreshIds((current) => new Set([...current, ...arrived]));
+          const timeoutId = window.setTimeout(() => {
+            highlightTimers.current.delete(timeoutId);
+            setFreshIds((current) => new Set([...current].filter((id) => !arrived.includes(id))));
+          }, FRESH_HIGHLIGHT_MS);
+          highlightTimers.current.add(timeoutId);
+        }
+      } catch {
+        if (isStale()) {
+          reportTimeout();
+          return;
+        }
+        setError('Connection lost. Retrying…');
+      } finally {
+        if (inFlight === controller) {
+          clearRequestTimer();
+          inFlight = null;
+        }
+      }
+    };
+
+    const stopPolling = () => {
+      if (pollTimer === null) return;
+      window.clearInterval(pollTimer);
+      pollTimer = null;
+    };
+
+    const startPolling = () => {
+      stopPolling();
+      pollTimer = window.setInterval(() => void refresh(), POLL_INTERVAL_MS);
+    };
+
+    const onVisibilityChange = () => {
+      if (document.hidden) {
+        stopPolling();
         return;
       }
-      const next = body as TrafficSnapshot;
-      const known = knownIds.current;
-      // Nothing is "fresh" on the first load: only clicks that arrive while this page is open should flash.
-      const arrived = known ? next.recent.filter((click) => !known.has(click.id)).map((click) => click.id) : [];
-      knownIds.current = new Set(next.recent.map((click) => click.id));
-      setSnapshot(next);
-      setError(null);
-      if (arrived.length > 0) {
-        setFreshIds((current) => new Set([...current, ...arrived]));
-        window.setTimeout(
-          () => setFreshIds((current) => new Set([...current].filter((id) => !arrived.includes(id)))),
-          FRESH_HIGHLIGHT_MS,
-        );
-      }
-    } catch (caught) {
-      if (caught instanceof DOMException && caught.name === 'AbortError') return;
-      setError('Connection lost. Retrying…');
+      void refresh();
+      startPolling();
+    };
+
+    // A dashboard opened in a background tab waits for the tab to become visible instead of fetching.
+    if (!document.hidden) {
+      void refresh();
+      startPolling();
     }
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
+    return () => {
+      isActive = false;
+      stopPolling();
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      clearRequestTimer();
+      inFlight?.abort();
+      inFlight = null;
+    };
+  }, [range]);
+
+  useEffect(() => {
+    const timers = highlightTimers.current;
+    return () => {
+      timers.forEach((timeoutId) => window.clearTimeout(timeoutId));
+      timers.clear();
+    };
   }, []);
 
-  // Refetch immediately when the range changes, then keep polling; paused while the tab is hidden.
+  // Keeps the "Xs ago" labels ticking while the tab is visible; no point waking a hidden tab every second.
   useEffect(() => {
-    void load(range);
-    const timer = window.setInterval(() => {
-      if (!document.hidden) void load(range);
-    }, POLL_INTERVAL_MS);
-    const onVisible = () => {
-      if (!document.hidden) void load(range);
-    };
-    document.addEventListener('visibilitychange', onVisible);
-    return () => {
-      window.clearInterval(timer);
-      document.removeEventListener('visibilitychange', onVisible);
-      inFlight.current?.abort();
-    };
-  }, [range, load]);
+    let tickTimer: number | null = null;
 
-  useEffect(() => {
-    const timer = window.setInterval(() => setNowMs(Date.now()), 1000);
-    return () => window.clearInterval(timer);
+    const stopTicking = () => {
+      if (tickTimer === null) return;
+      window.clearInterval(tickTimer);
+      tickTimer = null;
+    };
+
+    const startTicking = () => {
+      stopTicking();
+      tickTimer = window.setInterval(() => setNowMs(Date.now()), 1000);
+    };
+
+    const onVisibilityChange = () => {
+      if (document.hidden) {
+        stopTicking();
+        return;
+      }
+      setNowMs(Date.now());
+      startTicking();
+    };
+
+    if (!document.hidden) startTicking();
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => {
+      stopTicking();
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
   }, []);
 
   const top = snapshot?.destinations[0] ?? null;
