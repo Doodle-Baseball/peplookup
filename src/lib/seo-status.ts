@@ -32,6 +32,17 @@ export interface EffectiveSeo {
 
 export type SeoStatus = 'optimized' | 'needs-work' | 'noindex';
 
+type TaskStatus = 'needs-work' | 'pending' | 'done';
+
+/**
+ * Coupon and review pages call a finished page "Optimized"; every other kind
+ * keeps "Done". The stored value is the same 'done' either way.
+ */
+export function taskStatusLabel(status: TaskStatus, kind: string): string {
+  if (status === 'done') return kind === 'coupon' || kind === 'review' ? 'Optimized' : 'Done';
+  return status === 'pending' ? 'Pending' : 'Needs work';
+}
+
 export interface SeoCheck {
   label: string;
   passed: boolean;
@@ -47,7 +58,8 @@ export function effectiveSeo(defaults: SeoDefaults, override: SeoOverrideFields 
     title: override?.metaTitle || defaults.title,
     description: override?.metaDescription || defaults.description,
     h1: override?.h1 || defaults.h1,
-    keywords: override?.keywords ?? [],
+    // A saved list wins; the generated coupon and review pages fall back to their default keywords.
+    keywords: override?.keywords.length ? override.keywords : (defaults.keywords ?? []),
     canonical: override?.canonicalUrl || defaults.path,
     robotsIndex: override?.robotsIndex ?? true,
     robotsFollow: override?.robotsFollow ?? true,
