@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { getSuppliers, getProducts, countProductsForSupplier } from '@/lib/repository';
+import { getSuppliers, getProducts, countProductsBySupplier } from '@/lib/repository';
 import { getSupabaseServerClient } from '@/lib/supabase/server';
 import { fetchSuppliersFromDb } from '@/lib/supabase/suppliers';
 import { AdminPageHeader } from '@/components/admin/page-header';
@@ -108,8 +108,8 @@ function SectionCard({
 
 export default async function AdminDashboardPage() {
   const [suppliers, products] = await Promise.all([getSuppliers(), getProducts()]);
-  const counts = await Promise.all(suppliers.map((s) => countProductsForSupplier(s.slug)));
-  const totalOffers = counts.reduce((sum, n) => sum + n, 0);
+  const countBySupplier = await countProductsBySupplier();
+  const totalOffers = suppliers.reduce((sum, s) => sum + (countBySupplier.get(s.slug) ?? 0), 0);
   const suppliersWithCoupons = suppliers.filter((s) => s.coupon !== null).length;
   const labVerifiedSuppliers = suppliers.filter((s) => s.labVerified).length;
 

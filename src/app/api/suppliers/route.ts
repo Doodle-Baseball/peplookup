@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { countProductsForSupplier, getSuppliers } from '@/lib/repository';
+import { countProductsBySupplier, getSuppliers } from '@/lib/repository';
 import { MAX_SLUGS, parseSlugsParam, publicJson } from '@/lib/api/public-read';
 
 /**
@@ -25,10 +25,10 @@ export async function GET(request: NextRequest) {
   const all = await getSuppliers();
   const suppliers = all.filter((supplier) => wanted.has(supplier.slug));
 
-  const counts = await Promise.all(suppliers.map((supplier) => countProductsForSupplier(supplier.slug)));
-  const payload = suppliers.map((supplier, index) => ({
+  const countBySupplier = await countProductsBySupplier();
+  const payload = suppliers.map((supplier) => ({
     supplier,
-    productCount: counts[index] ?? 0,
+    productCount: countBySupplier.get(supplier.slug) ?? 0,
   }));
   return publicJson(payload);
 }
