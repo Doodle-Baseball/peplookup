@@ -290,7 +290,7 @@ const listings = [
     productUrl: 'https://crystalpeptides.eu/product/ahk-cu-50mg?ref=PEPLOOKUP',
   },
   {
-    productSlug: 'melanotan-i',
+    productSlug: 'melanotan-1',
     mg: 10,
     priceCents: 4679,
     imageUrl: `${IMAGES}uploads/melanotan-1-10mg-1777686571337.webp`,

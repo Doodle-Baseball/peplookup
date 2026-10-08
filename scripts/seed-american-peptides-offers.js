@@ -51,7 +51,7 @@ const listings = [
   { productSlug: 'selank', form: 'spray', mg: 5, priceCents: 9000, imageUrl: media('3ad2c9227b599638'), coaUrl: doc('COA7627.pdf'), productUrl: product('selank-nasal-spray') },
   { productSlug: 'pt-141', mg: 10, priceCents: 6000, imageUrl: media('ea5fd9ca91ac3dc6'), coaUrl: doc('COA7625.pdf'), productUrl: product('pt-141') },
   { productSlug: '5-amino-1mq', mg: 50, priceCents: 8000, imageUrl: media('32038ddbd945847f'), coaUrl: doc('COA7587.pdf'), productUrl: product('5-amino-1mq') },
-  { productSlug: 'melanotan-i', mg: 10, priceCents: 5500, imageUrl: media('440e420d390a9095'), coaUrl: doc('COA3394.pdf?v=2'), productUrl: product('melanotan-1') },
+  { productSlug: 'melanotan-1', mg: 10, priceCents: 5500, imageUrl: media('440e420d390a9095'), coaUrl: doc('COA3394.pdf?v=2'), productUrl: product('melanotan-1') },
   { productSlug: 'melanotan-2', mg: 10, priceCents: 5500, imageUrl: media('0c2c9b76d6a3fad9'), coaUrl: null, productUrl: product('melanotan-2') },
   { productSlug: 'cjc-1295-no-dac', mg: 10, priceCents: 11000, imageUrl: media('80e907e79507a406'), coaUrl: doc('COA7601.pdf'), productUrl: product('cjc-1295-no-dac') },
   // 5 mg + 5 mg and 10 mg + 10 mg blends.

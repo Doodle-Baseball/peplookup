@@ -19,7 +19,7 @@ const CATEGORIES = {
   '5-amino-1mq': 'Weight Loss, Metabolic',
   cagrisema: 'Weight Loss, Metabolic, Blends',
   'melanotan-2': 'Skin, Hair',
-  'melanotan-i': 'Skin, Hair',
+  'melanotan-1': 'Skin, Hair',
   'ahk-cu': 'Skin, Hair',
   dsip: 'Sleep, Recovery',
 };

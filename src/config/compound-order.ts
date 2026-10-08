@@ -39,7 +39,7 @@ export const COMPOUND_ORDER: readonly string[] = [
   'glutathione',
   'dihexa',
   'dsip',
-  'melanotan-i',
+  'melanotan-1',
   'wolverine',
   'ipamorelin-cjc-1295-no-dac',
   'bacteriostatic-water',

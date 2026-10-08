@@ -41,7 +41,7 @@ const listings = [
   { productSlug: 'ipamorelin', mg: 5, priceCents: 4499, imageUrl: `${UPLOADS}2026/07/Ipamorelin-5mg-768x768.jpg`, coaUrl: COA_PAGE, productUrl: product('ipamorelin') },
   { productSlug: 'ipamorelin', mg: 10, priceCents: 8499, imageUrl: `${UPLOADS}2026/07/Ipamorelin-10mg-768x768.jpg`, coaUrl: COA_PAGE, productUrl: product('ipamorelin') },
   { productSlug: 'klow-bpc-157-tb-500-kpv-ghk-cu', mg: 80, priceCents: 10999, imageUrl: `${UPLOADS}2026/07/KLOW-80mg-768x768.jpg`, coaUrl: COA_PAGE, productUrl: product('klow') },
-  { productSlug: 'melanotan-i', mg: 10, priceCents: 3499, imageUrl: `${UPLOADS}2026/07/Melanotan-I-10mg-768x768.jpg`, coaUrl: COA_PAGE, productUrl: product('melanotan-1') },
+  { productSlug: 'melanotan-1', mg: 10, priceCents: 3499, imageUrl: `${UPLOADS}2026/07/Melanotan-I-10mg-768x768.jpg`, coaUrl: COA_PAGE, productUrl: product('melanotan-1') },
   { productSlug: 'melanotan-2', mg: 10, priceCents: 3499, imageUrl: `${UPLOADS}2026/07/Melanotan-II-10mg-768x768.jpg`, coaUrl: COA_PAGE, productUrl: product('melanotan-ii') },
   { productSlug: 'nad', mg: 1000, priceCents: 9999, imageUrl: `${UPLOADS}2026/07/NAD-1000mg-768x768.jpg`, coaUrl: COA_PAGE, productUrl: product('nad') },
   { productSlug: 'selank', mg: 5, priceCents: 2499, imageUrl: `${UPLOADS}2026/07/Selank-5mg-768x768.jpg`, coaUrl: COA_PAGE, productUrl: product('selank') },

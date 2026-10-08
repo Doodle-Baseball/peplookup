@@ -145,7 +145,7 @@ const listings = [
     productUrl: 'https://vortexresearch.net/product/10ml-reconstitution-solution/?code=adamadam',
   },
   {
-    productSlug: 'melanotan-i',
+    productSlug: 'melanotan-1',
     mg: 10,
     priceCents: 2999,
     imageUrl: 'https://i0.wp.com/vortexresearch.net/wp-content/uploads/2026/08/vortex-mt-1-10mg.webp?fit=1200%2C1200&quality=72&ssl=1',

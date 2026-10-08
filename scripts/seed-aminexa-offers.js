@@ -23,7 +23,7 @@ const listings = [
   { productSlug: 'ipamorelin', mg: 5, priceCents: 5500, inStock: false, imageUrl: `${IMAGES}1787870737908-e6u1wm.png`, coaUrl: COA_PAGE, productUrl: product('ipamorelin-5mg') },
   { productSlug: 'ipamorelin', mg: 10, priceCents: 7500, inStock: false, imageUrl: `${IMAGES}1787870750569-hcatps.png`, coaUrl: COA_PAGE, productUrl: product('ipamorelin-5mg') },
   { productSlug: 'mots-c', mg: 10, priceCents: 8900, imageUrl: `${IMAGES}1787870763448-o53lxg.png`, coaUrl: COA_PAGE, productUrl: product('mots-c') },
-  { productSlug: 'melanotan-i', mg: 10, priceCents: 4900, imageUrl: `${IMAGES}1787870786772-saplh9.png`, coaUrl: COA_PAGE, productUrl: product('mt1') },
+  { productSlug: 'melanotan-1', mg: 10, priceCents: 4900, imageUrl: `${IMAGES}1787870786772-saplh9.png`, coaUrl: COA_PAGE, productUrl: product('mt1') },
   { productSlug: 'melanotan-2', mg: 10, priceCents: 4900, imageUrl: `${IMAGES}1787875276784-z5glaa.png`, coaUrl: COA_PAGE, productUrl: product('mt2') },
   { productSlug: 'nad', mg: 500, priceCents: 12900, imageUrl: `${IMAGES}1782423192652-l3lnla.png`, coaUrl: COA_PAGE, productUrl: product('nad') },
   { productSlug: 'selank', mg: 10, priceCents: 4900, imageUrl: `${IMAGES}1787870977260-vplmi2.png`, coaUrl: COA_PAGE, productUrl: product('selank-10mg') },

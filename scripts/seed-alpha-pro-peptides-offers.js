@@ -275,7 +275,7 @@ const listings = [
     inStock: false,
   },
   {
-    productSlug: 'melanotan-i',
+    productSlug: 'melanotan-1',
     mg: 10,
     priceCents: 2105,
     imageUrl: `${UPLOADS}apsq-melanotan-1-19285-zc-600x625.webp`,

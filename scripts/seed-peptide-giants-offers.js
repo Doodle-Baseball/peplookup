@@ -478,7 +478,7 @@ const listings = [
     productUrl: `https://peptidegiants.com/product/ahk-cu-100mg/${REF}`,
   },
   {
-    productSlug: 'melanotan-i',
+    productSlug: 'melanotan-1',
     mg: 10,
     priceCents: 3000,
     imageUrl: `${UPLOADS}2026/07/Melanotan1-10-mg-mockup.webp`,

@@ -29,7 +29,7 @@ const listings = [
   { productSlug: 'ss-31-elamipretide', mg: 10, priceCents: 6599, imageUrl: render('SS-31-10mg.webp'), coaUrl: coa('ss-31-coa.webp'), productUrl: product('ss-31') },
   { productSlug: 'dsip', mg: 5, priceCents: 4500, imageUrl: render('DSIP-5mg.webp'), coaUrl: null, productUrl: product('dsip') },
   { productSlug: 'glutathione', mg: 1500, priceCents: 6999, imageUrl: render('Glutathione-1500mg.webp'), coaUrl: null, productUrl: product('glutathione') },
-  { productSlug: 'melanotan-i', mg: 10, priceCents: 5000, imageUrl: render('Melanotan-1-10mg.webp'), coaUrl: null, productUrl: product('melanotan-1') },
+  { productSlug: 'melanotan-1', mg: 10, priceCents: 5000, imageUrl: render('Melanotan-1-10mg.webp'), coaUrl: null, productUrl: product('melanotan-1') },
   { productSlug: 'melanotan-2', mg: 10, priceCents: 5000, imageUrl: render('Melanotan-2-10mg.webp'), coaUrl: coa('Chromate_Job_37509.webp'), productUrl: product('melanotan-2') },
   { productSlug: 'glow-ghk-cu-bpc-157-tb-500', mg: 70, priceCents: 12500, imageUrl: render('GLOW-70mg.webp'), coaUrl: null, productUrl: product('glow') },
   { productSlug: 'klow-bpc-157-tb-500-kpv-ghk-cu', mg: 80, priceCents: 14500, imageUrl: render('Klow-80mg.webp'), coaUrl: coa('klow-coa.webp'), productUrl: product('klow') },

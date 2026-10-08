@@ -29,7 +29,7 @@ const listings = [
   { productSlug: 'retatrutide', mg: 30, priceCents: 24999, imageUrl: `${UPLOADS}2026/09/tri-receptor-agonist-39aa-v2-768x768.webp`, coaUrl: null, productUrl: product('glp3-glp-1-gip-glucagon-triple-agonist') },
   { productSlug: 'mots-c', mg: 10, priceCents: 5999, imageUrl: `${UPLOADS}2025/08/MOTS-C-768x768.png`, coaUrl: null, productUrl: product('mots-c-mitochondrial-peptide') },
   { productSlug: 'mots-c', mg: 20, priceCents: 7999, imageUrl: `${UPLOADS}2025/08/MOTS-C-768x768.png`, coaUrl: null, productUrl: product('mots-c-mitochondrial-peptide') },
-  { productSlug: 'melanotan-i', mg: 10, priceCents: 3599, imageUrl: `${UPLOADS}2025/08/MT-1-768x768.png`, coaUrl: null, productUrl: product('mt-1-10mg') },
+  { productSlug: 'melanotan-1', mg: 10, priceCents: 3599, imageUrl: `${UPLOADS}2025/08/MT-1-768x768.png`, coaUrl: null, productUrl: product('mt-1-10mg') },
   { productSlug: 'melanotan-2', mg: 10, priceCents: 3999, imageUrl: `${UPLOADS}2026/09/mt-ii-cyclic-heptapeptide-v2-768x768.webp`, coaUrl: null, productUrl: product('mt-ii-10mg') },
   { productSlug: 'nad', mg: 1000, priceCents: 9599, imageUrl: `${UPLOADS}2025/08/NAD.png`, coaUrl: null, productUrl: product('nad-nicotinamide-adenine-dinucleotide-1000mg') },
   { productSlug: 'pt-141', mg: 10, priceCents: 5999, imageUrl: `${UPLOADS}2026/09/pt-141-cyclic-heptapeptide-v2-768x768.webp`, coaUrl: null, productUrl: product('pt-141-bremelanotide-10mg') },

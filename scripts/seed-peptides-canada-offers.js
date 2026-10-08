@@ -105,8 +105,8 @@ const listings = [
   { productSlug: 'glutathione', mg: 1500, priceCents: 7999, imageUrl: `${ASSETS}glutathione-1500mg--1500-mg.webp?v=b45d6d5b`, coaUrl: COA_PAGE, productUrl: product('glutathione-1500mg') },
   { productSlug: 'glutathione', mg: 1500, count: 10, priceCents: 55999, imageUrl: `${ASSETS}glutathione-1500mg--1500-mg.webp?v=b45d6d5b`, coaUrl: COA_PAGE, productUrl: product('glutathione-1500mg') },
 
-  { productSlug: 'melanotan-i', mg: 10, priceCents: 5499, imageUrl: `${ASSETS}mt1-10mg--10-mg.webp?v=96432c05`, coaUrl: COA_PAGE, productUrl: product('mt1-10mg') },
-  { productSlug: 'melanotan-i', mg: 10, count: 10, priceCents: 38499, imageUrl: `${ASSETS}mt1-10mg--10-mg.webp?v=96432c05`, coaUrl: COA_PAGE, productUrl: product('mt1-10mg') },
+  { productSlug: 'melanotan-1', mg: 10, priceCents: 5499, imageUrl: `${ASSETS}mt1-10mg--10-mg.webp?v=96432c05`, coaUrl: COA_PAGE, productUrl: product('mt1-10mg') },
+  { productSlug: 'melanotan-1', mg: 10, count: 10, priceCents: 38499, imageUrl: `${ASSETS}mt1-10mg--10-mg.webp?v=96432c05`, coaUrl: COA_PAGE, productUrl: product('mt1-10mg') },
   { productSlug: 'melanotan-2', mg: 10, priceCents: 5499, imageUrl: `${ASSETS}mt2-10mg--10-mg.webp?v=cb0f597d`, coaUrl: COA_PAGE, productUrl: product('mt2-10mg') },
   { productSlug: 'melanotan-2', mg: 10, count: 10, priceCents: 38499, imageUrl: `${ASSETS}mt2-10mg--10-mg.webp?v=cb0f597d`, coaUrl: COA_PAGE, productUrl: product('mt2-10mg') },
 

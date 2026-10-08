@@ -49,7 +49,7 @@ const listings = [
   { productSlug: 'dsip', mg: 5, priceCents: 3500, imageUrl: photo('2026/08/DSIP-5MG.webp'), coaUrl: COA_PAGE, productUrl: product('dsip') },
   { productSlug: 'dsip', mg: 15, priceCents: 7500, imageUrl: photo('2026/08/DSIP-5MG.webp'), coaUrl: COA_PAGE, productUrl: product('dsip') },
   { productSlug: 'glutathione', mg: 1500, priceCents: 4500, imageUrl: photo('2026/08/GLUTATHIONE-1500MG.webp'), coaUrl: COA_PAGE, productUrl: product('glutathione') },
-  { productSlug: 'melanotan-i', mg: 10, priceCents: 4000, imageUrl: photo('2026/07/MELANOTAN-I-10MG.png'), coaUrl: COA_PAGE, productUrl: product('mt-1-melanotan-1') },
+  { productSlug: 'melanotan-1', mg: 10, priceCents: 4000, imageUrl: photo('2026/07/MELANOTAN-I-10MG.png'), coaUrl: COA_PAGE, productUrl: product('mt-1-melanotan-1') },
   { productSlug: 'melanotan-2', mg: 10, priceCents: 4000, imageUrl: photo('2026/08/MELANOTAN-II-10MG.webp'), coaUrl: COA_PAGE, productUrl: product('mt-2-melanotan-2') },
   { productSlug: 'cjc-1295-no-dac', mg: 10, priceCents: 4500, imageUrl: photo('2026/07/CJC-W-O-DAC-10MG.png'), coaUrl: COA_PAGE, productUrl: product('cjc-1295-without-dac') },
   // 5 mg + 5 mg.

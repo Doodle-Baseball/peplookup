@@ -24,7 +24,7 @@ const listings = [
   { productSlug: 'selank', mg: 10, priceCents: 3000, imageUrl: upload('2026/08/Selank-10mg-scaled-e1786575853544.png'), coaUrl: COA_PAGE, productUrl: product('selank-10mg-2') },
   { productSlug: 'glutathione', mg: 500, priceCents: 3000, inStock: false, imageUrl: upload('2026/08/Glutathione-500mg-scaled-e1786576162981-768x768.png'), coaUrl: COA_PAGE, productUrl: product('glutathione-500mg') },
   { productSlug: 'glutathione', mg: 600, priceCents: 2500, imageUrl: upload('2026/08/Glutathione-600mg-scaled-e1786576185526.png'), coaUrl: COA_PAGE, productUrl: product('glutathione-600mg') },
-  { productSlug: 'melanotan-i', mg: 10, priceCents: 3000, imageUrl: upload('2026/08/mt-1-10mg-scaled-e1786576298787.png'), coaUrl: COA_PAGE, productUrl: product('mt1-10mg') },
+  { productSlug: 'melanotan-1', mg: 10, priceCents: 3000, imageUrl: upload('2026/08/mt-1-10mg-scaled-e1786576298787.png'), coaUrl: COA_PAGE, productUrl: product('mt1-10mg') },
   { productSlug: 'melanotan-2', mg: 10, priceCents: 3000, imageUrl: upload('2026/08/mt-2-10mg-scaled-e1786576316296.png'), coaUrl: COA_PAGE, productUrl: product('mt2-10mg-2') },
   { productSlug: 'klow-bpc-157-tb-500-kpv-ghk-cu', mg: 80, priceCents: 7500, imageUrl: upload('2026/08/KLOW-80MG-scaled-e1786576242443-768x768.png'), coaUrl: upload('2026/06/img_1227.jpeg'), productUrl: product('klow-80mg-2') },
 ];

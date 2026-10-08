@@ -157,7 +157,7 @@ const listings = [
     [5, 1, 3599, '1787070359/aur1yhdywy2zwpyxcoxh.webp', false],
     [5, 10, 35990, '1787070359/aur1yhdywy2zwpyxcoxh.webp', false],
   ]),
-  ...compound('melanotan-i', 'mt-1', [
+  ...compound('melanotan-1', 'mt-1', [
     [10, 1, 2799, '1787070389/etcfn4r0jdtiaheyzmea.webp', false],
     [10, 10, 27990, '1787070389/etcfn4r0jdtiaheyzmea.webp', false],
   ]),

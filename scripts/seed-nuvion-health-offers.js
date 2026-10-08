@@ -35,7 +35,7 @@ const listings = [
   { productSlug: 'ss-31-elamipretide', mg: 10, priceCents: 7900, imageUrl: `${WEBP}2026/09/ss-31-10mg.png.webp`, coaUrl: COA_PAGE, productUrl: product('ss-31') },
   { productSlug: 'dsip', mg: 10, priceCents: 8900, imageUrl: `${WEBP}2026/09/dsip-10mg.png.webp`, coaUrl: COA_PAGE, productUrl: product('dsip-delta-sleep-inducing-peptide') },
   { productSlug: 'ghrp-2', mg: 10, priceCents: 5900, imageUrl: `${UPLOADS}2026/09/ghrp-2-10mg.png`, coaUrl: COA_PAGE, productUrl: product('ghrp-2') },
-  { productSlug: 'melanotan-i', mg: 10, priceCents: 4900, imageUrl: `${UPLOADS}2026/09/melanotan-1-10mg.png`, coaUrl: COA_PAGE, productUrl: product('melanotan-1') },
+  { productSlug: 'melanotan-1', mg: 10, priceCents: 4900, imageUrl: `${UPLOADS}2026/09/melanotan-1-10mg.png`, coaUrl: COA_PAGE, productUrl: product('melanotan-1') },
   { productSlug: 'melanotan-2', mg: 10, priceCents: 4900, imageUrl: `${UPLOADS}2026/09/melanotan-2-10mg.png`, coaUrl: COA_PAGE, productUrl: product('melanotan-2') },
   { productSlug: 'cjc-1295-no-dac', mg: 10, priceCents: 9900, imageUrl: `${UPLOADS}2026/09/cjc-1295-no-dac-10mg.png`, coaUrl: COA_PAGE, productUrl: product('cjc1295-no-dac') },
   { productSlug: 'glow-ghk-cu-bpc-157-tb-500', mg: 70, priceCents: 14900, imageUrl: `${UPLOADS}2026/09/nuvion-glow-70mg.png`, coaUrl: COA_PAGE, productUrl: product('glow') },

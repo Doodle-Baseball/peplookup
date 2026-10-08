@@ -66,7 +66,7 @@ export default async function VendorReviewsPage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ pq?: string; page?: string }>;
+  searchParams: Promise<{ pq?: string; page?: string; form?: string; size?: string }>;
 }) {
   const { slug } = await params;
   const supplierSlug = supplierSlugFromReviewsSegment(slug);
@@ -88,7 +88,7 @@ export default async function VendorReviewsPage({
     getSupplierReviews(supplier),
     getReviewPageContent(supplier),
   ]);
-  const { pq, page: pageParam } = await searchParams;
+  const { pq, page: pageParam, form: formParam, size: sizeParam } = await searchParams;
   const catalogueQuery = (pq ?? '').trim();
 
   const productsBySlug = new Map(allProducts.map((p) => [p.slug, p]));
@@ -331,6 +331,8 @@ export default async function VendorReviewsPage({
           basePath={path}
           query={catalogueQuery}
           pageParam={pageParam}
+          formParam={formParam}
+          sizeParam={sizeParam}
           className="mt-12"
         />
 

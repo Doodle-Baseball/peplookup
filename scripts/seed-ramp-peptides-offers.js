@@ -233,7 +233,7 @@ const listings = [
     productUrl: 'https://ramppeptides.com/product/cjc-1295-ipamorelin-no-dac-5mg-5mg/?coupon=products',
   },
   {
-    productSlug: 'melanotan-i',
+    productSlug: 'melanotan-1',
     mg: 10,
     priceCents: 2900,
     imageUrl: `${UPLOADS}2026/03/Melanotan10mg-768x872.png`,

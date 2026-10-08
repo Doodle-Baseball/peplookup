@@ -3,9 +3,16 @@ import { OfferCard } from '@/components/offer-card/offer-card';
 import { Pagination } from '@/components/ui/pagination';
 import { LiveSearchInput } from '@/components/ui/live-search-input';
 import { BoxIcon, SearchIcon } from '@/components/icons/icons';
+import { CatalogFilterSelect } from './catalog-filter-select';
+import { CATALOG_FORM_OPTIONS, isCatalogFormValue } from './catalog-form-options';
 
 /** Product Catalog tiles per page, 2 rows of the 3-column grid. */
 const CATALOG_PAGE_SIZE = 6;
+
+/** Same label the offer cards print, so a size reads identically in the filter and on the card. */
+function formatVialSize(vialSizeMcg: number): string {
+  return `${(vialSizeMcg / 1000).toLocaleString()} mg`;
+}
 
 /**
  * A vendor's "Products from X" catalogue with in-page search and pagination.
@@ -20,6 +27,8 @@ export function SupplierCatalogSection({
   id,
   query,
   pageParam,
+  formParam,
+  sizeParam,
   className,
 }: {
   supplier: Supplier;
@@ -31,11 +40,22 @@ export function SupplierCatalogSection({
   id?: string;
   query: string;
   pageParam: string | undefined;
+  /** The `form` URL param; anything other than a known form shows every form. */
+  formParam?: string;
+  /** The `size` URL param, in micrograms per vial; a size this supplier doesn't list shows every size. */
+  sizeParam?: string;
   className?: string;
 }) {
-  const catalogueOffers = query
-    ? offers.filter((o) => productsBySlug.get(o.productSlug)!.name.toLowerCase().includes(query.toLowerCase()))
-    : offers;
+  const selectedForm = isCatalogFormValue(formParam) ? formParam : undefined;
+  // Every per-vial size this supplier lists, smallest first; a multipack files under its vial size.
+  const vialSizes = [...new Set(offers.map((o) => o.vialSize))].sort((a, b) => a - b);
+  const selectedSize = vialSizes.find((size) => String(size) === sizeParam);
+  const catalogueOffers = offers.filter(
+    (o) =>
+      (!selectedForm || o.form === selectedForm) &&
+      (selectedSize === undefined || o.vialSize === selectedSize) &&
+      (!query || productsBySlug.get(o.productSlug)!.name.toLowerCase().includes(query.toLowerCase())),
+  );
 
   const pageCount = Math.max(1, Math.ceil(catalogueOffers.length / CATALOG_PAGE_SIZE));
   const currentPage = Math.min(Math.max(1, Number(pageParam) || 1), pageCount);
@@ -55,10 +75,31 @@ export function SupplierCatalogSection({
           </h2>
         </div>
         {offers.length > 0 ? (
-          <span className="inline-flex items-center gap-1.5 rounded-pill bg-accent-tint px-3 py-1.5 text-sm font-bold text-accent-strong">
-            <BoxIcon className="h-4 w-4" />
-            {offers.length} listed
-          </span>
+          <div className="flex flex-wrap items-center gap-3">
+            <CatalogFilterSelect
+              label="Form"
+              paramName="form"
+              options={CATALOG_FORM_OPTIONS.map((option) => ({
+                ...option,
+                count: offers.filter((o) => o.form === option.value).length,
+              }))}
+              value={selectedForm}
+            />
+            <CatalogFilterSelect
+              label="Size"
+              paramName="size"
+              options={vialSizes.map((size) => ({
+                value: String(size),
+                label: formatVialSize(size),
+                count: offers.filter((o) => o.vialSize === size).length,
+              }))}
+              value={selectedSize === undefined ? undefined : String(selectedSize)}
+            />
+            <span className="inline-flex items-center gap-1.5 rounded-pill bg-accent-tint px-3 py-1.5 text-sm font-bold text-accent-strong">
+              <BoxIcon className="h-4 w-4" />
+              {offers.length} listed
+            </span>
+          </div>
         ) : null}
       </div>
 
@@ -70,6 +111,8 @@ export function SupplierCatalogSection({
       ) : (
         <>
           <form action={basePath} className="mt-6">
+            {selectedForm ? <input type="hidden" name="form" value={selectedForm} /> : null}
+            {selectedSize !== undefined ? <input type="hidden" name="size" value={selectedSize} /> : null}
             <label htmlFor="pq" className="sr-only">
               Search within {supplier.name} catalog
             </label>
@@ -87,11 +130,13 @@ export function SupplierCatalogSection({
 
           {catalogueOffers.length === 0 ? (
             <p className="mt-4 rounded-card border border-dashed border-line bg-surface p-10 text-center text-sm text-muted">
-              No products match &ldquo;{query}&rdquo;.
+              {query
+                ? <>No products match &ldquo;{query}&rdquo;{selectedForm ? ` in ${selectedForm} form` : ''}{selectedSize !== undefined ? ` at ${formatVialSize(selectedSize)}` : ''}.</>
+                : <>No {selectedForm} products{selectedSize !== undefined ? ` at ${formatVialSize(selectedSize)}` : ''} listed for {supplier.name}.</>}
             </p>
           ) : (
             <>
-              <ul key={`${query}-${currentPage}`} className="animate-fade-up mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <ul key={`${query}-${selectedForm ?? 'all'}-${selectedSize ?? 'all'}-${currentPage}`} className="animate-fade-up mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {pagedOffers.map((offer: Offer) => (
                   <OfferCard
                     key={offer.id ?? `${offer.productSlug}-${offer.form}-${offer.vialSize}-${offer.vialCount}`}
@@ -111,6 +156,8 @@ export function SupplierCatalogSection({
                 hrefForPage={(page) =>
                   `${basePath}?${new URLSearchParams({
                     ...(query ? { pq: query } : {}),
+                    ...(selectedForm ? { form: selectedForm } : {}),
+                    ...(selectedSize !== undefined ? { size: String(selectedSize) } : {}),
                     page: String(page),
                   })}`
                 }

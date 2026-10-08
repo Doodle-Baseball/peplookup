@@ -37,7 +37,7 @@ const listings = [
   { productSlug: 'pt-141', mg: 10, priceCents: 3300, imageUrl: upload('2026/03/PT141.webp'), coaUrl: COA_PAGE, productUrl: product('pt-141-10mg') },
   { productSlug: '5-amino-1mq', mg: 50, priceCents: 6800, imageUrl: upload('2026/03/5-Amino-1q-1.webp'), coaUrl: COA_PAGE, productUrl: product('5-amino-1mq-50mg') },
   { productSlug: 'dsip', mg: 10, priceCents: 4500, imageUrl: upload('2026/03/DSIP.webp'), coaUrl: COA_PAGE, productUrl: product('dsip-10mg') },
-  { productSlug: 'melanotan-i', mg: 10, priceCents: 3800, imageUrl: upload('2026/03/melanotan-I.webp'), coaUrl: COA_PAGE, productUrl: product('melanotan-i-10mg') },
+  { productSlug: 'melanotan-1', mg: 10, priceCents: 3800, imageUrl: upload('2026/03/melanotan-I.webp'), coaUrl: COA_PAGE, productUrl: product('melanotan-i-10mg') },
   { productSlug: 'melanotan-2', mg: 10, priceCents: 3000, imageUrl: upload('2026/03/melanotan-II.webp'), coaUrl: COA_PAGE, productUrl: product('melanotan-ii-10mg') },
   { productSlug: 'cjc-1295-no-dac', mg: 5, priceCents: 3500, imageUrl: upload('2026/03/CJCnoDAC.webp'), coaUrl: COA_PAGE, productUrl: product('cjc-1295-no-dac') },
   // 5 mg + 5 mg.

@@ -34,7 +34,7 @@ const listings = [
   { productSlug: '5-amino-1mq', mg: 10, priceCents: 5200, imageUrl: upload('2025/08/Ascension-5-Amino-1MQ-1024x1024.webp'), coaUrl: COA_PAGE, productUrl: product('5-amino-1mq-10-mg') },
   { productSlug: 'ss-31-elamipretide', mg: 10, priceCents: 7999, imageUrl: upload('2024/05/Ascension-SS-31-10mg-1024x1024.webp'), coaUrl: COA_PAGE, productUrl: product('ss-31-10mg') },
   { productSlug: 'dsip', mg: 10, priceCents: 6000, imageUrl: upload('2024/05/Ascension-DSIP-10mg-1024x1024.jpg'), coaUrl: COA_PAGE, productUrl: product('dsip-10mg') },
-  { productSlug: 'melanotan-i', mg: 10, priceCents: 5000, imageUrl: upload('2024/03/Ascension-Melanotan-1-10mg-1024x1024.jpg'), coaUrl: COA_PAGE, productUrl: product('melanotan-i-10mg') },
+  { productSlug: 'melanotan-1', mg: 10, priceCents: 5000, imageUrl: upload('2024/03/Ascension-Melanotan-1-10mg-1024x1024.jpg'), coaUrl: COA_PAGE, productUrl: product('melanotan-i-10mg') },
   { productSlug: 'melanotan-2', mg: 10, priceCents: 5000, imageUrl: upload('2024/03/Ascension-Melanotan-2-10mg-1024x1024.jpg'), coaUrl: COA_PAGE, productUrl: product('melanotan-ii-10mg') },
   { productSlug: 'cjc-1295-no-dac', mg: 5, priceCents: 5000, imageUrl: upload('2024/05/Ascension-CJC-1295-5mg-1024x1024.jpg'), coaUrl: COA_PAGE, productUrl: product('cjc-1295-5mg') },
   { productSlug: 'cjc-1295-no-dac', mg: 10, priceCents: 7000, imageUrl: upload('2026/05/Ascension-CJC-1295-10mg-1024x1024.webp'), coaUrl: COA_PAGE, productUrl: product('cjc-1295-no-dac-10mg') },

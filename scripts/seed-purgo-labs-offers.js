@@ -236,7 +236,7 @@ const listings = [
     productUrl: `${SITE}/products/ahk-cu?ref=PEPLOOKUP`,
   },
   {
-    productSlug: 'melanotan-i',
+    productSlug: 'melanotan-1',
     mg: 10,
     priceCents: 2549,
     imageUrl: `${SITE}/product-images/v2/vials/melanoton-1--10mg.png`,

@@ -35,7 +35,7 @@ const listings = [
   { productSlug: 'ss-31-elamipretide', mg: 30, priceCents: 7495, imageUrl: upload('2026/05/Gemini_Generated_Image_psris9psris9psri-889x1024.png'), coaUrl: upload('2026/08/PUR31-30-BATCH-5-1-724x1024.png'), productUrl: product('ss-31') },
   { productSlug: 'dsip', mg: 10, priceCents: 3495, imageUrl: upload('2026/04/DSIP.jpg'), coaUrl: upload('2026/07/dsip-batch-2-1-724x1024.png'), productUrl: product('dsip-10mg') },
   { productSlug: 'glutathione', mg: 1500, priceCents: 5195, imageUrl: upload('2026/04/IMAGE-28-889x1024.webp'), coaUrl: upload('2026/07/gluta-batch-2-1-724x1024.png'), productUrl: product('glutathione-1500mg') },
-  { productSlug: 'melanotan-i', mg: 10, priceCents: 2795, imageUrl: upload('2026/01/Melanotan-1-889x1024.webp'), coaUrl: upload('2026/07/melanotan-1-batch-4-1-724x1024.png'), productUrl: product('melanotan-1') },
+  { productSlug: 'melanotan-1', mg: 10, priceCents: 2795, imageUrl: upload('2026/01/Melanotan-1-889x1024.webp'), coaUrl: upload('2026/07/melanotan-1-batch-4-1-724x1024.png'), productUrl: product('melanotan-1') },
   { productSlug: 'melanotan-2', mg: 10, priceCents: 2795, imageUrl: upload('2026/01/Melanotan-2-889x1024.webp'), coaUrl: upload('2026/05/mt2-batch-3-1-1-724x1024.png'), productUrl: product('melanotan-2') },
   { productSlug: 'cjc-1295-no-dac', mg: 10, priceCents: 4495, imageUrl: upload('2026/01/CJC-1295-3-889x1024.webp'), coaUrl: upload('2026/07/Cjc-no-dac-batch-2-1-724x1024.png'), productUrl: product('cjc-1295-no-dac') },
   // 5 mg + 5 mg blend.
