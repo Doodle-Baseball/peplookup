@@ -58,7 +58,7 @@ export default async function SupplierPage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ pq?: string; page?: string }>;
+  searchParams: Promise<{ pq?: string; page?: string; form?: string; size?: string }>;
 }) {
   const { slug } = await params;
   // The SEO override is keyed by path, so it needs only the slug, fetching it
@@ -66,7 +66,7 @@ export default async function SupplierPage({
   const [supplier, seo] = await Promise.all([getSupplier(slug), getSeoOverride(`/suppliers/${slug}`)]);
   if (!supplier) notFound();
 
-  const { pq, page: pageParam } = await searchParams;
+  const { pq, page: pageParam, form: formParam, size: sizeParam } = await searchParams;
   const catalogueQuery = (pq ?? '').trim();
 
   // One query for every compound up front instead of one round trip per
@@ -263,6 +263,8 @@ export default async function SupplierPage({
           basePath={`/suppliers/${supplier.slug}`}
           query={catalogueQuery}
           pageParam={pageParam}
+          formParam={formParam}
+          sizeParam={sizeParam}
           className="mt-12"
         />
 
