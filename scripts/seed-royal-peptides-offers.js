@@ -78,7 +78,7 @@ const listings = [
 
   { productSlug: 'dsip', mg: 5, priceCents: 4500, imageUrl: `${UPLOADS}2025/03/IMG_5868.png`, coaUrl: COA_PAGE, productUrl: shop('dsip-5mg') },
 
-  { productSlug: 'melanotan-i', mg: 10, priceCents: 5500, imageUrl: `${UPLOADS}2025/04/IMG_5861.png`, coaUrl: COA_PAGE, productUrl: shop('melanotan-10mg') },
+  { productSlug: 'melanotan-1', mg: 10, priceCents: 5500, imageUrl: `${UPLOADS}2025/04/IMG_5861.png`, coaUrl: COA_PAGE, productUrl: shop('melanotan-10mg') },
   { productSlug: 'melanotan-2', mg: 10, priceCents: 5500, imageUrl: `${UPLOADS}2025/04/IMG_5861.png`, coaUrl: COA_PAGE, productUrl: shop('melanotan-10mg') },
 
   { productSlug: 'glow-ghk-cu-bpc-157-tb-500', mg: 70, priceCents: 7000, imageUrl: `${UPLOADS}2025/02/b2f58166-a71c-47f3-9805-e216ca0b7e90.png`, coaUrl: COA_PAGE, productUrl: shop('glow-blend-vial-kit') },

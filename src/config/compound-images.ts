@@ -25,7 +25,7 @@ const COMPOUND_IMAGE_FILES: Readonly<Record<string, string>> = {
   ipamorelin: 'Imanorelin.png',
   'ipamorelin-cjc-1295-no-dac': 'Ipamorelin _ CJC-1295 (No DAC).png',
   klow: 'KLOW.png',
-  'melanotan-i': 'Melanotan-1.png',
+  'melanotan-1': 'Melanotan-1.png',
   'melanotan-2': 'Melanotan-2.png',
   'mots-c': 'MOTS-c.png',
   nad: 'NAD+.png',

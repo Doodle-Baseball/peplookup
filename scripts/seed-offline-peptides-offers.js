@@ -356,7 +356,7 @@ const listings = [
     productUrl: 'https://offlinepeptides.com/product/ahk-cu/?ref=adamdan6688',
   },
   {
-    productSlug: 'melanotan-i',
+    productSlug: 'melanotan-1',
     mg: 10,
     priceCents: 2900,
     imageUrl: `${UPLOADS}2026/02/product-image-2-5.png?w=238&ssl=1`,

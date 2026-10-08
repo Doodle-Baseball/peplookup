@@ -28,7 +28,7 @@ const listings = [
   { productSlug: 'pt-141', mg: 10, priceCents: 4400, imageUrl: upload('2025/04/PT-141-10mg-new.webp'), coaUrl: upload('2025/04/Test-Report-166068.png'), productUrl: product('pt-141-10mg-research-peptide') },
   { productSlug: '5-amino-1mq', mg: 50, priceCents: 6800, imageUrl: upload('2025/09/5amino-50mg.webp'), coaUrl: upload('2025/09/Test-Report-149292.png'), productUrl: product('5-amino-1mq-50mg') },
   { productSlug: 'dsip', mg: 10, priceCents: 5800, imageUrl: upload('2025/05/DSIP-10MG.webp'), coaUrl: null, productUrl: product('dsip-10mg') },
-  { productSlug: 'melanotan-i', mg: 10, priceCents: 4400, imageUrl: upload('2025/05/Melanotan-I-10mg-new.webp'), coaUrl: upload('2025/05/Test-Report-164161.png'), productUrl: product('melanotan-i-10mg') },
+  { productSlug: 'melanotan-1', mg: 10, priceCents: 4400, imageUrl: upload('2025/05/Melanotan-I-10mg-new.webp'), coaUrl: upload('2025/05/Test-Report-164161.png'), productUrl: product('melanotan-i-10mg') },
   { productSlug: 'melanotan-2', mg: 10, priceCents: 4400, imageUrl: upload('2025/05/Melanotan-II-10mg-new.webp'), coaUrl: upload('2025/05/Test-Report-194688.png'), productUrl: product('melanotan-ii-10mg') },
   { productSlug: 'cjc-1295-no-dac', mg: 5, priceCents: 3800, imageUrl: upload('2025/05/CJC-1295-No-DAC-5mg-new.webp'), coaUrl: upload('2025/05/Test-Report-168784.png'), productUrl: product('cjc-1295-no-dac-5mg') },
   // 5 mg + 5 mg.

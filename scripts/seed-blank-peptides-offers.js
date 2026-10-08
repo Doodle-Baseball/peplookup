@@ -224,7 +224,7 @@ const listings = [
     productUrl: `https://blankpeptides.com/product/hexarelin/${REF}`,
   },
   {
-    productSlug: 'melanotan-i',
+    productSlug: 'melanotan-1',
     mg: 10,
     priceCents: 5500,
     imageUrl: `${UPLOADS}2026/07/MELANOTAN_2_float_v4.png`,

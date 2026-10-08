@@ -24,7 +24,7 @@ const listings = [
   { productSlug: 'selank', mg: 10, priceCents: 4050, imageUrl: render('selank.jpg?v=3'), coaUrl: `${SITE}/coa/selank.html`, productUrl: product('selank') },
   { productSlug: 'semax', mg: 10, priceCents: 3510, imageUrl: render('semax.jpg?v=3'), coaUrl: `${SITE}/coa/semax.html`, productUrl: product('semax') },
   { productSlug: 'melanotan-2', mg: 10, priceCents: 3510, imageUrl: render('melanotan-2.jpg?v=3'), coaUrl: `${SITE}/coa/melanotan-2.html`, productUrl: product('melanotan-2') },
-  { productSlug: 'melanotan-i', mg: 10, priceCents: 3780, imageUrl: render('melanotan-1.jpg?v=3'), coaUrl: `${SITE}/coa/melanotan-1.html`, productUrl: product('melanotan-1') },
+  { productSlug: 'melanotan-1', mg: 10, priceCents: 3780, imageUrl: render('melanotan-1.jpg?v=3'), coaUrl: `${SITE}/coa/melanotan-1.html`, productUrl: product('melanotan-1') },
   // Listed by the vendor as "Lab Water", a "Solution"; stored as a vial like other vendors' water, size in mL
   // on the same scale the admin form uses for mL sizes. Its COA link is the vendor's general quality page.
   { productSlug: 'bacteriostatic-water', mg: 3, priceCents: 360, imageUrl: render('bacteriostatic-water.jpg?v=3'), coaUrl: `${SITE}/quality-coa.html`, productUrl: product('lab-water') },

@@ -42,7 +42,7 @@ const listings = [
   { productSlug: 'dsip', mg: 15, priceCents: 7500, imageUrl: upload('2026/09/DSIP-15mg-1024x971.webp'), coaUrl: null, productUrl: product('dsip') },
   { productSlug: 'glutathione', mg: 1500, priceCents: 6500, imageUrl: upload('2026/08/Glutathione-20ml-vial-1500-1-1024x971.webp'), coaUrl: upload('2026/09/glutathione-1500mg-batch.pdf'), productUrl: product('glutathione') },
   { productSlug: 'glutathione', mg: 3000, priceCents: 9500, imageUrl: upload('2026/08/ChatGPT-Image-Aug-12-2026-12_51_06-PM-1024x1024.png'), coaUrl: upload('2026/09/glutathione-1500mg-batch.pdf'), productUrl: product('glutathione') },
-  { productSlug: 'melanotan-i', mg: 10, priceCents: 6000, imageUrl: upload('2026/08/Melanotan-1-10mg-1024x971.webp'), coaUrl: null, productUrl: product('melanotan-1') },
+  { productSlug: 'melanotan-1', mg: 10, priceCents: 6000, imageUrl: upload('2026/08/Melanotan-1-10mg-1024x971.webp'), coaUrl: null, productUrl: product('melanotan-1') },
   { productSlug: 'melanotan-2', mg: 10, priceCents: 5000, imageUrl: upload('2026/08/Melanotan-2-10mg-1024x971.webp'), coaUrl: null, productUrl: product('melanotan-2') },
   { productSlug: 'glow-ghk-cu-bpc-157-tb-500', mg: 70, priceCents: 9500, imageUrl: upload('2026/08/GLOW-GHK-CU-TB500-BPC157-50-10-10mg-1024x971.webp'), coaUrl: upload('2026/09/glow-70mg-20260813-3.pdf'), productUrl: product('glow') },
   { productSlug: 'klow-bpc-157-tb-500-kpv-ghk-cu', mg: 80, priceCents: 12500, imageUrl: upload('2026/08/KLOW-GHKCU-TB500-BPC157-KPV-1-1024x971.webp'), coaUrl: null, productUrl: product('klow') },

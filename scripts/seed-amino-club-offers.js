@@ -58,7 +58,7 @@ const listings = [
   // 15 mg in 15 mL.
   { productSlug: 'dsip', form: 'spray', mg: 15, priceCents: 3899, imageUrl: photo(DPL_B, 'DSIP-1-01KZEECGGN9A8MA3K1KK6047AB.png'), coaUrl: COA_PAGE, productUrl: product('dsip-spray') },
   { productSlug: 'glutathione', mg: 1500, priceCents: 3899, imageUrl: photo(DPL_A, 'GLUTATHIONE-01KG62AW8WTK7CYQFFAYRGQV7S.png'), coaUrl: COA_PAGE, productUrl: product('glutathione') },
-  { productSlug: 'melanotan-i', mg: 10, priceCents: 1947, imageUrl: photo(DPL_A, 'MELANOTAN%2520_-01KKR02YMXG2RFC3FJBY9HEV4P.png'), coaUrl: COA_PAGE, productUrl: product('melanotan-i') },
+  { productSlug: 'melanotan-1', mg: 10, priceCents: 1947, imageUrl: photo(DPL_A, 'MELANOTAN%2520_-01KKR02YMXG2RFC3FJBY9HEV4P.png'), coaUrl: COA_PAGE, productUrl: product('melanotan-i') },
   { productSlug: 'melanotan-2', mg: 10, priceCents: 1497, imageUrl: photo(DPL_B, 'Melanotan%2520II-01KE3Y4EBVMD7ZM4DSBF40Y0GV.png'), coaUrl: COA_PAGE, productUrl: product('melanotan-ii') },
   // 15 mg in 15 mL.
   { productSlug: 'melanotan-2', form: 'spray', mg: 15, priceCents: 3899, inStock: false, imageUrl: photo(DPL_A, 'MELANOTAN%2520II-1-01KZEESW762PYT36F8HKHN8PTT.png'), coaUrl: COA_PAGE, productUrl: product('melanotan-ii-spray') },

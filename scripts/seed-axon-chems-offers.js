@@ -55,7 +55,7 @@ const listings = [
   { productSlug: 'dsip', form: 'spray', mg: 10, priceCents: 5500, imageUrl: `${IMG}dsip-nasal-spray-10mg-1024x1024.webp`, coaUrl: COA_PAGE, productUrl: product('dsip-nasal-spray') },
   { productSlug: 'glutathione', mg: 600, priceCents: 4500, imageUrl: `${IMG}glutathione-600mg-600x600.webp`, coaUrl: COA_PAGE, productUrl: product('glutathione') },
   { productSlug: 'ahk-cu', mg: 100, priceCents: 7000, imageUrl: 'https://shop.axonchems.com/wp-content/uploads/2026/06/ahkcu-100mg-vial-1-1024x1024.webp', coaUrl: COA_PAGE, productUrl: product('ahk-cu') },
-  { productSlug: 'melanotan-i', mg: 10, priceCents: 4000, imageUrl: 'https://shop.axonchems.com/wp-content/uploads/2026/06/melanotan-1-10mg-vial-600x600.webp', coaUrl: COA_PAGE, productUrl: product('melanotan-1') },
+  { productSlug: 'melanotan-1', mg: 10, priceCents: 4000, imageUrl: 'https://shop.axonchems.com/wp-content/uploads/2026/06/melanotan-1-10mg-vial-600x600.webp', coaUrl: COA_PAGE, productUrl: product('melanotan-1') },
   { productSlug: 'melanotan-2', mg: 10, priceCents: 4000, imageUrl: 'https://shop.axonchems.com/wp-content/uploads/2026/06/melanotan-2-10mg-vial-600x600.webp', coaUrl: COA_PAGE, productUrl: product('melanotan-2') },
   { productSlug: 'cjc-1295-no-dac', mg: 10, priceCents: 7000, imageUrl: `${IMG}cjc-1295-no-dac-10mg-600x600.webp`, coaUrl: COA_PAGE, productUrl: product('cjc-1295-no-dac') },
   { productSlug: 'glow-ghk-cu-bpc-157-tb-500', mg: 70, priceCents: 7500, imageUrl: `${IMG}glow-peptide-blend-50mg-600x600.webp`, coaUrl: COA_PAGE, productUrl: product('glow-peptide-blend') },

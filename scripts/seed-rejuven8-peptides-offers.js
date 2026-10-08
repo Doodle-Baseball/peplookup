@@ -312,7 +312,7 @@ const listings = [
     productUrl: `https://rejuven8peptides.com/product/ghrp-2/${REF}`,
   },
   {
-    productSlug: 'melanotan-i',
+    productSlug: 'melanotan-1',
     mg: 10,
     priceCents: 4000,
     imageUrl: `${UPLOADS}2026/07/rejuven8-peptides-melanotan-1-vial.png.webp`,

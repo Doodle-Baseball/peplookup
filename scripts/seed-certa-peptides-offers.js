@@ -74,7 +74,7 @@ const listings = [
   ...sizes('pt-141', { image: 'pt-141-10mg.jpg', test: '212166-PT141_10mg_XWU9H99WKYP1', path: 'pt-141-10mg' }, [
     [10, 4846],
   ]),
-  ...sizes('melanotan-i', { image: 'mt-1-10mg.jpg', test: '212162-Melanotan1_10mg_U7VIFC5IY9YV', path: 'mt-1-10mg' }, [
+  ...sizes('melanotan-1', { image: 'mt-1-10mg.jpg', test: '212162-Melanotan1_10mg_U7VIFC5IY9YV', path: 'mt-1-10mg' }, [
     [10, 3230],
   ]),
   ...sizes('melanotan-2', { image: 'mt-2-melanotan-2-acetate.jpg', test: '155231-MT2_Melanotan_2_Acetate_10mg_52IY2XTLW8J4', path: 'mt-2-melanotan-2-acetate' }, [

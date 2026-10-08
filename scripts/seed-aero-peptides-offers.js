@@ -19,7 +19,7 @@ const listings = [
   { productSlug: 'mots-c', mg: 10, priceCents: 3999, imageUrl: IMG('2025%2F12%2FMOTS-C.png'), coaUrl: LAB_RESULTS, productUrl: product('mots-c-10mg') },
   { productSlug: 'glutathione', mg: 1500, priceCents: 7499, imageUrl: IMG('2025%2F12%2FGLUTATHIONE.png'), coaUrl: LAB_RESULTS, productUrl: product('glutathione-1500mg') },
   { productSlug: 'nad', mg: 100, priceCents: 5999, imageUrl: IMG('2025%2F12%2FNAD.png'), coaUrl: LAB_RESULTS, productUrl: product('nad-100mg') },
-  { productSlug: 'melanotan-i', mg: 10, priceCents: 2499, imageUrl: IMG('2025%2F12%2FMELANOTAN-I.png'), coaUrl: LAB_RESULTS, productUrl: product('melanotan-i') },
+  { productSlug: 'melanotan-1', mg: 10, priceCents: 2499, imageUrl: IMG('2025%2F12%2FMELANOTAN-I.png'), coaUrl: LAB_RESULTS, productUrl: product('melanotan-i') },
   { productSlug: 'melanotan-2', mg: 5, priceCents: 2999, imageUrl: IMG('2025%2F12%2FMELANOTAN-II.png'), coaUrl: LAB_RESULTS, productUrl: product('melanotan-ii-10mg') },
   { productSlug: 'ghk-cu', mg: 100, priceCents: 4499, imageUrl: IMG('2025%2F12%2Fghk-full.png'), coaUrl: LAB_RESULTS, productUrl: product('ghk-cu-100mg') },
   { productSlug: 'tesamorelin', mg: 10, priceCents: 6499, imageUrl: IMG('2025%2F12%2FTESAMORELIN.png'), coaUrl: LAB_RESULTS, productUrl: product('tesamorelin-10mg') },

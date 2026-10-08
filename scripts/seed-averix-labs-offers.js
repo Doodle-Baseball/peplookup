@@ -203,7 +203,7 @@ const listings = [
     productUrl: `https://averixlabs.com/product/ahk-cu/${REF}`,
   },
   {
-    productSlug: 'melanotan-i',
+    productSlug: 'melanotan-1',
     mg: 10,
     priceCents: 2999,
     imageUrl: `${IMAGES}2026/07/MT-1.png?fit=1024%2C1024&ssl=1`,

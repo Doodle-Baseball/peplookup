@@ -156,7 +156,7 @@ const listings = [
     productUrl: 'https://blueridgepeptides.com/product/mots-c-40mg/?coupon=products',
   },
   {
-    productSlug: 'melanotan-i',
+    productSlug: 'melanotan-1',
     mg: 10,
     priceCents: 3500,
     imageUrl: `${UPLOADS}2026/01/MT-1-MELANOTAN1.jpg`,

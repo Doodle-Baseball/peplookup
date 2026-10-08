@@ -267,7 +267,7 @@ const listings = [
     productUrl: 'https://trueresearchlabs.com/shop/glutathione/?ref=peplookup',
   },
   {
-    productSlug: 'melanotan-i',
+    productSlug: 'melanotan-1',
     mg: 10,
     priceCents: 3900,
     imageUrl: `${UPLOADS}2026/03/melanotan-i_10-mg-1024x1024.jpg`,
