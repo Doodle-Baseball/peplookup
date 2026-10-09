@@ -6,8 +6,8 @@ import { BoxIcon, SearchIcon } from '@/components/icons/icons';
 import { CatalogFilterSelect } from './catalog-filter-select';
 import { CATALOG_FORM_OPTIONS, isCatalogFormValue } from './catalog-form-options';
 
-/** Product Catalog tiles per page, 2 rows of the 3-column grid. */
-const CATALOG_PAGE_SIZE = 6;
+/** Product Catalog tiles per page, 3 rows of the 3-column grid. */
+const CATALOG_PAGE_SIZE = 9;
 
 /** Same label the offer cards print, so a size reads identically in the filter and on the card. */
 function formatVialSize(vialSizeMcg: number): string {
