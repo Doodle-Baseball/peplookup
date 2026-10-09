@@ -31,16 +31,7 @@ interface ToolCard {
   bullets: string[];
   cta: string;
   icon: React.ReactNode;
-  accent: 'brand' | 'info' | 'coupon' | 'lab' | 'promo';
 }
-
-const ACCENT_CLASSES: Record<ToolCard['accent'], { icon: string; text: string }> = {
-  brand: { icon: 'bg-brand-soft text-brand-strong', text: 'text-brand' },
-  info: { icon: 'bg-info/10 text-info', text: 'text-info' },
-  coupon: { icon: 'bg-coupon-tint text-coupon-ink', text: 'text-coupon-ink' },
-  lab: { icon: 'bg-lab-soft text-lab-ink', text: 'text-lab-ink' },
-  promo: { icon: 'bg-promo-tint text-promo', text: 'text-promo' },
-};
 
 const TOOLS: ToolCard[] = [
   {
@@ -52,7 +43,6 @@ const TOOLS: ToolCard[] = [
     bullets: ['Side-by-side comparison', '$/mg across suppliers', 'Real supplier listings'],
     cta: 'Check Prices',
     icon: <ListIcon className="h-6 w-6" />,
-    accent: 'coupon',
   },
   {
     href: '/tools/price-per-mg',
@@ -63,7 +53,6 @@ const TOOLS: ToolCard[] = [
     bullets: ['$/mg, $/dose, total cost', 'Compare against real listings', 'Multi-vial pricing'],
     cta: 'Calculate Price',
     icon: <TagIcon className="h-6 w-6" />,
-    accent: 'brand',
   },
   {
     href: '/tools/calculator',
@@ -74,7 +63,6 @@ const TOOLS: ToolCard[] = [
     bullets: ['3 calculation modes', 'U-100 / U-50 / U-30 syringes', 'Doses per vial'],
     cta: 'Reconstitute',
     icon: <FlaskIcon className="h-6 w-6" />,
-    accent: 'info',
   },
   {
     href: '/tools/intranasal',
@@ -85,7 +73,6 @@ const TOOLS: ToolCard[] = [
     bullets: ['Mcg per spray', 'Spray volume tuning', 'Doses per bottle'],
     cta: 'Spray Doses',
     icon: <BoxIcon className="h-6 w-6" />,
-    accent: 'lab',
   },
   {
     href: '/tools/coa-reader',
@@ -96,7 +83,6 @@ const TOOLS: ToolCard[] = [
     bullets: ['Field-by-field breakdown', 'Red/green flag checklist', 'Lab-verified listings'],
     cta: 'Verify a COA',
     icon: <DocumentIcon className="h-6 w-6" />,
-    accent: 'promo',
   },
 ];
 
@@ -111,38 +97,41 @@ export default async function ToolsHubPage() {
   return (
     <div className="relative overflow-hidden">
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute left-1/2 top-0 h-[28rem] w-[56rem] -translate-x-1/2 rounded-full bg-brand/10 blur-[120px]" />
-        <div className="absolute -right-24 top-40 h-72 w-72 rounded-full bg-info/10 blur-3xl" />
-        <div className="absolute -left-24 top-16 h-64 w-64 rounded-full bg-coupon/10 blur-3xl" />
+        <div className="absolute left-1/2 top-0 h-[28rem] w-[56rem] -translate-x-1/2 rounded-full bg-accent/10 blur-[120px]" />
+        <div className="absolute -right-24 top-40 h-72 w-72 rounded-full bg-accent/10 blur-3xl" />
+        <div className="absolute -left-24 top-16 h-64 w-64 rounded-full bg-accent/5 blur-3xl" />
       </div>
 
       <div className="mx-auto max-w-shell px-4 py-14">
-        <section className="mx-auto max-w-2xl text-center">
-          <span className="inline-flex items-center gap-1.5 rounded-pill bg-brand-soft px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-brand-strong">
-            <BoltIcon className="h-3.5 w-3.5" />
+        <section className="mx-auto max-w-4xl text-center">
+          <span className="animate-fade-up inline-flex items-center gap-2 rounded-pill border border-line bg-surface-raised px-4 py-2 font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-content shadow-card">
+            <span className="relative flex h-2 w-2" aria-hidden="true">
+              <span className="absolute inline-flex h-full w-full rounded-full bg-accent opacity-60 motion-safe:animate-ping" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-accent" />
+            </span>
             Free research tools
           </span>
-          <h1 className="mt-3 text-4xl font-black tracking-tight text-content sm:text-5xl">
+          <h1 className="animate-fade-up animate-delay-100 mx-auto mt-6 max-w-4xl text-4xl font-black leading-[0.95] text-content sm:text-6xl">
             {seo?.h1 ? (
               seo.h1
             ) : (
               <>
-                Peptide Pricing <span className="italic text-brand">Tools.</span>
+                Peptide Pricing <span className="text-accent">Tools.</span>
               </>
             )}
           </h1>
-          <p className="mx-auto mt-4 max-w-xl text-sm text-muted sm:text-base">
+          <p className="animate-fade-up animate-delay-200 mx-auto mt-5 max-w-2xl text-base leading-7 text-muted sm:text-lg">
             A free, no-login suite of calculators and verification tools for the modern peptide researcher.
             Reconstitute vials, compare prices, dose intranasal sprays, and read COAs like a pro.
           </p>
 
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
+          <div className="animate-fade-up animate-delay-300 mt-6 flex flex-wrap items-center justify-center gap-2">
             {BADGES.map((badge) => (
               <span
                 key={badge.label}
                 className="inline-flex items-center gap-1.5 rounded-pill border border-line bg-surface px-3.5 py-1.5 text-xs font-bold text-content shadow-sm"
               >
-                <span className="text-brand">{badge.icon}</span>
+                <span className="text-accent">{badge.icon}</span>
                 {badge.label}
               </span>
             ))}
@@ -151,14 +140,13 @@ export default async function ToolsHubPage() {
 
         <section className="mt-12 grid grid-cols-1 gap-5 sm:grid-cols-2">
           {TOOLS.map((tool) => {
-            const accent = ACCENT_CLASSES[tool.accent];
             return (
               <Link
                 key={tool.href}
                 href={tool.href}
-                className="tilt-card group flex flex-col rounded-card border border-line bg-surface-raised p-6 hover:border-brand/30 sm:p-7"
+                className="tilt-card group flex flex-col rounded-card border border-line bg-surface-raised p-6 hover:border-accent/40 sm:p-7"
               >
-                <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-chip shadow-sm ${accent.icon}`}>
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-chip bg-accent-tint text-accent-strong shadow-sm">
                   {tool.icon}
                 </span>
                 <h2 className="mt-4 text-xl font-black text-content">{tool.title}</h2>
@@ -166,12 +154,12 @@ export default async function ToolsHubPage() {
                 <ul className="mt-4 space-y-1.5">
                   {tool.bullets.map((bullet) => (
                     <li key={bullet} className="flex items-center gap-2 text-sm font-semibold text-content">
-                      <span aria-hidden="true" className={`h-1.5 w-1.5 shrink-0 rounded-full ${accent.text.replace('text-', 'bg-')}`} />
+                      <span aria-hidden="true" className="h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
                       {bullet}
                     </li>
                   ))}
                 </ul>
-                <span className={`mt-5 inline-flex items-center gap-1.5 text-sm font-black uppercase tracking-wide ${accent.text}`}>
+                <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-black uppercase tracking-wide text-accent-strong">
                   {tool.cta}
                   <ArrowRightIcon className="h-4 w-4" />
                 </span>
@@ -180,7 +168,7 @@ export default async function ToolsHubPage() {
           })}
         </section>
 
-        <div className="mx-auto mt-12 max-w-3xl rounded-card border border-brand/20 bg-brand-tint p-6 text-center sm:p-8">
+        <div className="mx-auto mt-12 max-w-3xl rounded-card border border-accent/25 bg-accent-tint p-6 text-center sm:p-8">
           <p className="text-sm text-muted sm:text-base">
             Every calculation runs entirely in your browser with no data stored. The same per-milligram
             normalization used across the{' '}
@@ -198,8 +186,8 @@ export default async function ToolsHubPage() {
 
         <PageFaqSection path="/tools" className="mt-14" />
 
-        <section className="mx-auto mt-12 max-w-3xl rounded-card border border-brand/20 bg-brand-tint p-6 text-center sm:p-8">
-          <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-brand text-white shadow-sm">
+        <section className="mx-auto mt-12 max-w-3xl rounded-card border border-accent/25 bg-accent-tint p-6 text-center sm:p-8">
+          <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-accent text-surface-raised shadow-sm">
             <ShieldCheckIcon className="h-6 w-6" />
           </span>
           <h2 className="mt-3 text-xl font-black text-content">Research Use Only</h2>
