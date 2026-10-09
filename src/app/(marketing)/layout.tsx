@@ -7,11 +7,15 @@ import { PromoBar } from '@/components/layout/promo-bar';
 import { AllVendors } from '@/components/layout/all-vendors';
 import { Newsletter } from '@/components/layout/newsletter';
 import { SeoInjector } from '@/components/layout/seo-injector';
+import { SupplierSpotlight } from '@/components/layout/supplier-spotlight';
+import { buildSupplierSpotlight } from '@/lib/supplier-spotlight';
 
 export default async function MarketingLayout({ children }: { children: React.ReactNode }) {
   // Fetched once here (not per-page) so every public page gets the same
   // directory above the footer, instead of each page opting in separately.
   const [suppliers, seoInjections] = await Promise.all([getSuppliers(), getSeoInjections()]);
+  // The spotlight card belongs to the supplier marked Featured in the admin.
+  const featuredSupplier = suppliers.find((supplier) => supplier.isFeatured);
 
   return (
     <>
@@ -31,6 +35,9 @@ export default async function MarketingLayout({ children }: { children: React.Re
       <AllVendors suppliers={suppliers} />
       <Newsletter />
       <SiteFooter />
+      {featuredSupplier ? (
+        <SupplierSpotlight supplier={buildSupplierSpotlight(featuredSupplier)} />
+      ) : null}
       {/* Custom head/body code from /admin/seo, per page. */}
       <SeoInjector injections={seoInjections} />
     </>

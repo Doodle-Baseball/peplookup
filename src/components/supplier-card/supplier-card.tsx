@@ -20,6 +20,7 @@ import {
   ChevronRightIcon,
   ExternalIcon,
   FlaskIcon,
+  StarIcon,
   TruckIcon,
   WalletIcon,
 } from '@/components/icons/icons';
@@ -100,9 +101,18 @@ export function SupplierCard({ supplier, productCount }: { supplier: Supplier; p
           ) : null}
 
           <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-            {/* The "Featured" and "Trust" badges were dropped here: the featured
-                border/glow on the card itself already signals it, and the star
-                rating just above already covers the trust score. */}
+            {/* Featured is an editorial pick set in the admin, not a score, so the
+                badge says so on hover rather than implying a quality ranking.
+                The "Trust" badge stays dropped: the star rating above covers it. */}
+            {supplier.isFeatured ? (
+              <span
+                title={`Featured supplier: an editorial pick by ${site.name}. It does not change prices or price-per-mg rankings.`}
+                className="inline-flex items-center gap-1 rounded-pill border border-coupon bg-gradient-to-r from-accent to-accent-strong px-2.5 py-1 text-micro font-black uppercase tracking-wide text-surface-raised shadow-sm"
+              >
+                <StarIcon className="h-3 w-3 fill-current text-coupon" />
+                Featured
+              </span>
+            ) : null}
             {supplier.tier ? <Badge tone="tier">{supplier.tier}</Badge> : null}
             {supplier.labScore !== null ? (
               <Badge tone="lab" icon={<FlaskIcon className="h-3 w-3" />}>
