@@ -84,6 +84,8 @@ export function BulkVendorImport() {
             </button>
 
             <form action={formAction} className="space-y-5">
+              {/* The file is read in the browser, so its text has to travel with the form. */}
+              <input type="hidden" name="csvText" value={csvText} />
               <div className="rounded-card border border-dashed border-line bg-surface p-4">
                 <label className="flex cursor-pointer flex-col items-center justify-center gap-2 text-sm text-content">
                   <span className="rounded-chip bg-brand px-4 py-2 font-bold text-white">Choose CSV file</span>

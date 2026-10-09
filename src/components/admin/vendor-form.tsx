@@ -239,31 +239,33 @@ export function VendorForm({
       return;
     }
 
+    // Built here, not inside a state updater: React may run an updater twice,
+    // which doubled every reported error and could report the count before it ran.
     let added = 0;
     const rowErrors: string[] = [];
-    setPendingProducts((current) => {
-      const next = [...current];
-      for (const row of rows) {
-        if (!row.entry) {
-          rowErrors.push(`Row ${row.rowNumber}: ${row.errors.join(' ')}`);
-          continue;
-        }
-        const duplicate = next.some(
-          (item) =>
-            item.compoundSlug === row.entry!.compoundSlug &&
-            item.form === row.entry!.form &&
-            item.size === row.entry!.size &&
-            item.productUrl === row.entry!.productUrl,
-        );
-        if (duplicate) {
-          rowErrors.push(`Row ${row.rowNumber}: already in the product list, skipped.`);
-          continue;
-        }
-        next.push(row.entry);
-        added += 1;
+    const next = [...pendingProducts];
+    for (const row of rows) {
+      if (!row.entry) {
+        rowErrors.push(`Row ${row.rowNumber}: ${row.errors.join(' ')}`);
+        continue;
       }
-      return next;
-    });
+      const entry = row.entry;
+      const duplicate = next.some(
+        (item) =>
+          item.compoundSlug === entry.compoundSlug &&
+          item.form === entry.form &&
+          item.size === entry.size &&
+          (item.vialCount ?? 1) === (entry.vialCount ?? 1) &&
+          item.productUrl === entry.productUrl,
+      );
+      if (duplicate) {
+        rowErrors.push(`Row ${row.rowNumber}: already in the product list, skipped.`);
+        continue;
+      }
+      next.push(entry);
+      added += 1;
+    }
+    setPendingProducts(next);
     setCsvImportResult({ added, errors: rowErrors });
   }
 
@@ -845,7 +847,10 @@ export function VendorForm({
                   <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
                     <span className="font-bold">{item.compoundName}</span>
                     <span className="text-muted">{item.form}</span>
-                    <span className="text-muted">{item.size}</span>
+                    <span className="text-muted">
+                      {item.size}
+                      {(item.vialCount ?? 1) > 1 ? ` × ${item.vialCount}` : ''}
+                    </span>
                     <span className="font-bold">${item.price}</span>
                     {item.discountPercent ? <span className="-ml-1 text-muted">(-{item.discountPercent}%)</span> : null}
                     <span
