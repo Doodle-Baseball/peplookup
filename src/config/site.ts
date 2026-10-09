@@ -84,7 +84,6 @@ export const footerNav: readonly { heading: string; links: readonly NavChild[] }
       { label: 'Suppliers', href: '/suppliers' },
       { label: 'Reviews', href: '/reviews' },
       { label: 'Price Checker', href: '/price-checker' },
-      { label: 'Watchlist', href: '/watchlist' },
       { label: 'Supplier Listing', href: '/supplier-listing' },
       { label: 'Community', href: '/community' },
     ],

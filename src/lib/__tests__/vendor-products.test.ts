@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import type { Offer } from '@/lib/schema';
 import { toCents } from '../money';
-import { discountPercentText, offerToVendorProductEntry, sizeText } from '../vendor-products';
+import {
+  discountPercentText,
+  offerToVendorProductEntry,
+  parseSizeWithPack,
+  parseVendorProductsCsv,
+  sizeText,
+} from '../vendor-products';
 
 function offer(over: Partial<Offer> = {}): Offer {
   return {
@@ -59,6 +65,7 @@ describe('offerToVendorProductEntry', () => {
       price: '29.99',
       discountCode: '',
       discountPercent: '',
+      vialCount: 1,
     });
   });
 
@@ -80,5 +87,67 @@ describe('offerToVendorProductEntry', () => {
     );
     expect(entry.coaUrl).toBe('https://example.com/coa.pdf');
     expect(entry.discountPercent).toBe('10');
+  });
+});
+
+describe('parseSizeWithPack', () => {
+  it('reads a plain size as one unit', () => {
+    expect(parseSizeWithPack('10mg')).toEqual({ size: '10 mg', count: 1 });
+    expect(parseSizeWithPack('250 mcg')).toEqual({ size: '250 mcg', count: 1 });
+  });
+
+  it('reads a pack of vials or bottles', () => {
+    expect(parseSizeWithPack('5mg pack of 2 vials')).toEqual({ size: '5 mg', count: 2 });
+    expect(parseSizeWithPack('30mg pack of 2 Bottle')).toEqual({ size: '30 mg', count: 2 });
+    expect(parseSizeWithPack('3ML pack of 2 vials')).toEqual({ size: '3 ml', count: 2 });
+  });
+
+  it('counts capsules, multiplied across bottles', () => {
+    expect(parseSizeWithPack('10mg x 30 caps')).toEqual({ size: '10 mg', count: 30 });
+    expect(parseSizeWithPack('0.25MG x 60 caps pack of 2 Bottle')).toEqual({ size: '0.25 mg', count: 120 });
+  });
+
+  it('rejects wording it cannot account for rather than guessing', () => {
+    expect(parseSizeWithPack('10mg buy one get one')).toBeNull();
+    expect(parseSizeWithPack('about ten mg')).toBeNull();
+  });
+});
+
+describe('parseVendorProductsCsv', () => {
+  const catalogue = [
+    { slug: 'bpc-157', name: 'BPC-157' },
+    { slug: 'melanotan-1', name: 'Melanotan-1' },
+    { slug: 'glow', name: 'GLOW' },
+    { slug: 'klow', name: 'KLOW' },
+    { slug: 'ipamorelin-cjc-1295-no-dac', name: 'Ipamorelin / CJC-1295 (No DAC)' },
+  ];
+  const csv = (compound: string, size: string, price: string) =>
+    `Compound,Type,Size,Product URL,Price\r\n"${compound}",vial,${size},https://example.com/p,"${price}"\r\n`;
+
+  it('accepts a dollar-signed price with thousands separators', () => {
+    const [row] = parseVendorProductsCsv(csv('BPC-157', '10mg', '$1,034.90'), catalogue).rows;
+    expect(row?.errors).toEqual([]);
+    expect(row?.entry?.price).toBe('1034.9');
+  });
+
+  it('stores the per-vial size and the pack count', () => {
+    const [row] = parseVendorProductsCsv(csv('BPC-157', '5mg pack of 2 vials', '$53.99'), catalogue).rows;
+    expect(row?.entry).toMatchObject({ size: '5 mg', vialCount: 2 });
+  });
+
+  it.each([
+    ['Melanotan-I', 'melanotan-1'],
+    ['GLOW (GHK-Cu + BPC-157 + TB-500)', 'glow'],
+    ['KLOW(BPC-157, TB-500, KPV, GHK-Cu)', 'klow'],
+    ['Ipamorelin/CJC-1295 (No DAC)', 'ipamorelin-cjc-1295-no-dac'],
+  ])('matches the sheet name %s to %s', (compound, slug) => {
+    const [row] = parseVendorProductsCsv(csv(compound, '10mg', '$50'), catalogue).rows;
+    expect(row?.entry?.compoundSlug).toBe(slug);
+  });
+
+  it('still rejects a compound that is not in the catalogue', () => {
+    const [row] = parseVendorProductsCsv(csv('Unobtainium', '10mg', '$50'), catalogue).rows;
+    expect(row?.entry).toBeNull();
+    expect(row?.errors[0]).toMatch(/Unknown compound/);
   });
 });

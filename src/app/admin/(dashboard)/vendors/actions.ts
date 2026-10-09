@@ -216,7 +216,7 @@ async function saveVendorProducts(
       supplierSlug,
       form,
       vialSize,
-      vialCount: 1,
+      vialCount: Number.isInteger(entry.vialCount) && (entry.vialCount ?? 0) >= 1 ? entry.vialCount! : 1,
       listPrice,
       salePrice: salePriceFor(listPrice, entry.discountPercent),
       currency: 'USD',

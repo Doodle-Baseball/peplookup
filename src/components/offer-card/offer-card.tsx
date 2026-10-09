@@ -19,6 +19,28 @@ interface OfferCardProps {
   layout?: 'row' | 'grid';
 }
 
+/** Capsules per bottle; a capsule listing above this is a multi-bottle pack. */
+const CAPSULES_PER_BOTTLE = 60;
+
+/**
+ * The catalogue tile's size line. A pack names its unit: sprays come in
+ * bottles, and capsule listings store mg per capsule with `vialCount`
+ * capsules, so a multi-bottle pack (e.g. 600) reads as 60 capsules × 10 bottles.
+ */
+function gridSizeLabel(offer: Offer): string {
+  const size = `${(offer.vialSize / 1000).toLocaleString()} mg`;
+  if (offer.vialCount <= 1) return size;
+  if (offer.form === 'spray') return `${size} · pack of ${offer.vialCount} bottles`;
+  if (offer.form === 'capsule') {
+    const bottleCount = offer.vialCount / CAPSULES_PER_BOTTLE;
+    return bottleCount > 1 && Number.isInteger(bottleCount)
+      ? `${size} × ${CAPSULES_PER_BOTTLE} capsules · pack of ${bottleCount} bottles`
+      : `${size} · ${offer.vialCount} capsules`;
+  }
+  if (offer.form === 'vial') return `${size} · pack of ${offer.vialCount} vials`;
+  return `${size} · ${offer.vialCount} vials`;
+}
+
 /**
  * One vendor's price observation for one product. Used on both the product
  * page (heading = supplier, since the product is already the page context)
@@ -47,6 +69,7 @@ export function OfferCard({
   const logo = supplier.logoUrl ?? supplier.faviconUrl;
 
   const buyHref = `/go?to=${encodeURIComponent(offer.productUrl)}`;
+  const coaHref = offer.labReport?.reportUrl ?? offer.labReport?.labUrl ?? offer.coaUrl ?? null;
   const compareHref = `/products/${product.slug}`;
 
   if (layout === 'grid') {
@@ -77,10 +100,7 @@ export function OfferCard({
             </Link>
             {/* A vendor lists several sizes and kits of one compound, so each tile needs its own size. */}
             <p className="mt-0.5 text-xs text-muted">
-              <span className="font-semibold text-content">Size</span>{' '}
-              {offer.vialCount > 1
-                ? `${(offer.vialSize / 1000).toLocaleString()} mg · ${offer.vialCount} vials`
-                : `${(offer.vialSize / 1000).toLocaleString()} mg`}
+              <span className="font-semibold text-content">Size</span> {gridSizeLabel(offer)}
             </p>
             <p className={cn('mt-0.5 flex items-center gap-1 text-xs font-semibold', offer.inStock ? 'text-ok' : 'text-danger')}>
               <span aria-hidden="true" className={cn('h-1.5 w-1.5 rounded-pill', offer.inStock ? 'bg-ok' : 'bg-danger')} />
@@ -102,10 +122,22 @@ export function OfferCard({
           </div>
         </div>
 
-        <p className={cn('text-xs', stale ? 'font-semibold text-warn' : 'text-muted')}>
-          {perMg !== null ? formatPerMg(perMg, listing.currency) : 'Price per mg unavailable'} · seen{' '}
-          {timeAgo(offer.scrapedAt)}
-        </p>
+        <div className="flex items-center justify-between gap-3">
+          <p className={cn('text-xs', stale ? 'font-semibold text-warn' : 'text-muted')}>
+            {perMg !== null ? formatPerMg(perMg, listing.currency) : 'Price per mg unavailable'} · seen{' '}
+            {timeAgo(offer.scrapedAt)}
+          </p>
+          {coaHref ? (
+            <a
+              href={coaHref}
+              target="_blank"
+              rel="nofollow noopener"
+              className="shrink-0 font-display text-xs text-accent-strong underline-offset-4 transition-colors hover:text-accent hover:underline"
+            >
+              View COA
+            </a>
+          ) : null}
+        </div>
 
         <div className="mt-auto grid grid-cols-2 gap-2 pt-1">
           <a

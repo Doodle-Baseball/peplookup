@@ -22,6 +22,11 @@ export interface VendorProductEntry {
   price: string;
   discountCode: string;
   discountPercent: string;
+  /**
+   * Units in the pack: vials or bottles, or capsules for a capsule listing
+   * (capsules per bottle × bottles). Absent means a single unit.
+   */
+  vialCount?: number;
 }
 
 /** Integer micrograms as the size text the form's parser reads back, e.g. "10 mg" or "250 mcg". */
@@ -49,6 +54,7 @@ export function offerToVendorProductEntry(offer: Offer, compoundName: string): V
     // Coupon codes live on the vendor, not on a listing, so there is nothing stored to show.
     discountCode: '',
     discountPercent: discountPercentText(offer.listPrice, offer.salePrice),
+    vialCount: offer.vialCount,
   };
 }
 
@@ -65,6 +71,50 @@ function normalizeVendorProductForm(value: string): VendorProductFormValue | nul
 
 /** Matches the size format the save action parses: a number plus mg, mcg or mL. */
 const SIZE_PATTERN = /^\d+(?:\.\d+)?\s*(mg|mcg|ml)?$/i;
+
+/**
+ * Reads a supplier's size text, which often carries the pack along with the
+ * amount: "10mg", "5mg pack of 2 vials", "10mg x 30 caps",
+ * "0.25MG x 60 caps pack of 2 Bottle". Returns the per-unit size in the
+ * format the save action parses, and the unit count (capsules × bottles for
+ * capsules, else vials or bottles). Null when the amount itself is unreadable.
+ */
+export function parseSizeWithPack(text: string): { size: string; count: number } | null {
+  const normalized = text.trim().toLowerCase().replace(/\s+/g, ' ');
+  const amount = normalized.match(/^(\d+(?:\.\d+)?)\s*(mg|mcg|ml)?\b/);
+  if (!amount) return null;
+  const rest = normalized.slice(amount[0].length).trim();
+  const capsules = rest.match(/(?:x|×|\*)\s*(\d+)\s*(?:caps?|capsules?)\b/);
+  const pack = rest.match(/pack of\s*(\d+)/);
+  // Anything else left over (an unknown pack wording) is safer rejected than guessed.
+  const leftover = rest
+    .replace(capsules?.[0] ?? '', '')
+    .replace(/pack of\s*\d+\s*(?:vials?|bottles?|kits?|units?)?/, '')
+    .trim();
+  if (leftover) return null;
+  const count = Number(capsules?.[1] ?? 1) * Number(pack?.[1] ?? 1);
+  if (!Number.isInteger(count) || count < 1) return null;
+  return { size: `${amount[1]} ${amount[2] ?? 'mg'}`, count };
+}
+
+/** "$1,034.90" → 1034.9; supplier sheets often keep the currency sign and thousands separators. */
+function parsePriceText(text: string): number {
+  return Number(text.replace(/^\$/, '').replace(/,/g, '').trim());
+}
+
+/**
+ * A forgiving key for matching a sheet's compound name to the catalogue:
+ * case, spacing and punctuation are ignored, and a trailing Roman numeral
+ * reads as a digit ("Melanotan-I" is "Melanotan-1").
+ */
+function compoundKey(text: string): string {
+  return text
+    .trim()
+    .toLowerCase()
+    .replace(/[\s-]+ii$/, '2')
+    .replace(/[\s-]+i$/, '1')
+    .replace(/[^a-z0-9]/g, '');
+}
 
 /**
  * Header row plus one filled example so a file started from this template has
@@ -139,6 +189,18 @@ export function parseVendorProductsCsv(
 
   const byName = new Map(products.map((p) => [p.name.trim().toLowerCase(), p]));
   const bySlug = new Map(products.map((p) => [p.slug, p]));
+  const byKey = new Map<string, { slug: string; name: string }>();
+  for (const p of products) {
+    byKey.set(compoundKey(p.name), p);
+    byKey.set(compoundKey(p.slug), p);
+  }
+  // Exact name or slug first; then the forgiving key, with and without a
+  // trailing parenthetical (sheets write "GLOW (GHK-Cu + BPC-157 + TB-500)").
+  const findCompound = (text: string) =>
+    byName.get(text.toLowerCase()) ??
+    bySlug.get(text) ??
+    byKey.get(compoundKey(text)) ??
+    byKey.get(compoundKey(text.replace(/\s*\(.*$/, '')));
   const cell = (row: string[], index: number) => (index >= 0 ? (row[index] ?? '').trim() : '');
 
   const rows: VendorProductCsvRow[] = dataRows
@@ -156,7 +218,7 @@ export function parseVendorProductsCsv(
       const discountCode = cell(row, columns.discountCode);
       const discountPercentRaw = cell(row, columns.discountPercent);
 
-      const product = byName.get(compoundText.toLowerCase()) ?? bySlug.get(compoundText);
+      const product = findCompound(compoundText);
       if (!compoundText) errors.push('Compound is required.');
       else if (!product) errors.push(`Unknown compound "${compoundText}". Use the exact name from this supplier's compound list.`);
 
@@ -164,8 +226,13 @@ export function parseVendorProductsCsv(
       if (!typeText) errors.push('Type is required.');
       else if (!form) errors.push(`Unknown type "${typeText}". Use one of: ${VENDOR_PRODUCT_FORM_VALUES.join(', ')}.`);
 
+      const sizeWithPack = sizeValue ? parseSizeWithPack(sizeValue) : null;
       if (!sizeValue) errors.push('Size is required.');
-      else if (!SIZE_PATTERN.test(sizeValue)) errors.push(`Size "${sizeValue}" must be a number with mg, mcg or mL, e.g. "10 mg".`);
+      else if (!sizeWithPack || !SIZE_PATTERN.test(sizeWithPack.size)) {
+        errors.push(
+          `Size "${sizeValue}" must be a number with mg, mcg or mL, optionally with a pack, e.g. "10 mg", "10 mg pack of 2 vials" or "5 mg x 60 caps".`,
+        );
+      }
 
       if (!url) errors.push('Product URL is required.');
       else if (!/^https?:\/\//i.test(url)) errors.push('Product URL must start with http:// or https://.');
@@ -178,7 +245,7 @@ export function parseVendorProductsCsv(
         errors.push('COA URL must start with http:// or https://, or be left blank.');
       }
 
-      const price = Number(priceText);
+      const price = parsePriceText(priceText);
       if (!priceText) errors.push('Price is required.');
       else if (!Number.isFinite(price) || price <= 0) errors.push(`Price "${priceText}" must be a positive number.`);
 
@@ -193,12 +260,13 @@ export function parseVendorProductsCsv(
       }
 
       const entry: VendorProductEntry | null =
-        errors.length === 0 && product && form
+        errors.length === 0 && product && form && sizeWithPack
           ? {
               compoundSlug: product.slug,
               compoundName: product.name,
               form,
-              size: sizeValue,
+              size: sizeWithPack.size,
+              vialCount: sizeWithPack.count,
               productUrl: url,
               imageUrl,
               coaUrl,
