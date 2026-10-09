@@ -8,10 +8,10 @@ const PANEL_CLASS = 'rounded-panel border border-line bg-surface-raised shadow-c
 
 /** Internal links, anchor text kept to the "[Compound] Price Comparison" pattern this section targets. */
 const POPULAR_COMPARISONS: readonly { slug: string; note: string }[] = [
-  { slug: 'bpc-157', note: 'healing and tissue repair research' },
-  { slug: 'retatrutide', note: 'most-compared weight loss compound' },
+  { slug: 'bpc-157', note: 'per-mg prices across suppliers' },
+  { slug: 'retatrutide', note: 'popular research compound' },
   { slug: 'tirzepatide', note: 'GLP-1 research pricing' },
-  { slug: 'tb-500', note: 'tissue repair research' },
+  { slug: 'tb-500', note: 'per-mg prices across suppliers' },
   { slug: 'semaglutide', note: 'GLP-1 research pricing' },
 ];
 
@@ -25,7 +25,7 @@ function listingsPhrase(listingCount: number): string {
 }
 
 /**
- * "Peptide Pricing Comparison, Explained": supporting copy between the
+ * "Peptide Price Comparison, Explained": supporting copy between the
  * homepage compound grid and the FAQs. A Server Component so the text is in
  * the initial HTML. Counts come from the live catalogue, never hardcoded.
  */
@@ -58,36 +58,43 @@ export function PricingComparisonExplainer({
             id="pricing-comparison-explained-heading"
             className="mt-3 text-3xl font-black leading-tight text-content break-words sm:text-4xl lg:text-5xl"
           >
-            Peptide Pricing Comparison, <span className="italic text-accent">Explained</span>
+            Peptide Price Comparison, <span className="italic text-accent">Explained</span>
           </h2>
         </div>
 
         <div className="space-y-4 text-sm leading-7 text-muted sm:text-base lg:col-span-2">
           <p>
-            A true peptide pricing comparison isn&rsquo;t just listing prices side by side. It&rsquo;s making
-            them comparable. Vial sizes, forms, and packaging vary widely between suppliers, so PepLookup
-            normalizes every price to cost per milligram before it appears in any comparison. This is what
-            separates an accurate peptide pricing comparison from a simple price list.
+            A good peptide price comparison does more than list prices side by side. It makes them
+            comparable. Vial sizes, forms and packaging vary between suppliers, so PepLookup converts every
+            price to cost per milligram before it appears in a comparison. That is what separates a real price
+            comparison from a simple price list.
           </p>
           <p>
-            Our peptide pricing comparison currently spans{' '}
-            <strong className="font-bold text-content">{number.format(stats.supplierCount)} verified suppliers</strong>{' '}
-            and <strong className="font-bold text-content">{listingsPhrase(stats.listingCount)}</strong> across{' '}
+            PepLookup currently compares{' '}
+            <strong className="font-bold text-content">{number.format(stats.supplierCount)} research suppliers</strong>,{' '}
+            <strong className="font-bold text-content">{listingsPhrase(stats.listingCount)}</strong> and{' '}
             <strong className="font-bold text-content">
               {number.format(stats.compoundCount)} research compounds
             </strong>
             . Every comparison shows when a price was last observed, whether the supplier publishes a certificate
-            of analysis, and any active discount code: everything needed to run a fair peptide pricing
-            comparison before ordering.
+            of analysis, and any active discount code, so you have what you need to compare peptide prices
+            before ordering.
           </p>
           <p>
-            When you compare peptide prices on a single listing page, sort by cost per mg first. This is
-            the number that actually reflects value, since a lower sticker price on a smaller vial can cost more
-            per milligram than a higher-priced larger one.
+            When you compare peptide prices on a listing page, sort by cost per mg first. A lower sticker price
+            on a smaller vial can cost more per milligram than a higher-priced larger one. You can also check a
+            single price with our{' '}
+            <Link href="/price-checker" className="font-bold text-brand hover:underline">
+              peptide price checker
+            </Link>{' '}
+            or the{' '}
+            <Link href="/tools/price-per-mg" className="font-bold text-brand hover:underline">
+              price per mg calculator
+            </Link>
+            .
           </p>
           <p className="font-semibold text-content">
-            Explore individual peptide pricing comparison pages below for BPC-157, Retatrutide, Tirzepatide and
-            more.
+            Explore the price comparison pages below for BPC-157, Retatrutide, Tirzepatide and more.
           </p>
         </div>
       </div>
@@ -95,7 +102,7 @@ export function PricingComparisonExplainer({
       {popular.length > 0 ? (
         <div className="mt-8 border-t border-line pt-6 sm:mt-10 sm:pt-8">
           <h3 className="text-lg font-black text-content sm:text-xl">
-            Popular Peptide Pricing <span className="text-accent">Comparisons</span>
+            Popular Peptide Price <span className="text-accent">Comparisons</span>
           </h3>
           <ul className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {popular.map(({ slug, name, note }) => (

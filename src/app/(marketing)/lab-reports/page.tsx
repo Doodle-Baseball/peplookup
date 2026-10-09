@@ -10,6 +10,7 @@ import { staticSeoPage } from '@/config/seo-pages';
 import { pageMetadata } from '@/lib/seo-defaults';
 import { getSeoOverride, withSeo } from '@/lib/seo';
 import { PageFaqSection } from '@/components/faq/page-faq-section';
+import { AccentedHeading } from '@/components/ui/accented-heading';
 
 const PAGE = staticSeoPage('/lab-reports');
 
@@ -25,6 +26,15 @@ const FORM_LABELS: Record<ProductForm, string> = {
   pen: 'Pen',
   serum: 'Serum',
 };
+
+/** "What a Peptide COA Usually Shows": general COA anatomy, not claims about any listing. */
+const COA_CONTENTS: readonly { label: string; detail: string }[] = [
+  { label: 'Identity', detail: 'confirms the compound, usually by mass spectrometry (MS).' },
+  { label: 'Purity', detail: 'the percentage reported by HPLC, with the method named.' },
+  { label: 'Batch or lot number', detail: 'should match the vial you receive.' },
+  { label: 'Test date and lab', detail: 'who ran it and when.' },
+  { label: 'Extras (sometimes)', detail: 'endotoxin, sterility or heavy metals.' },
+];
 
 export default async function LabReportsPage({
   searchParams,
@@ -113,7 +123,7 @@ export default async function LabReportsPage({
         </p>
         <h1 className="mt-3 text-4xl font-black tracking-tight text-content sm:text-5xl">
           {seo?.h1 ? (
-            seo.h1
+            <AccentedHeading text={seo.h1} />
           ) : (
             <>
               COA Test Reports <span className="italic text-brand">Scored</span>
@@ -121,8 +131,8 @@ export default async function LabReportsPage({
           )}
         </h1>
         <p className="mx-auto mt-4 max-w-xl text-sm text-muted sm:text-base">
-          Independent third-party lab results from verified suppliers, covering purity, concentration and identity
-          testing for the peptides listed on this site.
+          Peptide COAs and lab reports published by suppliers, covering purity, HPLC and identity testing, with links
+          to each original document.
         </p>
 
         <div className="mt-8 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 rounded-card border border-line bg-surface-raised px-6 py-5 shadow-card">
@@ -156,29 +166,48 @@ export default async function LabReportsPage({
 
       <section className="mt-10 rounded-panel border border-line bg-surface-raised p-5 shadow-card sm:p-8">
         <h2 className="text-lg font-black text-content sm:text-xl">
-          COA <span className="text-brand">Lab Reports</span>
+          Where These Peptide COAs <span className="text-brand">Come From</span>
         </h2>
         <p className="mt-3 text-sm leading-relaxed text-muted sm:text-base">
-          Every report below links to a certificate of analysis published by the supplier or produced
-          by a third-party testing laboratory on their behalf. {site.name} does not run tests or
-          rehost documents. You always read the original, and a report&rsquo;s presence here means
-          only that the supplier made it accessible, not that its claims have been independently verified
-          by us.
+          Each peptide COA below links to a certificate of analysis published by the supplier, or produced by a
+          third-party lab on their behalf. Where a supplier has not published one, the listing shows &ldquo;Report
+          Pending&rdquo;. {site.name} does not run tests or rehost documents, so you always read the original. A
+          report appearing here only means the supplier made it accessible. We have not verified its claims.
         </p>
       </section>
 
       <section className="mt-10 rounded-panel border border-line bg-surface-raised p-5 shadow-card sm:p-8">
         <h2 className="text-lg font-black text-content sm:text-xl">
-          Not Sure What You&rsquo;re <span className="text-brand">Looking At?</span>
+          What a Peptide COA <span className="text-brand">Usually Shows</span>
+        </h2>
+        <ul className="mt-4 space-y-2 text-sm leading-relaxed text-muted sm:text-base">
+          {COA_CONTENTS.map(({ label, detail }) => (
+            <li key={label} className="flex gap-2">
+              <span aria-hidden="true" className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-brand" />
+              <span>
+                <strong className="font-bold text-content">{label}:</strong> {detail}
+              </span>
+            </li>
+          ))}
+        </ul>
+        <p className="mt-4 text-sm leading-relaxed text-muted sm:text-base">
+          A COA describes one batch at one point in time. It is one input, not proof. Research use only.
+        </p>
+      </section>
+
+      <section className="mt-10 rounded-panel border border-line bg-surface-raised p-5 shadow-card sm:p-8">
+        <h2 className="text-lg font-black text-content sm:text-xl">
+          How to Read a <span className="text-brand">Peptide COA</span>
         </h2>
         <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
           <p className="max-w-2xl text-sm leading-relaxed text-muted sm:text-base">
-            A COA can look intimidating on first read. Our COA Reader breaks down every
-            field, explains what the numbers mean, and flags the warning signs that signal
-            a fake or incomplete certificate.
+            A peptide COA can look intimidating on first read. Our free COA Reader explains each field, including
+            HPLC purity, mass spec results, batch number and test date, and points out common red flags such as
+            missing batch numbers or no chromatogram.
           </p>
           <Link
             href="/tools/coa-reader"
+            title="Free peptide COA reader"
             className="btn-3d inline-flex shrink-0 items-center gap-2 rounded-chip bg-brand px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-brand-strong"
           >
             <DocumentIcon className="h-4 w-4" />

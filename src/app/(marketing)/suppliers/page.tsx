@@ -134,12 +134,13 @@ export default async function SuppliersPage({
               seo.h1
             ) : (
               <>
-                Find the Best <span className="block text-accent">Peptide Suppliers.</span>
+                Research Peptide <span className="block text-accent">Suppliers Directory</span>
               </>
             )}
           </h1>
           <p className="animate-fade-up animate-delay-200 mx-auto mt-5 max-w-2xl text-base leading-7 text-muted sm:text-lg">
-            Compare prices, shipping, payment options and verification grades from listed suppliers.
+            Compare 87+ research peptide suppliers by price per mg, COA links, shipping, payment options and coupon
+            codes in one directory.
           </p>
 
           <dl
@@ -279,8 +280,7 @@ export default async function SuppliersPage({
         )}
       </section>
 
-      {/* Same count as the "Suppliers listed" stat above. */}
-      <SupplierEvaluationGuide supplierCount={suppliers.length} />
+      <SupplierEvaluationGuide />
 
       <section className="mx-auto max-w-shell px-4 pb-12">
         <PageFaqSection path="/suppliers" />

@@ -10,6 +10,7 @@ import { getSeoOverride, withSeo } from '@/lib/seo';
 import { PageFaqSection } from '@/components/faq/page-faq-section';
 import { PricingComparisonExplainer } from '@/components/home/pricing-comparison-explainer';
 import { catalogueStats } from '@/lib/catalogue-stats';
+import { AccentedHeading } from '@/components/ui/accented-heading';
 
 const PAGE = staticSeoPage('/');
 
@@ -67,7 +68,7 @@ export default async function HomePage() {
 
           <h1 className="animate-fade-up animate-delay-100 mx-auto mt-6 max-w-4xl text-[clamp(2.5rem,8vw,4.5rem)] font-black leading-[0.95] text-content">
             {seo?.h1 ? (
-              seo.h1
+              <AccentedHeading text={seo.h1} />
             ) : (
               <>
                 Peptide Pricing <span className="text-accent">Comparison.</span>
@@ -75,8 +76,8 @@ export default async function HomePage() {
             )}
           </h1>
           <p className="animate-fade-up animate-delay-200 mx-auto mt-5 max-w-2xl text-base leading-7 text-muted sm:text-lg">
-            Peptide price tracking and supplier verification for the modern researcher, normalised to
-            cost per mg.
+            Compare peptide prices across 80+ research suppliers with a free peptide price tool, normalised
+            to cost per mg.
           </p>
 
           {featured.length > 0 ? (
