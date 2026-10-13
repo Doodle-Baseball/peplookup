@@ -6,7 +6,12 @@ import { site } from '@/config/site';
  * community; the old email signup (Web3Forms) was removed with it, so there is
  * nothing to submit and no client-side state.
  */
-export function Newsletter() {
+export function Newsletter({
+  compareSuppliersText = 'compare verified suppliers',
+}: {
+  /** The closing phrase of the pitch; some pages avoid calling suppliers "verified". */
+  compareSuppliersText?: string;
+}) {
   return (
     // `mx-100` is a fixed 100px gutter from the custom spacing scale, which
     // left a phone with barely half its width. Scaled by breakpoint instead.
@@ -26,7 +31,7 @@ export function Newsletter() {
           </h2>
           <p className="mx-auto mt-5 max-w-2xl text-balance text-base leading-7 text-white/60">
             A free forum for researchers to learn peptide science, interpret certificates of analysis, review published
-            studies and compare verified suppliers.
+            studies and {compareSuppliersText}.
           </p>
 
           <div className="mt-8 flex justify-center">
