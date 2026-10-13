@@ -81,7 +81,7 @@ export const STATIC_SEO_PAGES = [
     title: `Price per MG Calculator | Compare Peptide Vial Pricing | ${site.name}`,
     description:
       'Convert any peptide vial price into cost per milligram and cost per dose, then check it against real live supplier listings.',
-    h1: 'Price per MG',
+    h1: 'Peptide Price per mg Calculator',
   },
   {
     path: '/tools/calculator',

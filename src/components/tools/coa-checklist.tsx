@@ -10,7 +10,7 @@ const RED_FLAGS = [
   'A bare purity percentage with nothing backing it up',
   'The same exact COA reused across different products or batches',
   "Dates that don't line up with when the product was actually listed",
-  'PDF metadata stripped, removing the lab and analyst info',
+  'Numbers, fonts or alignment that look edited or inconsistent',
   'No testing laboratory or analyst named anywhere on it',
 ];
 

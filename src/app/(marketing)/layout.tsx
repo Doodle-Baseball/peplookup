@@ -8,7 +8,11 @@ import { AllVendors } from '@/components/layout/all-vendors';
 import { Newsletter } from '@/components/layout/newsletter';
 import { SeoInjector } from '@/components/layout/seo-injector';
 import { SupplierSpotlight } from '@/components/layout/supplier-spotlight';
+import { RouteOverride } from '@/components/layout/route-override';
 import { buildSupplierSpotlight } from '@/lib/supplier-spotlight';
+
+/** Tool pages that drop the supplier directory and the "verified" claim. */
+const TOOL_PATHS_WITHOUT_DIRECTORY = ['/tools/calculator', '/tools/intranasal', '/tools/coa-reader'];
 
 export default async function MarketingLayout({ children }: { children: React.ReactNode }) {
   // Fetched once here (not per-page) so every public page gets the same
@@ -32,8 +36,15 @@ export default async function MarketingLayout({ children }: { children: React.Re
       <main id="main" className="flex-1">
         {children}
       </main>
-      <AllVendors suppliers={suppliers} />
-      <Newsletter />
+      <RouteOverride paths={TOOL_PATHS_WITHOUT_DIRECTORY} override={null}>
+        <AllVendors suppliers={suppliers} />
+      </RouteOverride>
+      <RouteOverride
+        paths={TOOL_PATHS_WITHOUT_DIRECTORY}
+        override={<Newsletter compareSuppliersText="compare suppliers" />}
+      >
+        <Newsletter />
+      </RouteOverride>
       <SiteFooter />
       {featuredSupplier ? (
         <SupplierSpotlight supplier={buildSupplierSpotlight(featuredSupplier)} />
