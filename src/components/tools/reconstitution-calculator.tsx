@@ -1,7 +1,7 @@
 'use client';
 
 import { useId, useState, type ReactNode } from 'react';
-import { DropletIcon, RepeatIcon, SyringeIcon, TargetIcon, VialIcon } from '@/components/icons/icons';
+import { DropletIcon, SyringeIcon, TargetIcon, VialIcon } from '@/components/icons/icons';
 import { parsePositive } from '@/components/tools/calc-ui';
 import {
   CardHeading,
@@ -17,7 +17,6 @@ import {
   SYRINGES,
   SYRINGE_SIZES,
   solveReconstitution,
-  vialsForCycle,
   type ReconstitutionMode,
   type SyringeSize,
 } from '@/components/tools/reconstitution-math';
@@ -25,7 +24,7 @@ import { cn } from '@/lib/cn';
 
 const VIAL_PRESETS = [2, 5, 10, 15, 20, 30, 50];
 const BAC_PRESETS = [1, 2, 3, 5];
-const DOSE_PRESETS = [100, 250, 500, 1000];
+const AMOUNT_PRESETS = [100, 250, 500, 1000];
 const UNITS_PRESETS = [5, 10, 20, 25, 50];
 
 interface ModeOption {
@@ -36,30 +35,28 @@ interface ModeOption {
 }
 
 const MODES: readonly [ModeOption, ...ModeOption[]] = [
-  { value: 'units', title: 'Find Units', subtitle: 'From dose → syringe units', icon: <SyringeIcon className="h-5 w-5" /> },
-  { value: 'dose', title: 'Find Dose', subtitle: 'From syringe units → mcg', icon: <TargetIcon className="h-5 w-5" /> },
-  { value: 'bac', title: 'Find BAC Water', subtitle: 'From vial & dose → mL', icon: <DropletIcon className="h-5 w-5" /> },
+  { value: 'units', title: 'Find Units', subtitle: 'From amount → syringe units', icon: <SyringeIcon className="h-5 w-5" /> },
+  { value: 'amount', title: 'Find Amount', subtitle: 'From syringe units → mcg', icon: <TargetIcon className="h-5 w-5" /> },
+  { value: 'bac', title: 'Find BAC Water', subtitle: 'From vial & amount → mL', icon: <DropletIcon className="h-5 w-5" /> },
 ];
 
 export function ReconstitutionCalculator() {
   const [mode, setMode] = useState<ReconstitutionMode>('units');
   const [vialMg, setVialMg] = useState('10');
   const [bacWaterMl, setBacWaterMl] = useState('2');
-  const [doseMcg, setDoseMcg] = useState('500');
+  const [amountMcg, setAmountMcg] = useState('500');
   const [units, setUnits] = useState('10');
   const [syringe, setSyringe] = useState<SyringeSize>('U-100');
-  const [cycleDays, setCycleDays] = useState('30');
   const syringeLabelId = useId();
 
   const activeMode = MODES.find((option) => option.value === mode) ?? MODES[0];
   const result = solveReconstitution(mode, {
     vialMg: parsePositive(vialMg),
     bacWaterMl: parsePositive(bacWaterMl),
-    doseMcg: parsePositive(doseMcg),
+    amountMcg: parsePositive(amountMcg),
     units: parsePositive(units),
   });
   const capacityUnits = SYRINGES[syringe].capacityUnits;
-  const days = parsePositive(cycleDays);
 
   return (
     <div>
@@ -94,11 +91,11 @@ export function ReconstitutionCalculator() {
             />
             {mode === 'bac' ? (
               <NumberField
-                label="Target dose (mcg)"
+                label="Target amount (mcg)"
                 icon={<TargetIcon className="h-4 w-4" />}
-                value={doseMcg}
-                onChange={setDoseMcg}
-                presets={DOSE_PRESETS}
+                value={amountMcg}
+                onChange={setAmountMcg}
+                presets={AMOUNT_PRESETS}
                 unit="mcg"
               />
             ) : (
@@ -116,11 +113,11 @@ export function ReconstitutionCalculator() {
           {mode !== 'bac' ? (
             <div className="mt-6">
               <NumberField
-                label="Target dose (mcg)"
+                label="Target amount (mcg)"
                 icon={<TargetIcon className="h-4 w-4" />}
-                value={doseMcg}
-                onChange={setDoseMcg}
-                presets={DOSE_PRESETS}
+                value={amountMcg}
+                onChange={setAmountMcg}
+                presets={AMOUNT_PRESETS}
                 unit="mcg"
               />
             </div>
@@ -129,13 +126,13 @@ export function ReconstitutionCalculator() {
           {mode !== 'units' ? (
             <div className="mt-6">
               <NumberField
-                label={mode === 'dose' ? 'Syringe units' : 'Target syringe units'}
+                label={mode === 'amount' ? 'Syringe units' : 'Target syringe units'}
                 icon={<SyringeIcon className="h-4 w-4" />}
                 value={units}
                 onChange={setUnits}
                 presets={mode === 'bac' ? UNITS_PRESETS : undefined}
                 unit="units"
-                hint={mode === 'bac' ? 'The syringe mark you want each dose to land on.' : undefined}
+                hint={mode === 'bac' ? 'The syringe mark you want each draw to land on.' : undefined}
               />
             </div>
           ) : null}
@@ -148,7 +145,7 @@ export function ReconstitutionCalculator() {
               {SYRINGE_SIZES.map((size) => (
                 <OptionCard
                   key={size}
-                  title={size}
+                  title={`${SYRINGES[size].volumeLabel} syringe`}
                   detail={describeSyringe(size)}
                   isActive={size === syringe}
                   onSelect={() => setSyringe(size)}
@@ -187,42 +184,31 @@ export function ReconstitutionCalculator() {
                   emphasis
                 />
               ) : null}
-              {mode === 'dose' ? (
+              {mode === 'amount' ? (
                 <ResultRow
-                  label="Actual dose"
-                  value={result ? `${formatNumber(result.doseMcg, 1)} mcg` : EMPTY_RESULT}
+                  label="Actual amount"
+                  value={result ? `${formatNumber(result.amountMcg, 1)} mcg` : EMPTY_RESULT}
                   emphasis
                 />
               ) : null}
               <ResultRow label="Draw volume" value={result ? `${formatNumber(result.drawMl, 3, 3)} mL` : EMPTY_RESULT} />
               {mode === 'units' ? (
                 <ResultRow
-                  label={`Syringe units (${syringe})`}
+                  label="Syringe units (U-100)"
                   value={result ? `${formatNumber(result.units, 1, 1)} units` : EMPTY_RESULT}
                   emphasis
                 />
               ) : null}
-              <ResultRow label="Doses per vial" value={result ? String(result.dosesPerVial) : EMPTY_RESULT} />
+              <ResultRow label="Draws per vial" value={result ? String(result.drawsPerVial) : EMPTY_RESULT} />
             </div>
 
             {result && result.units > capacityUnits ? (
               <Notice>
-                {`${formatNumber(result.units, 1)} units is more than a ${syringe} syringe holds (${capacityUnits} units). `}
+                {`${formatNumber(result.units, 1)} units is more than a ${SYRINGES[syringe].volumeLabel} syringe holds (${capacityUnits} units). `}
                 {mode === 'units' ? 'Pick a larger syringe or add more BAC water.' : 'Pick a larger syringe.'}
               </Notice>
             ) : null}
-            {result && result.dosesPerVial === 0 ? <Notice>That dose is more than the whole vial contains.</Notice> : null}
-          </div>
-
-          <div className="rounded-card border border-line bg-surface-raised p-6 shadow-card">
-            <p className="flex items-center gap-2 text-micro font-bold uppercase text-content">
-              <RepeatIcon className="h-4 w-4 text-accent" />
-              Cycle projection
-            </p>
-            <div className="mt-4">
-              <NumberField label="Cycle length (days)" value={cycleDays} onChange={setCycleDays} />
-            </div>
-            <p className="mt-3 text-xs text-muted">{describeCycle(result?.dosesPerVial ?? 0, days)}</p>
+            {result && result.drawsPerVial === 0 ? <Notice>That amount is more than the whole vial contains.</Notice> : null}
           </div>
         </div>
       </div>
@@ -232,15 +218,7 @@ export function ReconstitutionCalculator() {
 
 function describeSyringe(size: SyringeSize): string {
   const spec = SYRINGES[size];
-  return `${spec.volumeLabel} · ${spec.gauge}${spec.note ? ` (${spec.note})` : ''}`;
-}
-
-function describeCycle(dosesInVial: number, cycleDays: number): string {
-  if (dosesInVial <= 0) return 'Enter a dose that fits in the vial to project a cycle.';
-  const coverage = `Each vial covers ${dosesInVial} ${dosesInVial === 1 ? 'day' : 'days'} at 1 dose/day`;
-  const vialsNeeded = vialsForCycle(cycleDays, dosesInVial);
-  if (vialsNeeded === null) return `${coverage}.`;
-  return `${coverage} (you'll need ~${formatNumber(vialsNeeded, 1)} ${vialsNeeded === 1 ? 'vial' : 'vials'} for a ${formatNumber(cycleDays, 1)}-day cycle).`;
+  return `${spec.capacityUnits} units${spec.note ? ` (${spec.note})` : ''}`;
 }
 
 function ModeCard({ option, isActive, onSelect }: { option: ModeOption; isActive: boolean; onSelect: () => void }) {

@@ -9,24 +9,24 @@ export const UNITS_PER_ML = 100;
 const MCG_PER_MG = 1000;
 
 export const SYRINGES = {
-  'U-100': { capacityUnits: 100, volumeLabel: '1 mL', gauge: '29G', note: null },
-  'U-50': { capacityUnits: 50, volumeLabel: '0.5 mL', gauge: '30G', note: null },
-  'U-30': { capacityUnits: 30, volumeLabel: '0.3 mL', gauge: '31G', note: 'best for small doses' },
+  'U-100': { capacityUnits: 100, volumeLabel: '1 mL', note: null },
+  'U-50': { capacityUnits: 50, volumeLabel: '0.5 mL', note: null },
+  'U-30': { capacityUnits: 30, volumeLabel: '0.3 mL', note: 'easier to read small volumes' },
 } as const;
 
 export type SyringeSize = keyof typeof SYRINGES;
 export const SYRINGE_SIZES: SyringeSize[] = ['U-100', 'U-50', 'U-30'];
 
 /** Which variable is unknown: the same equation, solved for a different term. */
-export type ReconstitutionMode = 'units' | 'dose' | 'bac';
+export type ReconstitutionMode = 'units' | 'amount' | 'bac';
 
 export interface ReconstitutionInputs {
   vialMg: number;
-  /** Used by Find Units and Find Dose. */
+  /** Used by Find Units and Find Amount. */
   bacWaterMl: number;
   /** Used by Find Units and Find BAC Water. */
-  doseMcg: number;
-  /** Units drawn (Find Dose) or the mark the dose should land on (Find BAC Water). */
+  amountMcg: number;
+  /** Units drawn (Find Amount) or the mark the amount should land on (Find BAC Water). */
   units: number;
 }
 
@@ -34,67 +34,62 @@ export interface ReconstitutionResult {
   concentrationMcgPerMl: number;
   drawMl: number;
   units: number;
-  doseMcg: number;
+  amountMcg: number;
   bacWaterMl: number;
-  /** Whole doses only, 0 means a single dose is more than the vial holds. */
-  dosesPerVial: number;
+  /** Whole draws only, 0 means a single draw is more than the vial holds. */
+  drawsPerVial: number;
 }
 
 /**
- * Solves vial mg, BAC water mL, dose mcg and syringe units for whichever one the
+ * Solves vial mg, BAC water mL, amount mcg and syringe units for whichever one the
  * mode leaves unknown. Multiplications run before divisions so textbook inputs
  * land on exact results (18 units × 5,000 mcg ÷ 200 = 450, not 450.00000000000006).
  * Returns null until every input the mode needs is positive.
  */
 export function solveReconstitution(
   mode: ReconstitutionMode,
-  { vialMg, bacWaterMl, doseMcg, units }: ReconstitutionInputs,
+  { vialMg, bacWaterMl, amountMcg, units }: ReconstitutionInputs,
 ): ReconstitutionResult | null {
   const vialMcg = vialMg * MCG_PER_MG;
   if (vialMcg <= 0) return null;
 
   if (mode === 'units') {
-    if (bacWaterMl <= 0 || doseMcg <= 0) return null;
+    if (bacWaterMl <= 0 || amountMcg <= 0) return null;
     return {
       concentrationMcgPerMl: vialMcg / bacWaterMl,
-      drawMl: (doseMcg * bacWaterMl) / vialMcg,
-      units: (doseMcg * bacWaterMl * UNITS_PER_ML) / vialMcg,
-      doseMcg,
+      drawMl: (amountMcg * bacWaterMl) / vialMcg,
+      units: (amountMcg * bacWaterMl * UNITS_PER_ML) / vialMcg,
+      amountMcg,
       bacWaterMl,
-      dosesPerVial: dosesPerVial(vialMcg, doseMcg),
+      drawsPerVial: drawsPerVial(vialMcg, amountMcg),
     };
   }
 
-  if (mode === 'dose') {
+  if (mode === 'amount') {
     if (bacWaterMl <= 0 || units <= 0) return null;
     const deliveredMcg = (units * vialMcg) / (bacWaterMl * UNITS_PER_ML);
     return {
       concentrationMcgPerMl: vialMcg / bacWaterMl,
       drawMl: units / UNITS_PER_ML,
       units,
-      doseMcg: deliveredMcg,
+      amountMcg: deliveredMcg,
       bacWaterMl,
-      dosesPerVial: dosesPerVial(vialMcg, deliveredMcg),
+      drawsPerVial: drawsPerVial(vialMcg, deliveredMcg),
     };
   }
 
-  if (doseMcg <= 0 || units <= 0) return null;
+  if (amountMcg <= 0 || units <= 0) return null;
   return {
-    concentrationMcgPerMl: (doseMcg * UNITS_PER_ML) / units,
+    concentrationMcgPerMl: (amountMcg * UNITS_PER_ML) / units,
     drawMl: units / UNITS_PER_ML,
     units,
-    doseMcg,
-    bacWaterMl: (vialMcg * units) / (doseMcg * UNITS_PER_ML),
-    dosesPerVial: dosesPerVial(vialMcg, doseMcg),
+    amountMcg,
+    bacWaterMl: (vialMcg * units) / (amountMcg * UNITS_PER_ML),
+    drawsPerVial: drawsPerVial(vialMcg, amountMcg),
   };
 }
 
-function dosesPerVial(vialMcg: number, doseMcg: number): number {
-  return wholeCount(vialMcg / doseMcg) ?? 0;
+function drawsPerVial(vialMcg: number, amountMcg: number): number {
+  return wholeCount(vialMcg / amountMcg) ?? 0;
 }
 
-/** Vials needed for a cycle at one dose per day; fractional so a half vial shows as ~0.5. */
-export function vialsForCycle(cycleDays: number, dosesInVial: number): number | null {
-  if (cycleDays <= 0 || dosesInVial <= 0) return null;
-  return cycleDays / dosesInVial;
-}

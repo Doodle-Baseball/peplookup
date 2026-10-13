@@ -16,12 +16,12 @@ describe('ReconstitutionCalculator', () => {
     expect(screen.getByText('5.00 mg / mL')).toBeTruthy();
     expect(screen.getByText('0.100 mL')).toBeTruthy();
     expect(screen.getByText('10.0 units')).toBeTruthy();
-    expect(screen.getByText(/Each vial covers 20 days at 1 dose\/day \(you'll need ~1\.5 vials for a 30-day cycle\)/)).toBeTruthy();
+    expect(screen.getByText('Draws per vial').parentElement?.textContent).toBe('Draws per vial20');
   });
 
-  it('Find Dose turns 18 units from a 5 mg / 2 mL vial into 450 mcg', () => {
+  it('Find Amount turns 18 units from a 5 mg / 2 mL vial into 450 mcg', () => {
     render(<ReconstitutionCalculator />);
-    fireEvent.click(screen.getByRole('button', { name: /find dose/i }));
+    fireEvent.click(screen.getByRole('button', { name: /find amount/i }));
     setField('Vial size (mg)', '5');
     setField('BAC water (mL)', '2');
     setField('Syringe units', '18');
@@ -29,27 +29,26 @@ describe('ReconstitutionCalculator', () => {
     expect(screen.getByText('0.180 mL')).toBeTruthy();
   });
 
-  it('Find Dose reports the actual dose from the units drawn, not the target dose', () => {
+  it('Find Amount reports the actual amount from the units drawn, not the target amount', () => {
     render(<ReconstitutionCalculator />);
-    fireEvent.click(screen.getByRole('button', { name: /find dose/i }));
+    fireEvent.click(screen.getByRole('button', { name: /find amount/i }));
     setField('Vial size (mg)', '5');
     setField('BAC water (mL)', '5');
-    setField('Target dose (mcg)', '500');
+    setField('Target amount (mcg)', '500');
     setField('Syringe units', '10');
     expect(screen.getByText('1,000')).toBeTruthy();
     expect(screen.getByText('1.00 mg / mL')).toBeTruthy();
-    // "100 mcg" is also a dose preset chip, so read it from the result row itself.
-    expect(screen.getByText('Actual dose').parentElement?.textContent).toBe('Actual dose100 mcg');
+    // "100 mcg" is also an amount preset chip, so read it from the result row itself.
+    expect(screen.getByText('Actual amount').parentElement?.textContent).toBe('Actual amount100 mcg');
     expect(screen.getByText('0.100 mL')).toBeTruthy();
-    expect(screen.getByText('50')).toBeTruthy();
-    expect(screen.getByText(/Each vial covers 50 days at 1 dose\/day \(you'll need ~0\.6 vials for a 30-day cycle\)/)).toBeTruthy();
+    expect(screen.getByText('Draws per vial').parentElement?.textContent).toBe('Draws per vial50');
   });
 
   it('Find BAC Water lands 250 mcg on the 25-unit mark of a 5 mg vial with 5 mL', () => {
     render(<ReconstitutionCalculator />);
     fireEvent.click(screen.getByRole('button', { name: /find bac water/i }));
     setField('Vial size (mg)', '5');
-    setField('Target dose (mcg)', '250');
+    setField('Target amount (mcg)', '250');
     setField('Target syringe units', '25');
     expect(screen.getByText('5.00 mL')).toBeTruthy();
     expect(screen.getByText('1,000')).toBeTruthy();
@@ -57,9 +56,9 @@ describe('ReconstitutionCalculator', () => {
 
   it('warns when the draw is larger than the chosen syringe', () => {
     render(<ReconstitutionCalculator />);
-    setField('Target dose (mcg)', '2000');
-    fireEvent.click(screen.getByRole('button', { name: /U-30/ }));
-    expect(screen.getByText(/40 units is more than a U-30 syringe holds \(30 units\)/)).toBeTruthy();
+    setField('Target amount (mcg)', '2000');
+    fireEvent.click(screen.getByRole('button', { name: /0\.3 mL syringe/ }));
+    expect(screen.getByText(/40 units is more than a 0\.3 mL syringe holds \(30 units\)/)).toBeTruthy();
   });
 
   it('shows dashes instead of numbers while a required field is empty', () => {
