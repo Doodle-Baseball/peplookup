@@ -18,25 +18,25 @@ describe('IntranasalCalculator', () => {
     render(<IntranasalCalculator />);
     expect(screen.getByText('3,000 mcg / mL')).toBeTruthy();
     expect(screen.getByText('150')).toBeTruthy();
-    expect(screen.getByText('300 mcg per 2-spray dose')).toBeTruthy();
-    expect(rowText('Sprays per bottle')).toBe('Sprays per bottle200');
-    expect(rowText('Doses per bottle')).toBe('Doses per bottle100');
-    expect(rowText('Cost per spray')).toBe('Cost per spray$0.2250');
-    expect(rowText('Cost per dose')).toBe('Cost per dose$0.450');
+    expect(rowText('Actuations per bottle')).toBe('Actuations per bottle200');
+    expect(rowText('Cost per actuation')).toBe('Cost per actuation$0.2250');
+  });
+
+  it('offers only Semax, Selank and Custom', () => {
+    render(<IntranasalCalculator />);
+    const presets = screen.getByRole('group', { name: 'Peptide' }).querySelectorAll('button');
+    expect(Array.from(presets, (button) => button.textContent)).toEqual(['Semax 0.25%', 'Selank 0.05%', 'Custom']);
   });
 
   it.each([
-    ['Selank 0.05%', '500 mcg / mL', '25', '50 mcg per 2-spray dose'],
-    ['PT-141 (Bremelanotide)', '1,000 mcg / mL', '50', '100 mcg per 2-spray dose'],
-    ['Melanotan II', '1,000 mcg / mL', '50', '100 mcg per 2-spray dose'],
-    ['Custom', '1,000 mcg / mL', '50', '100 mcg per 2-spray dose'],
-  ])('%s loads its own vial and water', (label, concentration, mcgPerSpray, perDose) => {
+    ['Selank 0.05%', '500 mcg / mL', '25'],
+    ['Custom', '1,000 mcg / mL', '50'],
+  ])('%s loads its own vial and water', (label, concentration, mcgPerActuation) => {
     render(<IntranasalCalculator />);
     fireEvent.click(screen.getByRole('button', { name: label }));
     expect(screen.getByText(concentration)).toBeTruthy();
-    expect(screen.getByText(mcgPerSpray)).toBeTruthy();
-    expect(screen.getByText(perDose)).toBeTruthy();
-    expect(rowText('Cost per spray')).toBe('Cost per spray$0.2250');
+    expect(screen.getByText(mcgPerActuation)).toBeTruthy();
+    expect(rowText('Cost per actuation')).toBe('Cost per actuation$0.2250');
   });
 
   it('locks the vial size for named peptides and unlocks it for Custom', () => {
@@ -49,45 +49,37 @@ describe('IntranasalCalculator', () => {
     expect(screen.getByText('2,000 mcg / mL')).toBeTruthy();
   });
 
-  it('recalculates for a finer spray rate', () => {
+  it('recalculates for a smaller pump', () => {
     render(<IntranasalCalculator />);
-    fireEvent.click(screen.getByRole('button', { name: /50 sprays \/ mL/ }));
+    fireEvent.click(screen.getByRole('button', { name: /50 per mL/ }));
     expect(screen.getByText('60')).toBeTruthy();
-    expect(rowText('Sprays per bottle')).toBe('Sprays per bottle500');
-    expect(rowText('Cost per spray')).toBe('Cost per spray$0.0900');
+    expect(rowText('Actuations per bottle')).toBe('Actuations per bottle500');
+    expect(rowText('Cost per actuation')).toBe('Cost per actuation$0.0900');
   });
 
-  it('Selank in 15 mL with a 1 mL bottle and a 12-spray dose', () => {
+  it('Selank in 15 mL with a 1 mL bottle at 10 per mL', () => {
     render(<IntranasalCalculator />);
     fireEvent.click(screen.getByRole('button', { name: 'Selank 0.05%' }));
     fireEvent.click(screen.getByRole('button', { name: '15 mL' }));
     setField('Bottle volume (mL)', '1');
-    setField('Dose (sprays)', '12');
-    fireEvent.click(screen.getByRole('button', { name: /10 sprays \/ mL/ }));
+    fireEvent.click(screen.getByRole('button', { name: /10 per mL/ }));
     expect(screen.getByText('33')).toBeTruthy();
-    expect(screen.getByText('400 mcg per 12-spray dose')).toBeTruthy();
-    expect(rowText('Sprays per bottle')).toBe('Sprays per bottle10');
-    expect(rowText('Doses per bottle')).toBe('Doses per bottle0');
-    expect(rowText('Cost per spray')).toBe('Cost per spray$4.5000');
-    expect(rowText('Cost per dose')).toBe('Cost per dose$54.000');
+    expect(rowText('Actuations per bottle')).toBe('Actuations per bottle10');
+    expect(rowText('Cost per actuation')).toBe('Cost per actuation$4.5000');
   });
 
-  it('a 1 mL bottle at the standard 20 sprays/mL with a 12-spray dose', () => {
+  it('a 1 mL bottle at the standard 20 per mL', () => {
     render(<IntranasalCalculator />);
     setField('Bottle volume (mL)', '1');
-    setField('Dose (sprays)', '12');
     setField('Vial price (optional)', '45');
-    expect(rowText('Sprays per bottle')).toBe('Sprays per bottle20');
-    expect(rowText('Doses per bottle')).toBe('Doses per bottle1');
-    expect(rowText('Cost per spray')).toBe('Cost per spray$2.2500');
-    expect(rowText('Cost per dose')).toBe('Cost per dose$27.000');
+    expect(rowText('Actuations per bottle')).toBe('Actuations per bottle20');
+    expect(rowText('Cost per actuation')).toBe('Cost per actuation$2.2500');
   });
 
   it('shows costs as empty when no price is entered', () => {
     render(<IntranasalCalculator />);
     setField('Vial price (optional)', '');
-    expect(rowText('Cost per spray')).toBe('Cost per spray-');
-    expect(rowText('Cost per dose')).toBe('Cost per dose-');
+    expect(rowText('Cost per actuation')).toBe('Cost per actuation-');
     expect(screen.getByText('150')).toBeTruthy();
   });
 });
