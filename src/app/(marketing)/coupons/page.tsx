@@ -7,6 +7,9 @@ import { getAllOffers, getSuppliers } from '@/lib/repository';
 import { CouponBrowser, type CouponVendor } from '@/components/coupons/coupon-browser';
 import { TagIcon } from '@/components/icons/icons';
 import { PageFaqSection } from '@/components/faq/page-faq-section';
+import { PageSeo } from '@/components/seo/page-seo';
+import { compareCouponVendors, DEFAULT_COUPON_SORT } from '@/components/coupons/coupon-sort';
+import { couponPagePath } from '@/lib/coupon-pages';
 
 const PAGE = staticSeoPage('/coupons');
 
@@ -42,6 +45,10 @@ export default async function CouponsPage() {
       coupon: supplier.coupon!,
       listingCount: listingCounts.get(supplier.slug) ?? 0,
     }));
+  const couponItems = [...vendors].sort(compareCouponVendors(DEFAULT_COUPON_SORT)).map((vendor) => ({
+    name: vendor.name,
+    url: couponPagePath(vendor.slug),
+  }));
 
   return (
     <div className="relative overflow-hidden">
@@ -51,6 +58,7 @@ export default async function CouponsPage() {
       </div>
 
       <div className="mx-auto max-w-shell px-4 py-14">
+        <PageSeo seo={PAGE} itemList={couponItems} />
         <span className="inline-flex items-center gap-1.5 rounded-pill bg-coupon-tint px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-coupon-ink">
           <TagIcon className="h-3.5 w-3.5" />
           Coupons

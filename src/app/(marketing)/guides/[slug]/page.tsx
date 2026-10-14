@@ -10,6 +10,7 @@ import { formatDate } from '@/lib/format';
 import { site } from '@/config/site';
 import { guideSeoDefaults, pageMetadata } from '@/lib/seo-defaults';
 import { getSeoOverride, withSeo } from '@/lib/seo';
+import { PageSeo } from '@/components/seo/page-seo';
 import { PageFaqSection } from '@/components/faq/page-faq-section';
 
 /**
@@ -39,24 +40,17 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
 
   const more = allGuides.filter((g) => g.slug !== guide.slug).slice(0, 3);
 
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'Article',
-    headline: guide.title,
-    description: guide.excerpt,
-    datePublished: guide.publishedAt,
-    author: { '@type': 'Organization', name: site.publisher },
-    publisher: { '@type': 'Organization', name: site.publisher },
-  };
-
   return (
     <>
       {/* The reading column stays narrow: long-form prose is unreadable at full
           shell width. The FAQ and "More guides" bands below break out of it,
           the same width they get on every other page that renders them. */}
       <article className="mx-auto max-w-3xl px-4 pt-8 sm:pt-10">
-        {/* eslint-disable-next-line react/no-danger */}
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+        <PageSeo
+          seo={guideSeoDefaults(guide)}
+          article={{ datePublished: guide.publishedAt }}
+          dataDates={[guide.publishedAt]}
+        />
 
         <Link href="/guides" className="inline-flex items-center gap-1.5 text-sm font-semibold text-muted hover:text-brand">
           <ArrowLeftIcon className="h-4 w-4" />

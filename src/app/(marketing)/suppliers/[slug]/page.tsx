@@ -13,6 +13,7 @@ import { cn } from '@/lib/cn';
 import { site } from '@/config/site';
 import { pageMetadata, supplierSeoDefaults } from '@/lib/seo-defaults';
 import { getSeoOverride, withSeo } from '@/lib/seo';
+import { PageSeo } from '@/components/seo/page-seo';
 import { Badge } from '@/components/ui/badge';
 import { CopyCode } from '@/components/ui/copy-code';
 import { ShareButton } from '@/components/ui/share-button';
@@ -108,22 +109,15 @@ export default async function SupplierPage({
     ...(supplier.foundedYear !== null ? [{ label: 'Established', value: String(supplier.foundedYear) }] : []),
   ];
 
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'Organization',
-    name: supplier.name,
-    url: supplier.affiliateUrl || supplier.homepageUrl,
-    ...(supplier.foundedYear ? { foundingDate: String(supplier.foundedYear) } : {}),
-  };
-
   return (
     <div className="relative isolate overflow-hidden">
       <PatternBackdrop mask="radial-gradient(ellipse at top, black 10%, transparent 55%)" />
 
       <div className="mx-auto max-w-shell px-4 py-8 sm:py-10">
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        <PageSeo
+          seo={supplierSeoDefaults(supplier)}
+          supplier={supplier}
+          dataDates={[supplier.inventoryRefreshedAt, ...resolvedOffers.map((offer) => offer.scrapedAt)]}
         />
 
         <Link

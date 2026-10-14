@@ -15,6 +15,7 @@ import {
   SearchIcon,
   ShieldCheckIcon,
 } from '@/components/icons/icons';
+import { PageSeo } from '@/components/seo/page-seo';
 
 const PAGE = staticSeoPage('/community');
 
@@ -68,27 +69,16 @@ const TOOL_LINKS: { label: string; href: string; hint: string }[] = [
   { label: 'COA Reader', href: '/tools/coa-reader', hint: 'How to read a certificate' },
 ];
 
-const jsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'WebPage',
-  name: 'Peptides Lookup Community',
-  url: `https://${site.domain}/community`,
-  description: PAGE.description,
-  author: { '@type': 'Organization', name: site.publisher },
-  publisher: { '@type': 'Organization', name: site.publisher },
-  about: { '@type': 'Organization', name: 'Peptides Lookup', url: site.communityUrl },
-};
-
 export default async function CommunityPage() {
   const seo = await getSeoOverride(PAGE.path);
 
   return (
     <div className="relative isolate overflow-hidden">
       <PatternBackdrop mask="radial-gradient(ellipse at top, black 10%, transparent 55%)" />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
       {/* ------------------------------------------------------------- Hero */}
       <section className="mx-auto max-w-shell px-4 pb-12 pt-12 text-center sm:pt-16">
+        <PageSeo seo={PAGE} />
         <span className="animate-fade-up inline-flex items-center gap-2 rounded-pill border border-line bg-surface-raised px-4 py-2 font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-content shadow-card">
           <span className="relative flex h-2 w-2" aria-hidden="true">
             <span className="absolute inline-flex h-full w-full rounded-full bg-accent opacity-60 motion-safe:animate-ping" />

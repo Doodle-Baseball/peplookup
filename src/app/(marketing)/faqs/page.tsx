@@ -5,6 +5,7 @@ import { staticSeoPage } from '@/config/seo-pages';
 import { pageMetadata } from '@/lib/seo-defaults';
 import { getSeoOverride, withSeo } from '@/lib/seo';
 import { ArrowRightIcon, BoltIcon, ChevronDownIcon, ExternalIcon } from '@/components/icons/icons';
+import { PageSeo } from '@/components/seo/page-seo';
 
 const PAGE = staticSeoPage('/faqs');
 
@@ -169,6 +170,7 @@ export default async function FaqsPage() {
       </div>
 
       <div className="mx-auto max-w-4xl px-4 py-14">
+        <PageSeo seo={PAGE} />
         <section className="mx-auto max-w-2xl text-center">
           <span className="inline-flex items-center gap-1.5 rounded-pill bg-brand-soft px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-brand-strong">
             <BoltIcon className="h-3.5 w-3.5" />

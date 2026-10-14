@@ -11,6 +11,7 @@ import { pageMetadata } from '@/lib/seo-defaults';
 import { getSeoOverride, withSeo } from '@/lib/seo';
 import { PageFaqSection } from '@/components/faq/page-faq-section';
 import { AccentedHeading } from '@/components/ui/accented-heading';
+import { PageSeo } from '@/components/seo/page-seo';
 
 const PAGE = staticSeoPage('/lab-reports');
 
@@ -104,6 +105,7 @@ export default async function LabReportsPage({
     .sort((a, b) => a.name.localeCompare(b.name));
 
   const testsTotal = vendorGroups.reduce((sum, v) => sum + v.rows.length, 0);
+  const reportItems = vendorGroups.map((group) => ({ name: group.name, url: `/suppliers/${group.slug}` }));
 
   // Quick search covers every real substance (compound) name plus every
   // vendor that actually has at least one test on file, nothing curated.
@@ -115,6 +117,7 @@ export default async function LabReportsPage({
 
   return (
     <div className="mx-auto max-w-shell px-4 py-14">
+      <PageSeo seo={PAGE} itemList={reportItems} dataDates={[mostRecentTestedAt]} />
       <section className="mx-auto max-w-2xl text-center">
         <p className="flex items-center justify-center gap-3 text-xs font-bold uppercase tracking-[0.2em] text-brand">
           <span aria-hidden="true" className="h-px w-8 bg-brand/40" />

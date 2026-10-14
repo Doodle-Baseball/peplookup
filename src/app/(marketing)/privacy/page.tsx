@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { site } from '@/config/site';
 import { staticSeoPage } from '@/config/seo-pages';
+import { PageSeo } from '@/components/seo/page-seo';
 import { pageMetadata } from '@/lib/seo-defaults';
 import { getSeoOverride, withSeo } from '@/lib/seo';
 import { LegalPage, type LegalSection } from '@/components/layout/legal-page';
@@ -215,6 +216,7 @@ export default async function PrivacyPage() {
   const seo = await getSeoOverride(PAGE.path);
   return (
     <LegalPage
+      structuredData={<PageSeo seo={PAGE} />}
       eyebrow="Legal"
       title={seo?.h1 || 'Privacy Policy'}
       updated="September 2026"

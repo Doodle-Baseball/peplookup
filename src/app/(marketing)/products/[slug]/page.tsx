@@ -33,6 +33,9 @@ import { site } from '@/config/site';
 import { compoundImageSrc } from '@/config/compound-images';
 import { compoundSeoDefaults, pageMetadata } from '@/lib/seo-defaults';
 import { getSeoOverride, withSeo } from '@/lib/seo';
+import { PageSeo } from '@/components/seo/page-seo';
+import { PRODUCT_OFFER_SCHEMA_ENABLED } from '@/config/features';
+import { summarizeOffers } from '@/lib/structured-data/product-offers';
 import type { Offer, Supplier, ProductForm } from '@/lib/schema';
 import {
   ArrowLeftIcon,
@@ -268,33 +271,20 @@ export default async function ProductPage({
     .map((s) => suppliersBySlug.get(s)!)
     .sort((a, b) => a.name.localeCompare(b.name));
 
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'Product',
-    name: product.name,
-    description: product.description ?? product.summary ?? undefined,
-    category: product.category ?? undefined,
-    offers: resolvedOffers.map((offer) => {
-      const listing = toListing(offer);
-      const supplier = suppliersBySlug.get(offer.supplierSlug)!;
-      const basePrice = effectivePrice(listing);
-      // Matches the price row below: a coupon only fills in when there's no
-      // already-recorded sale price, so structured data never contradicts
-      // what the page itself shows for the same offer.
-      const couponPercentOff = !hasDiscount(listing) ? (supplier.coupon?.percentOff ?? null) : null;
-      const price = couponPercentOff !== null ? couponAdjustedPrice(basePrice, couponPercentOff) : basePrice;
-      return {
-        '@type': 'Offer',
-        price: price / 100,
-        priceCurrency: listing.currency,
-        availability: offer.inStock
-          ? 'https://schema.org/InStock'
-          : 'https://schema.org/OutOfStock',
-        url: offer.productUrl,
-        seller: { '@type': 'Organization', name: supplier.name },
-      };
-    }),
-  };
+  // The price each listing shows in its row below: a coupon only fills in
+  // when there's no already-recorded sale price.
+  const displayedOffers = resolvedOffers.map((offer) => {
+    const listing = toListing(offer);
+    const supplier = suppliersBySlug.get(offer.supplierSlug)!;
+    const basePrice = effectivePrice(listing);
+    const couponPercentOff = !hasDiscount(listing) ? (supplier.coupon?.percentOff ?? null) : null;
+    const priceCents = couponPercentOff !== null ? couponAdjustedPrice(basePrice, couponPercentOff) : basePrice;
+    return { priceCents, currency: listing.currency, inStock: offer.inStock };
+  });
+  const seoDefaults = compoundSeoDefaults(product);
+  const offerSummary = PRODUCT_OFFER_SCHEMA_ENABLED
+    ? summarizeOffers({ name: product.name, description: seo?.metaDescription ?? seoDefaults.description }, displayedOffers)
+    : null;
 
   const research = product.research;
 
@@ -329,10 +319,7 @@ export default async function ProductPage({
 
   return (
     <div className="mx-auto max-w-shell px-4 py-8 sm:py-10">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      <PageSeo seo={seoDefaults} dataDates={[lastUpdated]} product={offerSummary} />
 
       <Link
         href="/"

@@ -19,6 +19,7 @@ import {
   ShieldCheckIcon,
   StoreIcon,
 } from '@/components/icons/icons';
+import { PageSeo } from '@/components/seo/page-seo';
 
 const PAGE = staticSeoPage('/supplier-listing');
 
@@ -98,6 +99,7 @@ export default async function VendorListingPage() {
       </div>
 
       <div className="mx-auto max-w-5xl px-4 pb-16 pt-10 sm:px-6 sm:pb-20 sm:pt-20">
+        <PageSeo seo={PAGE} />
         {/* Hero */}
         <header className="mx-auto max-w-3xl text-center">
           <span className="animate-fade-up inline-flex items-center gap-1.5 rounded-pill border border-accent/20 bg-accent-tint px-3.5 py-1.5 text-xs font-bold uppercase tracking-wide text-accent-strong">

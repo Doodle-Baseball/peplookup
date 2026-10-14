@@ -42,29 +42,6 @@ export const metadata: Metadata = {
   },
 };
 
-/** Site-wide structured data naming the author and publisher of every page. */
-const siteJsonLd = {
-  '@context': 'https://schema.org',
-  '@graph': [
-    {
-      '@type': 'Organization',
-      '@id': `https://${site.domain}/#organization`,
-      name: site.publisher,
-      url: `https://${site.domain}`,
-      logo: `https://${site.domain}/favicon.png`,
-    },
-    {
-      '@type': 'WebSite',
-      '@id': `https://${site.domain}/#website`,
-      name: site.name,
-      url: `https://${site.domain}`,
-      description: site.description,
-      author: { '@type': 'Organization', name: site.publisher },
-      publisher: { '@id': `https://${site.domain}/#organization` },
-    },
-  ],
-};
-
 /** Google Analytics 4 measurement ID. Public by design: it ships to every visitor's browser. */
 const GA_MEASUREMENT_ID = 'G-CTRYVJ794V';
 
@@ -79,7 +56,6 @@ function gtag(){dataLayer.push(arguments);}
 gtag('js', new Date());
 gtag('config', '${GA_MEASUREMENT_ID}');`}
         </Script>
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(siteJsonLd) }} />
         <NavigationProgress />
         <LoadingScreen />
         {children}

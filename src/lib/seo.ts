@@ -4,6 +4,9 @@ import { unstable_cache } from 'next/cache';
 import { getSupabaseServerClient } from '@/lib/supabase/server';
 import { parseNamedMetaTags } from '@/lib/seo-html';
 import { CATALOGUE_REVALIDATE_SECONDS } from '@/lib/cache-ttl';
+import { PRODUCT_OFFER_SCHEMA_ENABLED } from '@/config/features';
+import { ownedSchemaTypes } from '@/lib/structured-data/graph';
+import { stripOwnedJsonLd } from '@/lib/structured-data/pasted-json-ld';
 
 /** Revalidated by every save in /admin/seo. */
 export const SEO_CACHE_TAG = 'seo';
@@ -329,12 +332,20 @@ export interface SeoInjection {
   bodyHtml: string | null;
 }
 
-/** Custom head/body HTML by path, only for pages that actually have some. */
+/**
+ * Custom head/body HTML by path, only for pages that actually have some.
+ * Pasted JSON-LD of a type the page already outputs is dropped here, before it
+ * reaches the browser, so no page ever carries a type twice.
+ */
 export async function getSeoInjections(): Promise<Record<string, SeoInjection>> {
   const { pages } = await getSeoData();
   return Object.fromEntries(
     pages
       .filter((page) => page.headHtml || page.bodyHtml)
-      .map((page) => [page.path, { headHtml: page.headHtml, bodyHtml: page.bodyHtml }]),
+      .map((page) => {
+        const owned = ownedSchemaTypes(page.path, { productOffers: PRODUCT_OFFER_SCHEMA_ENABLED });
+        const clean = (html: string | null) => (html ? stripOwnedJsonLd(html, owned) || null : null);
+        return [page.path, { headHtml: clean(page.headHtml), bodyHtml: clean(page.bodyHtml) }];
+      }),
   );
 }
