@@ -15,6 +15,7 @@ import { formatRating, formatReviewCount } from '@/lib/format';
 import { ratingSourceLabel, reviewsPageIndexable, reviewsPagePath, supplierSlugFromReviewsSegment } from '@/lib/review-pages';
 import { pageMetadata, reviewsPageSeoDefaults } from '@/lib/seo-defaults';
 import { getSeoOverride, withSeo } from '@/lib/seo';
+import { PageSeo } from '@/components/seo/page-seo';
 import { SupplierLogo } from '@/components/ui/supplier-logo';
 import { CopyCode } from '@/components/ui/copy-code';
 import { ShareButton } from '@/components/ui/share-button';
@@ -105,20 +106,16 @@ export default async function VendorReviewsPage({
   // Only facts we actually hold for this vendor, no placeholder figures.
   const productCount = resolvedOffers.length;
 
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Home', item: `https://${site.domain}/` },
-      { '@type': 'ListItem', position: 2, name: 'Reviews', item: `https://${site.domain}/reviews` },
-      { '@type': 'ListItem', position: 3, name: defaults.h1, item: `https://${site.domain}${path}` },
-    ],
-  };
-
   return (
     <div className="relative isolate overflow-hidden">
       <div className="mx-auto max-w-shell px-4 py-8 sm:py-10">
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+        {/* The rating shown here is the review source's, not a PepLookup score, so no Review node. */}
+        <PageSeo
+          seo={defaults}
+          indexable={reviewsPageIndexable(seo)}
+          supplier={supplier}
+          dataDates={[...reviews.map((review) => review.reviewedAt), ...resolvedOffers.map((offer) => offer.scrapedAt)]}
+        />
 
         <Link
           href="/reviews"
@@ -337,7 +334,7 @@ export default async function VendorReviewsPage({
         />
 
         {/* ------------------------------------------------------------- FAQ */}
-        <PageFaqSection path={path} className="mt-12" />
+        <PageFaqSection path={path} includeSchema={reviewsPageIndexable(seo)} className="mt-12" />
       </div>
     </div>
   );

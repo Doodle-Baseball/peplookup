@@ -7,6 +7,7 @@ import { ArrowRightIcon, BoltIcon } from '@/components/icons/icons';
 import { staticSeoPage } from '@/config/seo-pages';
 import { pageMetadata } from '@/lib/seo-defaults';
 import { getSeoOverride, withSeo } from '@/lib/seo';
+import { PageSeo } from '@/components/seo/page-seo';
 
 const PAGE = staticSeoPage('/guides');
 
@@ -17,6 +18,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function GuidesPage() {
   const [seo, guides] = await Promise.all([getSeoOverride(PAGE.path), getGuides()]);
   const [featured, ...rest] = guides;
+  const guideItems = guides.map((guide) => ({ name: guide.title, url: `/guides/${guide.slug}` }));
   const categories = [...new Set(guides.map((guide) => guide.category))];
   const totalMinutes = guides.reduce((sum, guide) => sum + guide.readMinutes, 0);
 
@@ -34,6 +36,7 @@ export default async function GuidesPage() {
       </div>
 
       <div className="mx-auto max-w-shell px-4 py-14">
+        <PageSeo seo={PAGE} itemList={guideItems} dataDates={guides.map((guide) => guide.publishedAt)} />
         <section className="mx-auto max-w-2xl text-center">
           <span className="inline-flex items-center gap-1.5 rounded-pill bg-brand-soft px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-brand-strong">
             <BoltIcon className="h-3.5 w-3.5" />

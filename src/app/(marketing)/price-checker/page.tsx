@@ -9,6 +9,7 @@ import { getSeoOverride, withSeo } from '@/lib/seo';
 import { PageFaqSection } from '@/components/faq/page-faq-section';
 import { site } from '@/config/site';
 import { AccentedHeading } from '@/components/ui/accented-heading';
+import { PageSeo } from '@/components/seo/page-seo';
 
 const PAGE = staticSeoPage('/price-checker');
 
@@ -57,6 +58,7 @@ export default async function PriceCheckerPage() {
   return (
     <>
       <div className="mx-auto max-w-shell px-4 pb-4 pt-12 text-center sm:pt-16">
+        <PageSeo seo={PAGE} />
         <span className="animate-fade-up inline-flex items-center gap-2 rounded-pill border border-line bg-surface-raised px-4 py-2 font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-content shadow-card">
           <span className="relative flex h-2 w-2" aria-hidden="true">
             <span className="absolute inline-flex h-full w-full rounded-full bg-accent opacity-60 motion-safe:animate-ping" />

@@ -38,7 +38,7 @@ export const STATIC_SEO_PAGES = [
     title: `Peptide Suppliers Directory | Verified & Compared | ${site.name}`,
     description:
       'Browse verified peptide suppliers and compare trust ratings, lab grades, shipping, payment methods and discount codes.',
-    h1: 'Find the Best Peptide Suppliers.',
+    h1: 'Research Peptide Suppliers Directory',
   },
   {
     path: '/lab-reports',
@@ -108,7 +108,7 @@ export const STATIC_SEO_PAGES = [
     title: `COA Reader | How to Read a Certificate of Analysis | ${site.name}`,
     description:
       'A field guide to reading a peptide certificate of analysis: what every field means, what the numbers mean, and the red flags that signal a fake.',
-    h1: 'COA Reader.',
+    h1: 'How to Read a Peptide COA',
   },
   {
     path: '/about',
@@ -188,7 +188,7 @@ export const STATIC_SEO_PAGES = [
     group: 'Company',
     title: `Supplier Listing | ${site.name}`,
     description: `List your peptide brand on ${site.name}: compare your prices per mg, get a dedicated brand page, and choose Basic or Pro for extra visibility and promotion.`,
-    h1: 'Supplier Listing',
+    h1: `List your brand on ${site.name}.`,
   },
   {
     path: '/community',

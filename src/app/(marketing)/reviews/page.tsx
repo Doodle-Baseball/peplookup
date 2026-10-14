@@ -8,6 +8,9 @@ import { formatReviewCount } from '@/lib/format';
 import { ReviewsBrowser, type ReviewVendor } from '@/components/reviews/reviews-browser';
 import { PageFaqSection } from '@/components/faq/page-faq-section';
 import { StarIcon } from '@/components/icons/icons';
+import { PageSeo } from '@/components/seo/page-seo';
+import { compareReviewVendors, DEFAULT_REVIEW_SORT } from '@/components/reviews/review-sort';
+import { reviewsPagePath } from '@/lib/review-pages';
 
 const PAGE = staticSeoPage('/reviews');
 
@@ -40,14 +43,10 @@ export default async function ReviewsPage() {
   }));
   const ratedCount = vendors.filter((vendor) => vendor.rating !== null).length;
 
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Home', item: `https://${site.domain}/` },
-      { '@type': 'ListItem', position: 2, name: 'Reviews', item: `https://${site.domain}/reviews` },
-    ],
-  };
+  const reviewItems = [...vendors].sort(compareReviewVendors(DEFAULT_REVIEW_SORT)).map((vendor) => ({
+    name: vendor.name,
+    url: reviewsPagePath(vendor.slug),
+  }));
 
   return (
     <div className="relative overflow-hidden">
@@ -57,8 +56,8 @@ export default async function ReviewsPage() {
       </div>
 
       <div className="mx-auto max-w-shell px-4 py-14">
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-
+        <PageSeo seo={PAGE} itemList={reviewItems} />
+  
         <span className="inline-flex items-center gap-1.5 rounded-pill bg-accent-tint px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-accent-strong">
           <StarIcon className="h-3.5 w-3.5 fill-current" />
           Reviews

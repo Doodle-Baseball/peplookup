@@ -5,6 +5,9 @@ import ContactPage from './page';
 // Isolates this render from Supabase/cache: SEO overrides are covered by
 // src/lib/__tests__/seo.test.ts, not by this page smoke test.
 vi.mock('@/lib/seo', () => ({ getSeoOverride: async () => null, withSeo: async (_path: string, base: unknown) => base }));
+// PageSeo is an async Server Component, which the synchronous renderer below
+// can't run; its output is covered by src/lib/structured-data's tests.
+vi.mock('@/components/seo/page-seo', () => ({ PageSeo: () => null }));
 
 describe('ContactPage', () => {
   it('includes the Web3Forms submission action and access key', async () => {

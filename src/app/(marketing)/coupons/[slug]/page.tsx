@@ -8,6 +8,7 @@ import { COUPON_DETAIL_KEYS, COUPON_DETAIL_LABELS } from '@/lib/coupon-page-cont
 import { getCouponPageContent } from '@/lib/coupon-page-content-store';
 import { couponPageSeoDefaults, pageMetadata } from '@/lib/seo-defaults';
 import { getSeoOverride, withSeo } from '@/lib/seo';
+import { PageSeo } from '@/components/seo/page-seo';
 import { SupplierLogo } from '@/components/ui/supplier-logo';
 import { CouponCopyBlock } from '@/components/coupons/coupon-copy-block';
 import { SupplierCatalogSection } from '@/components/supplier-card/supplier-catalog-section';
@@ -115,31 +116,15 @@ export default async function CouponCodePage({
   // Only facts we actually hold for this vendor, no placeholder figures.
   const productCount = resolvedOffers.length;
 
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@graph': [
-      {
-        '@type': 'BreadcrumbList',
-        itemListElement: [
-          { '@type': 'ListItem', position: 1, name: 'Home', item: `https://${site.domain}/` },
-          { '@type': 'ListItem', position: 2, name: 'Coupons', item: `https://${site.domain}/coupons` },
-          { '@type': 'ListItem', position: 3, name: defaults.h1, item: `https://${site.domain}${path}` },
-        ],
-      },
-      {
-        '@type': 'WebPage',
-        name: defaults.title,
-        description: defaults.description,
-        url: `https://${site.domain}${path}`,
-        about: { '@type': 'Organization', name: supplier.name, url: supplier.affiliateUrl || supplier.homepageUrl },
-      },
-    ],
-  };
-
   return (
     <div className="relative isolate overflow-hidden">
       <div className="mx-auto max-w-shell px-4 py-8 sm:py-10">
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+        <PageSeo
+          seo={defaults}
+          indexable={couponPageIndexable(seo)}
+          supplier={supplier}
+          dataDates={resolvedOffers.map((offer) => offer.scrapedAt)}
+        />
 
         <Link
           href="/coupons"
@@ -339,7 +324,7 @@ export default async function CouponCodePage({
         </p>
 
         {/* ------------------------------------------------------------- FAQ */}
-        <PageFaqSection path={path} className="mt-10" />
+        <PageFaqSection path={path} includeSchema={couponPageIndexable(seo)} className="mt-10" />
       </div>
     </div>
   );

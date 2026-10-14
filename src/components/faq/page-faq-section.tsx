@@ -1,4 +1,5 @@
 import { getFaqsForPath } from '@/lib/page-faqs';
+import { getSeoOverride } from '@/lib/seo';
 import type { FaqItem } from '@/data/default-page-faqs';
 import { ChevronDownIcon } from '@/components/icons/icons';
 import { cn } from '@/lib/cn';
@@ -18,8 +19,9 @@ export async function PageFaqSection({
   path,
   className,
   /**
-   * Set false on a page that already emits its own FAQPage schema, so the two
-   * don't both claim the same URL. The visible section still renders.
+   * Set false on a page that already emits its own FAQPage schema, or that is
+   * noindex by its own rule (coupon and review pages), so no FAQPage goes out
+   * where it shouldn't. The visible section still renders.
    */
   includeSchema = true,
 }: {
@@ -27,8 +29,10 @@ export async function PageFaqSection({
   className?: string;
   includeSchema?: boolean;
 }) {
-  const faqs = await getFaqsForPath(path);
+  const [faqs, seo] = await Promise.all([getFaqsForPath(path), getSeoOverride(path)]);
   if (faqs.length === 0) return null;
+  // A page switched to noindex in /admin/seo carries no structured data at all.
+  const emitsSchema = includeSchema && (seo?.robotsIndex ?? true);
 
   return (
     <section
@@ -36,7 +40,7 @@ export async function PageFaqSection({
       aria-labelledby="faq-heading"
       className={cn(PANEL_CLASS, 'scroll-mt-24 p-5 sm:p-8', className)}
     >
-      {includeSchema ? <FaqJsonLd faqs={faqs} /> : null}
+      {emitsSchema ? <FaqJsonLd faqs={faqs} /> : null}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-10">
         <div>

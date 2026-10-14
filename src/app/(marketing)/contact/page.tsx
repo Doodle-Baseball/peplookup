@@ -4,6 +4,7 @@ import { staticSeoPage } from '@/config/seo-pages';
 import { pageMetadata } from '@/lib/seo-defaults';
 import { getSeoOverride, withSeo } from '@/lib/seo';
 import { ExternalIcon, GlobeIcon } from '@/components/icons/icons';
+import { PageSeo } from '@/components/seo/page-seo';
 
 const PAGE = staticSeoPage('/contact');
 
@@ -18,6 +19,7 @@ export default async function ContactPage() {
   const seo = await getSeoOverride(PAGE.path);
   return (
     <div className="mx-auto max-w-4xl px-4 py-12">
+      <PageSeo seo={PAGE} />
       <h1 className="text-3xl font-black text-content sm:text-4xl">{seo?.h1 || 'Contact Us'}</h1>
       <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted">
         Questions, pricing corrections or partnership enquiries? Send us a message and we&rsquo;ll get back to you.

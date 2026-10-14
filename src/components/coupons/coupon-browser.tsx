@@ -5,6 +5,7 @@ import Link from 'next/link';
 import type { Supplier } from '@/lib/schema';
 import { couponPagePath } from '@/lib/coupon-pages';
 import { ArrowRightIcon, CheckIcon, CopyIcon, ExternalIcon, SearchIcon } from '@/components/icons/icons';
+import { compareCouponVendors, DEFAULT_COUPON_SORT, type CouponSortKey } from '@/components/coupons/coupon-sort';
 
 /** Every supplier shown here is guaranteed by the page to carry a coupon. */
 export type CouponVendor = Supplier & {
@@ -13,9 +14,7 @@ export type CouponVendor = Supplier & {
   listingCount: number;
 };
 
-type SortKey = 'discount' | 'listings' | 'name';
-
-const SORTS: { key: SortKey; label: string }[] = [
+const SORTS: { key: CouponSortKey; label: string }[] = [
   { key: 'discount', label: 'Biggest discount' },
   { key: 'listings', label: 'Largest catalogue' },
   { key: 'name', label: 'A–Z' },
@@ -64,7 +63,7 @@ function CouponCodeBlock({ code }: { code: string }) {
 
 export function CouponBrowser({ vendors }: { vendors: CouponVendor[] }) {
   const [query, setQuery] = useState('');
-  const [sort, setSort] = useState<SortKey>('discount');
+  const [sort, setSort] = useState<CouponSortKey>(DEFAULT_COUPON_SORT);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -77,11 +76,7 @@ export function CouponBrowser({ vendors }: { vendors: CouponVendor[] }) {
         )
       : vendors;
 
-    return [...matched].sort((a, b) => {
-      if (sort === 'name') return a.name.localeCompare(b.name);
-      if (sort === 'listings') return b.listingCount - a.listingCount || a.name.localeCompare(b.name);
-      return b.coupon.percentOff - a.coupon.percentOff || b.listingCount - a.listingCount;
-    });
+    return [...matched].sort(compareCouponVendors(sort));
   }, [vendors, query, sort]);
 
   return (

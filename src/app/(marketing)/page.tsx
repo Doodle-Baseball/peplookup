@@ -11,6 +11,7 @@ import { PageFaqSection } from '@/components/faq/page-faq-section';
 import { PricingComparisonExplainer } from '@/components/home/pricing-comparison-explainer';
 import { catalogueStats } from '@/lib/catalogue-stats';
 import { AccentedHeading } from '@/components/ui/accented-heading';
+import { PageSeo } from '@/components/seo/page-seo';
 
 const PAGE = staticSeoPage('/');
 
@@ -61,6 +62,7 @@ export default async function HomePage() {
       <section className="relative overflow-hidden">
         {/* pt-11 (44px) on mobile: 20px less than the pt-16 it replaces. */}
         <div className="mx-auto max-w-shell px-4 pb-10 pt-11 text-center sm:pt-20">
+          <PageSeo seo={PAGE} />
           <span className="animate-fade-up inline-flex items-center gap-2 rounded-pill border border-line bg-surface-raised px-4 py-2 font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-content shadow-card">
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-accent" />
             Live peptide price tracking

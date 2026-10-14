@@ -6,6 +6,7 @@ import { pageMetadata } from '@/lib/seo-defaults';
 import { getSeoOverride, withSeo } from '@/lib/seo';
 import { getAllOffers, getSuppliers } from '@/lib/repository';
 import { CheckBadgeIcon, ExternalIcon, FlaskIcon, ShieldCheckIcon, WarningIcon } from '@/components/icons/icons';
+import { PageSeo } from '@/components/seo/page-seo';
 
 const PAGE = staticSeoPage('/labs');
 
@@ -46,6 +47,7 @@ export default async function LabsPage() {
   const publishingSuppliers = suppliers
     .filter((s) => slugsWithCoa.has(s.slug))
     .sort((a, b) => a.name.localeCompare(b.name));
+  const labItems = publishingSuppliers.map((supplier) => ({ name: supplier.name, url: `/suppliers/${supplier.slug}` }));
   const coaListings = offers.filter((o) => o.coaUrl || o.labReport?.reportUrl || o.labReport?.labUrl).length;
 
   const stats = [
@@ -62,6 +64,7 @@ export default async function LabsPage() {
       </div>
 
       <div className="mx-auto max-w-3xl px-4 py-14">
+        <PageSeo seo={PAGE} itemList={labItems} />
         <span className="inline-flex items-center gap-1.5 rounded-pill bg-brand-soft px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-brand-strong">
           <FlaskIcon className="h-3.5 w-3.5" />
           Verification

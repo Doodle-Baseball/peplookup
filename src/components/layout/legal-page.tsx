@@ -17,6 +17,7 @@ export function LegalPage({
   updated,
   intro,
   sections,
+  structuredData,
 }: {
   eyebrow: string;
   title: string;
@@ -25,6 +26,8 @@ export function LegalPage({
   updated: string;
   intro: ReactNode;
   sections: LegalSection[];
+  /** The page's JSON-LD, from <PageSeo>. */
+  structuredData?: ReactNode;
 }) {
   return (
     <div className="relative overflow-hidden">
@@ -34,6 +37,7 @@ export function LegalPage({
       </div>
 
       <div className="mx-auto max-w-4xl px-4 py-14">
+        {structuredData}
         <header>
           <span className="inline-flex items-center gap-1.5 rounded-pill bg-brand-soft px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-brand-strong">
             <ShieldCheckIcon className="h-3.5 w-3.5" />

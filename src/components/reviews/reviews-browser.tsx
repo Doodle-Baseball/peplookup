@@ -7,6 +7,7 @@ import { SupplierLogo } from '@/components/ui/supplier-logo';
 import { ArrowRightIcon, ChevronDownIcon, ExternalIcon, SearchIcon, StarIcon } from '@/components/icons/icons';
 import { cn } from '@/lib/cn';
 import { reviewsPagePath } from '@/lib/review-pages';
+import { compareReviewVendors, DEFAULT_REVIEW_SORT, type ReviewSortKey } from '@/components/reviews/review-sort';
 
 /** What a vendor card needs; plain data so the server page can pass it across. */
 export interface ReviewVendor {
@@ -23,9 +24,7 @@ export interface ReviewVendor {
   shopHref: string;
 }
 
-type SortKey = 'rating' | 'reviews' | 'name';
-
-const SORTS: { key: SortKey; label: string }[] = [
+const SORTS: { key: ReviewSortKey; label: string }[] = [
   { key: 'rating', label: 'Top rated' },
   { key: 'reviews', label: 'Most reviews' },
   { key: 'name', label: 'A–Z' },
@@ -33,29 +32,15 @@ const SORTS: { key: SortKey; label: string }[] = [
 
 const PAGE_SIZE = 24;
 
-function compareVendors(sort: SortKey) {
-  return (a: ReviewVendor, b: ReviewVendor): number => {
-    if (sort === 'name') return a.name.localeCompare(b.name);
-    // Unrated vendors sort last under either numeric order, never as a zero.
-    const aRated = a.rating !== null;
-    const bRated = b.rating !== null;
-    if (aRated !== bRated) return aRated ? -1 : 1;
-    if (sort === 'reviews') {
-      return b.reviewCountValue - a.reviewCountValue || (b.rating ?? 0) - (a.rating ?? 0) || a.name.localeCompare(b.name);
-    }
-    return (b.rating ?? 0) - (a.rating ?? 0) || b.reviewCountValue - a.reviewCountValue || a.name.localeCompare(b.name);
-  };
-}
-
 export function ReviewsBrowser({ vendors }: { vendors: ReviewVendor[] }) {
   const [query, setQuery] = useState('');
-  const [sort, setSort] = useState<SortKey>('rating');
+  const [sort, setSort] = useState<ReviewSortKey>(DEFAULT_REVIEW_SORT);
   const [visible, setVisible] = useState(PAGE_SIZE);
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
     const matched = needle ? vendors.filter((vendor) => vendor.name.toLowerCase().includes(needle)) : vendors;
-    return [...matched].sort(compareVendors(sort));
+    return [...matched].sort(compareReviewVendors(sort));
   }, [vendors, query, sort]);
 
   const shown = filtered.slice(0, visible);
