@@ -444,4 +444,12 @@
   .plan-glow { animation: plan-glow 2.4s ease-out infinite; }
   .badge-ping { animation: badge-ping 1.6s cubic-bezier(0, 0, 0.2, 1) infinite; }
   .animate-check-pop { animation: check-pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s both; }
+  /* A soft band of light that crosses its parent now and then; the parent
+     needs overflow-hidden. Used on the partner bar and partner buttons. */
+  .animate-sheen { animation: sheen 7s ease-in-out infinite; }
+}
+
+@keyframes sheen {
+  0%, 60% { transform: translateX(-120%) skewX(-20deg); }
+  100% { transform: translateX(320%) skewX(-20deg); }
 }
