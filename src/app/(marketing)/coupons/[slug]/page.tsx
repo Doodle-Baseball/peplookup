@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
-import { notFound, permanentRedirect } from 'next/navigation';
 import Link from 'next/link';
-import { getOffersForSupplier, getProducts, getSupplier, getSuppliers } from '@/lib/repository';
+import { getOffersForSupplier, getProducts, getSuppliers } from '@/lib/repository';
 import { site } from '@/config/site';
-import { couponPageIndexable, couponPagePath, supplierSlugFromCouponSegment } from '@/lib/coupon-pages';
+import { couponPageIndexable, couponPagePath } from '@/lib/coupon-pages';
+import { loadCouponPageOrExit } from '@/lib/coupon-page-route';
 import { COUPON_DETAIL_KEYS, COUPON_DETAIL_LABELS } from '@/lib/coupon-page-content';
 import { getCouponPageContent } from '@/lib/coupon-page-content-store';
 import { couponPageSeoDefaults, pageMetadata } from '@/lib/seo-defaults';
@@ -33,19 +33,9 @@ export async function generateStaticParams() {
     .map((supplier) => ({ slug: `${supplier.slug}-coupon-code` }));
 }
 
-/** The vendor behind a `<vendor-slug>-coupon-code` segment, only when it really has a code to show. */
-async function loadCouponSupplier(segment: string) {
-  const supplierSlug = supplierSlugFromCouponSegment(segment);
-  if (!supplierSlug) return null;
-  const supplier = await getSupplier(supplierSlug);
-  if (!supplier || !supplier.coupon) return null;
-  return { supplier, coupon: supplier.coupon };
-}
-
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const found = await loadCouponSupplier(slug);
-  if (!found) return { title: 'Coupon not found' };
+  const found = await loadCouponPageOrExit(slug);
   const defaults = couponPageSeoDefaults(found.supplier, found.coupon);
   const [metadata, seo] = await Promise.all([
     withSeo(defaults.path, pageMetadata(defaults)),
@@ -85,14 +75,7 @@ export default async function CouponCodePage({
   searchParams: Promise<{ pq?: string; page?: string; form?: string; size?: string }>;
 }) {
   const { slug } = await params;
-  const found = await loadCouponSupplier(slug);
-  if (!found) {
-    // /coupons/<vendor> (no suffix) was an address earlier on; send it to the page's real one.
-    const bare = await getSupplier(slug);
-    if (bare?.coupon) permanentRedirect(couponPagePath(bare.slug));
-    notFound();
-  }
-  const { supplier, coupon } = found;
+  const { supplier, coupon } = await loadCouponPageOrExit(slug);
 
   const path = couponPagePath(supplier.slug);
   const [seo, offers, allProducts, content] = await Promise.all([

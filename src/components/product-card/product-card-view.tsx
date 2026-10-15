@@ -100,6 +100,12 @@ export function ProductCardView({ data, view = 'total' }: { data: ProductCardDat
         : data.rowCounts.byForm[selectedForm]) ?? sortedRows.length
     : sortedRows.length;
   const remaining = Math.max(0, totalForSelection - shownRows.length);
+  // The product page opens on the first form too, so that case links to its
+  // clean URL rather than a ?form= duplicate of it.
+  const moreHref =
+    selectedForm && selectedForm !== availableForms[0]
+      ? `/products/${data.slug}?form=${selectedForm}`
+      : `/products/${data.slug}`;
 
   return (
     <article className="card-3d flex h-full flex-col gap-4 rounded-card border border-line bg-surface-raised p-5">
@@ -206,7 +212,7 @@ export function ProductCardView({ data, view = 'total' }: { data: ProductCardDat
 
           {remaining > 0 ? (
             <Link
-              href={`/products/${data.slug}?form=${selectedForm}`}
+              href={moreHref}
               className="flex items-center justify-center gap-1 pt-1 text-sm font-bold text-muted hover:text-brand"
             >
               +{remaining} more

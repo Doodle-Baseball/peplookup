@@ -15,18 +15,20 @@ const nextConfig = {
     minimumCacheTTL: 60 * 60 * 24 * 30,
   },
   async redirects() {
+    // 301 rather than `permanent: true` (a 308): search engines treat the two
+    // alike, but SEO audit tools expect a 301 for a page that moved for good.
     return [
       // Common misspelling of the community page's address.
-      { source: '/comunity', destination: '/community', permanent: true },
+      { source: '/comunity', destination: '/community', statusCode: 301 },
       // The payment thanks page lives at /thanks; /tanks is a likely typo for it.
-      { source: '/vendor-listing/thanks', destination: '/thanks', permanent: true },
-      { source: '/tanks', destination: '/thanks', permanent: true },
+      { source: '/vendor-listing/thanks', destination: '/thanks', statusCode: 301 },
+      { source: '/tanks', destination: '/thanks', statusCode: 301 },
       // The supplier listing page used to live at /partners and at /vendor-listing.
-      { source: '/partners', destination: '/supplier-listing', permanent: true },
-      { source: '/vendor-listing', destination: '/supplier-listing', permanent: true },
+      { source: '/partners', destination: '/supplier-listing', statusCode: 301 },
+      { source: '/vendor-listing', destination: '/supplier-listing', statusCode: 301 },
       // Vendor coupon and reviews pages live under /coupons and /reviews; these were their addresses at the site root first.
-      { source: '/:slug-coupon-code', destination: '/coupons/:slug-coupon-code', permanent: true },
-      { source: '/:slug-reviews', destination: '/reviews/:slug-reviews', permanent: true },
+      { source: '/:slug-coupon-code', destination: '/coupons/:slug-coupon-code', statusCode: 301 },
+      { source: '/:slug-reviews', destination: '/reviews/:slug-reviews', statusCode: 301 },
     ];
   },
   async headers() {

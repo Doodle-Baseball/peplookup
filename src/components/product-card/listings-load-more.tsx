@@ -7,6 +7,8 @@ import { Children, useState } from 'react';
  * A compound carried by sixty-plus vendors otherwise renders as one endless
  * list. The rows themselves are rendered on the server and passed through as
  * children, so "Load more" only reveals what is already there, no refetch.
+ * The rows past the cap are in the HTML from the start, only hidden, so every
+ * supplier listed for the compound is linked from its page for crawlers too.
  */
 export function ListingsLoadMore({
   children,
@@ -21,7 +23,12 @@ export function ListingsLoadMore({
 
   return (
     <>
-      <ul className="mt-4 space-y-2.5">{expanded ? rows : rows.slice(0, initialCount)}</ul>
+      <ul className="mt-4 space-y-2.5">{rows.slice(0, initialCount)}</ul>
+      {hiddenCount > 0 ? (
+        <ul hidden={!expanded} className="mt-2.5 space-y-2.5">
+          {rows.slice(initialCount)}
+        </ul>
+      ) : null}
       {hiddenCount > 0 && !expanded ? (
         <button
           type="button"

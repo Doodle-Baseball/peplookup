@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getGuides } from '@/lib/repository';
+import { guideHasContent } from '@/data/guides';
 import { GuideCard } from '@/components/guides/guide-card';
 import { FeaturedGuide } from '@/components/guides/featured-guide';
 import { ArrowRightIcon, BoltIcon } from '@/components/icons/icons';
@@ -16,7 +17,9 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function GuidesPage() {
-  const [seo, guides] = await Promise.all([getSeoOverride(PAGE.path), getGuides()]);
+  const [seo, allGuides] = await Promise.all([getSeoOverride(PAGE.path), getGuides()]);
+  // Placeholder guides (no body yet) are noindex, so nothing links to them either.
+  const guides = allGuides.filter(guideHasContent);
   const [featured, ...rest] = guides;
   const guideItems = guides.map((guide) => ({ name: guide.title, url: `/guides/${guide.slug}` }));
   const categories = [...new Set(guides.map((guide) => guide.category))];

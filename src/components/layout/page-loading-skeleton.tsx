@@ -6,8 +6,13 @@
  * It also raises the value of link prefetching: for dynamically rendered
  * routes Next prefetches the loading state, so this is what appears instantly
  * rather than a stalled page.
+ *
+ * Each catalogue route mounts this from its own loading.tsx rather than one
+ * file for the whole site: a loading state sends a 200 before the page runs,
+ * so it must sit below the layout that checks the route's slug, or a missing
+ * page goes out as a 200 instead of a 404 (a soft 404 to search engines).
  */
-export default function MarketingLoading() {
+export function PageLoadingSkeleton() {
   return (
     <div className="mx-auto max-w-shell px-4 py-12" role="status" aria-label="Loading">
       <span className="sr-only">Loading…</span>

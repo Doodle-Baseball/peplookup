@@ -8,6 +8,11 @@ export type JumpToItem = { id: string; label: string };
  * Anchor nav for a product page's own sections. Highlights whichever section
  * is currently in view (IntersectionObserver) so the active pill tracks
  * scroll position instead of always pointing at the first item.
+ *
+ * A click scrolls without touching the URL, so /products/glow never picks up
+ * a #vendor-listings it doesn't need. The pills stay real `#id` links, and
+ * the sections keep their ids, so a shared or copied #section link still
+ * lands on that section.
  */
 export function JumpToNav({ items }: { items: JumpToItem[] }) {
   const [activeId, setActiveId] = useState(items[0]?.id ?? '');
@@ -42,7 +47,6 @@ export function JumpToNav({ items }: { items: JumpToItem[] }) {
     event.preventDefault();
     target.scrollIntoView({ behavior: 'smooth', block: 'start' });
     setActiveId(id);
-    history.replaceState(null, '', `#${id}`);
   };
 
   return (

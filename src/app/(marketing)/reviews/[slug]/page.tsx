@@ -1,18 +1,17 @@
 import type { Metadata } from 'next';
-import { notFound, permanentRedirect } from 'next/navigation';
 import Link from 'next/link';
 import {
   getOffersForSupplier,
   getProducts,
-  getSupplier,
   getSupplierReviews,
   getSupplierSlugsWithReviews,
   getSuppliers,
   supplierHasReviews,
 } from '@/lib/repository';
+import { loadReviewsSupplierOrExit } from '@/lib/reviews-page-route';
 import { site } from '@/config/site';
 import { formatRating, formatReviewCount } from '@/lib/format';
-import { ratingSourceLabel, reviewsPageIndexable, reviewsPagePath, supplierSlugFromReviewsSegment } from '@/lib/review-pages';
+import { ratingSourceLabel, reviewsPageIndexable, reviewsPagePath } from '@/lib/review-pages';
 import { pageMetadata, reviewsPageSeoDefaults } from '@/lib/seo-defaults';
 import { getSeoOverride, withSeo } from '@/lib/seo';
 import { PageSeo } from '@/components/seo/page-seo';
@@ -51,9 +50,7 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const supplierSlug = supplierSlugFromReviewsSegment(slug);
-  const supplier = supplierSlug ? await getSupplier(supplierSlug) : null;
-  if (!supplier || !supplierHasReviews(supplier, await getSupplierSlugsWithReviews())) return { title: 'Supplier not found' };
+  const supplier = await loadReviewsSupplierOrExit(slug);
   const defaults = reviewsPageSeoDefaults(supplier);
   const [metadata, seo] = await Promise.all([withSeo(defaults.path, pageMetadata(defaults)), getSeoOverride(defaults.path)]);
   // Hidden from search engines until its SEO details are saved and indexing is
@@ -70,16 +67,7 @@ export default async function VendorReviewsPage({
   searchParams: Promise<{ pq?: string; page?: string; form?: string; size?: string }>;
 }) {
   const { slug } = await params;
-  const supplierSlug = supplierSlugFromReviewsSegment(slug);
-  const supplier = supplierSlug ? await getSupplier(supplierSlug) : null;
-  const storedSlugs = await getSupplierSlugsWithReviews();
-  // A vendor with no reviews has no reviews page.
-  if (!supplier || !supplierHasReviews(supplier, storedSlugs)) {
-    // /reviews/<vendor> (no suffix) is a natural guess; send it to the page's real address.
-    const bare = await getSupplier(slug);
-    if (bare && supplierHasReviews(bare, storedSlugs)) permanentRedirect(reviewsPagePath(bare.slug));
-    notFound();
-  }
+  const supplier = await loadReviewsSupplierOrExit(slug);
 
   const path = reviewsPagePath(supplier.slug);
   const [seo, offers, allProducts, reviews, content] = await Promise.all([

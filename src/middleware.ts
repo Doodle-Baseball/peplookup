@@ -27,7 +27,9 @@ async function handlePublicRoute(request: NextRequest): Promise<NextResponse> {
   const redirectUrl = new URL(target, request.url);
   redirectUrl.search = request.nextUrl.search;
   // Permanent: this is a page that moved for good, not a temporary detour.
-  return NextResponse.redirect(redirectUrl, 308);
+  // 301 rather than a 308: search engines treat the two alike, but SEO audit
+  // tools expect a 301 for a page that moved for good.
+  return NextResponse.redirect(redirectUrl, 301);
 }
 
 export async function middleware(request: NextRequest) {

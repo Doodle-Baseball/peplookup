@@ -29,6 +29,7 @@ import { DoseChipsExpandable } from '@/components/product-card/dose-chips-expand
 import { SupplierChipsExpandable } from '@/components/product-card/supplier-chips-expandable';
 import { ListingsLoadMore } from '@/components/product-card/listings-load-more';
 import { JumpToNav } from '@/components/product-card/jump-to-nav';
+import { FilterButton } from '@/components/product-card/filter-button';
 import { site } from '@/config/site';
 import { compoundImageSrc } from '@/config/compound-images';
 import { compoundSeoDefaults, pageMetadata } from '@/lib/seo-defaults';
@@ -455,11 +456,10 @@ export default async function ProductPage({
                     {availableForms.map((form) => {
                       const isSelected = selectedForm === form;
                       return (
-                        <Link
+                        <FilterButton
                           key={form}
                           href={filterHref(product.slug, sp, { form, dose: undefined })}
-                          scroll={false}
-                          aria-current={isSelected ? 'true' : undefined}
+                          isSelected={isSelected}
                           className={segmentClass(isSelected)}
                         >
                           {FORM_LABELS[form]}
@@ -471,7 +471,7 @@ export default async function ProductPage({
                           >
                             {formCounts.get(form) ?? 0}
                           </span>
-                        </Link>
+                        </FilterButton>
                       );
                     })}
                   </div>
@@ -480,22 +480,20 @@ export default async function ProductPage({
                 <div>
                   <p className="eyebrow">Show prices as</p>
                   <div className={cn(SEGMENT_TRACK_CLASS, 'mt-2 grid-cols-2 sm:inline-grid')}>
-                    <Link
+                    <FilterButton
                       href={filterHref(product.slug, sp, { view: undefined })}
-                      scroll={false}
-                      aria-current={view === 'total' ? 'true' : undefined}
+                      isSelected={view === 'total'}
                       className={segmentClass(view === 'total')}
                     >
                       Total price
-                    </Link>
-                    <Link
+                    </FilterButton>
+                    <FilterButton
                       href={filterHref(product.slug, sp, { view: 'permg' })}
-                      scroll={false}
-                      aria-current={view === 'permg' ? 'true' : undefined}
+                      isSelected={view === 'permg'}
                       className={segmentClass(view === 'permg')}
                     >
                       Cost per mg
-                    </Link>
+                    </FilterButton>
                   </div>
                 </div>
               </div>
@@ -525,14 +523,14 @@ export default async function ProductPage({
         {hasOffers ? (
           <div className="border-t border-line">
             <div className="flex gap-6 border-b border-line px-5 sm:px-8">
-              <TabLink
+              <TabButton
                 href={filterHref(product.slug, sp, { tab: undefined })}
                 isActive={tab === 'prices'}
                 icon={<TagIcon className="h-4 w-4" />}
               >
                 Prices
-              </TabLink>
-              <TabLink
+              </TabButton>
+              <TabButton
                 href={filterHref(product.slug, sp, { tab: 'tests' })}
                 isActive={tab === 'tests'}
                 icon={<FlaskIcon className="h-4 w-4" />}
@@ -541,7 +539,7 @@ export default async function ProductPage({
                 <span className="rounded-pill bg-surface-sunken px-1.5 text-micro font-black text-muted">
                   {offersWithReports.length}
                 </span>
-              </TabLink>
+              </TabButton>
             </div>
 
             <div className="p-5 sm:p-8">
@@ -557,32 +555,29 @@ export default async function ProductPage({
                     </p>
                     <div className="flex flex-wrap items-center gap-2">
                       <div className={cn(SEGMENT_TRACK_CLASS, 'grid-cols-2')}>
-                        <Link
+                        <FilterButton
                           href={filterHref(product.slug, sp, { stock: undefined })}
-                          scroll={false}
-                          aria-current={stockFilter === 'all' ? 'true' : undefined}
+                          isSelected={stockFilter === 'all'}
                           className={cn(segmentClass(stockFilter === 'all'), 'py-1.5 text-xs')}
                         >
                           All
-                        </Link>
-                        <Link
+                        </FilterButton>
+                        <FilterButton
                           href={filterHref(product.slug, sp, { stock: 'in' })}
-                          scroll={false}
-                          aria-current={stockFilter === 'in' ? 'true' : undefined}
+                          isSelected={stockFilter === 'in'}
                           className={cn(segmentClass(stockFilter === 'in'), 'py-1.5 text-xs')}
                         >
                           In stock
-                        </Link>
+                        </FilterButton>
                       </div>
-                      <Link
+                      <FilterButton
                         href={filterHref(product.slug, sp, {
                           sort: sort === 'price-asc' ? 'price-desc' : undefined,
                         })}
-                        scroll={false}
                         className="rounded-pill border border-line bg-surface px-3.5 py-2 text-xs font-bold text-content transition-colors hover:border-brand"
                       >
                         Price: {sort === 'price-asc' ? 'Low to High' : 'High to Low'}
-                      </Link>
+                      </FilterButton>
                     </div>
                   </div>
 
@@ -860,7 +855,7 @@ function EmptyNote({ children }: { children: ReactNode }) {
   );
 }
 
-function TabLink({
+function TabButton({
   href,
   isActive,
   icon,
@@ -872,10 +867,9 @@ function TabLink({
   children: ReactNode;
 }) {
   return (
-    <Link
+    <FilterButton
       href={href}
-      scroll={false}
-      aria-current={isActive ? 'true' : undefined}
+      isSelected={isActive}
       className={cn(
         '-mb-px flex items-center gap-1.5 border-b-2 py-4 text-sm font-bold transition-colors',
         isActive ? 'border-brand text-content' : 'border-transparent text-muted hover:text-content',
@@ -883,7 +877,7 @@ function TabLink({
     >
       {icon}
       {children}
-    </Link>
+    </FilterButton>
   );
 }
 

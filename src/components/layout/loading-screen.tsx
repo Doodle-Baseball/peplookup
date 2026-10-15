@@ -17,11 +17,17 @@ function easeInOutCubic(t: number) {
  * wordmark and a progress bar hold, then fade to reveal the real page
  * underneath. Mounted once in the root layout, so it never reappears on
  * client-side navigations between pages, only on a fresh load of the site.
+ *
+ * The overlay is in the server HTML (so it covers the first paint), but its
+ * "Loading prices" label is not: that text would otherwise be the first thing
+ * a crawler reads on every page. A CSS fallback also dismisses the overlay if
+ * this script never runs.
  */
 export function LoadingScreen() {
   const [visible, setVisible] = useState(true);
   const [hiding, setHiding] = useState(false);
-  const [percent, setPercent] = useState(0);
+  /** Null until mounted, so the server HTML carries no loading label. */
+  const [percent, setPercent] = useState<number | null>(null);
 
   useEffect(() => {
     // Reduced-motion visitors get the same reveal with none of the hold or fade.
@@ -53,7 +59,7 @@ export function LoadingScreen() {
     <div
       aria-hidden="true"
       className={cn(
-        'fixed inset-0 z-50 flex flex-col items-center justify-center bg-surface transition-opacity ease-out',
+        'splash-self-dismiss fixed inset-0 z-50 flex flex-col items-center justify-center bg-surface transition-opacity ease-out',
         hiding ? 'pointer-events-none opacity-0 duration-500' : 'opacity-100 duration-0',
       )}
     >
@@ -68,9 +74,13 @@ export function LoadingScreen() {
             style={{ '--loading-duration': `${HOLD_MS}ms` } as React.CSSProperties}
           />
         </div>
-        <div className="mt-3 flex items-center justify-between font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-faint">
-          <span>Loading prices</span>
-          <span className="tabular-nums text-content">{percent}%</span>
+        <div className="mt-3 flex h-4 items-center justify-between font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-faint">
+          {percent !== null ? (
+            <>
+              <span>Loading prices</span>
+              <span className="tabular-nums text-content">{percent}%</span>
+            </>
+          ) : null}
         </div>
       </div>
     </div>

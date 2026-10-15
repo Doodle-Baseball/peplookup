@@ -113,7 +113,13 @@ export default async function LabReportsPage({
     ...new Set([...products.map((p) => p.name), ...vendorGroups.map((v) => v.name)]),
   ];
 
-  const initialQuery = (sp.supplier ?? sp.q ?? '').trim();
+  // Links pass a supplier slug; the search box matches names, so it is shown as
+  // the supplier's name. Anything else (older links passed the name itself)
+  // is searched as typed.
+  const supplierParam = sp.supplier?.trim();
+  const initialQuery = supplierParam
+    ? (suppliersBySlug.get(supplierParam)?.name ?? supplierParam)
+    : (sp.q ?? '').trim();
 
   return (
     <div className="mx-auto max-w-shell px-4 py-14">

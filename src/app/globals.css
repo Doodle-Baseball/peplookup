@@ -398,6 +398,21 @@
   to { transform: translateX(100%); }
 }
 
+/* Splash-screen safety net: the overlay dismisses itself even when its script
+   never runs (a crawler's rendering snapshot, a failed or slow bundle), so the
+   page underneath is never left covered. The script normally removes the
+   overlay well before this starts. */
+.splash-self-dismiss {
+  animation: splash-self-dismiss 0.2s ease-out 1.5s forwards;
+}
+
+@keyframes splash-self-dismiss {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
 @keyframes marquee {
   from { transform: translateX(0); }
   to { transform: translateX(-50%); }

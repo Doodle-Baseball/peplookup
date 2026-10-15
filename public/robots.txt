@@ -6,10 +6,10 @@ Allow: /
 # Outbound affiliate/redirect links - no crawl value, keep link equity internal
 Disallow: /go?
  
-# Filtered, sorted and tabbed views of a page repeat the page itself (its canonical
-# is the clean URL) and each one costs a full server render, so crawlers skip them.
-# The clean /products/<slug>, /suppliers/<slug> and /lab-reports URLs stay crawlable.
-Disallow: /products/*?
+# Supplier catalog searches and lab-report searches repeat the page itself (its
+# canonical is the clean URL) and each one costs a full server render, so crawlers
+# skip them. Product filter URLs (/products/<slug>?form=...) are left crawlable so
+# search engines can read their canonical, which points at the clean product page.
 Disallow: /suppliers/*pq=
 Disallow: /lab-reports?
  
