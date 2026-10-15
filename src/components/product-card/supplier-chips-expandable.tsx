@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
+import { FilterButton } from '@/components/product-card/filter-button';
 import { cn } from '@/lib/cn';
 
 /** Chips shown before the "+N more" toggle. Roughly two rows on a desktop width. */
@@ -17,8 +17,8 @@ function chipClass(isSelected: boolean) {
 /**
  * Supplier filter for the product page's price table. A popular compound is carried
  * by sixty-plus vendors, which buries the first price under a wall of chips, so the
- * list collapses to `COLLAPSED_COUNT` until expanded. Selecting a chip navigates
- * (filter state is URL-driven); expanding does not.
+ * list collapses to `COLLAPSED_COUNT` until expanded. Selecting a chip updates the
+ * URL (filter state is URL-driven); expanding does not.
  */
 export function SupplierChipsExpandable({
   suppliers,
@@ -39,18 +39,18 @@ export function SupplierChipsExpandable({
 
   return (
     <div className="scrollbar-hide -mx-5 mt-3 flex gap-1.5 overflow-x-auto px-5 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
-      <Link href={allHref} scroll={false} className={chipClass(!selectedSlug)}>
+      <FilterButton href={allHref} isSelected={!selectedSlug} className={chipClass(!selectedSlug)}>
         All suppliers
-      </Link>
+      </FilterButton>
       {visible.map((supplier) => (
-        <Link
+        <FilterButton
           key={supplier.slug}
           href={supplier.href}
-          scroll={false}
+          isSelected={selectedSlug === supplier.slug}
           className={chipClass(selectedSlug === supplier.slug)}
         >
           {supplier.name}
-        </Link>
+        </FilterButton>
       ))}
       {hiddenCount > 0 ? (
         <button type="button" onClick={() => setExpanded(true)} className={cn(chipClass(false), 'border-dashed')}>

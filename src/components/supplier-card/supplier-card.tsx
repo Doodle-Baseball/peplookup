@@ -41,7 +41,7 @@ export function SupplierCard({ supplier, productCount }: { supplier: Supplier; p
   const hiddenPaymentCount = supplier.paymentMethods.length - visiblePayments.length;
   const hasPaymentInfo = supplier.paymentMethods.length > 0;
   const hasShippingInfo = supplier.shippingCost.kind !== 'unknown' || supplier.shippingSpeed !== null;
-  const labReportsHref = `/lab-reports?supplier=${encodeURIComponent(supplier.name)}`;
+  const labReportsHref = `/lab-reports?supplier=${supplier.slug}`;
 
   return (
     <article
@@ -256,7 +256,7 @@ export function SupplierCard({ supplier, productCount }: { supplier: Supplier; p
           </Link>
         </div>
         <Link
-          href={`/?supplier=${encodeURIComponent(supplier.name)}`}
+          href={`/?supplier=${supplier.slug}`}
           className={cn(
             'btn-3d group/prices inline-flex w-full items-center justify-center gap-2 rounded-chip bg-brand px-3 py-3',
             'text-sm font-bold text-surface transition-colors duration-200 hover:bg-brand-strong',

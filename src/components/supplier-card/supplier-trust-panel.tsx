@@ -51,7 +51,7 @@ export function SupplierTrustPanel({
   const router = useRouter();
   const [email, setEmail] = useState('');
   // Lands on /lab-reports already filtered to this vendor.
-  const labReportsHref = `${UNLOCK_REDIRECT}?supplier=${encodeURIComponent(supplierName)}`;
+  const labReportsHref = `${UNLOCK_REDIRECT}?supplier=${supplierSlug}`;
   const [state, setState] = useState<'idle' | 'sending' | 'done' | 'error'>('idle');
   // The unlock box shows for every supplier; the reviews card only when there is something to show.
   const listRef = useRef<HTMLUListElement>(null);
