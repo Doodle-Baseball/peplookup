@@ -36,3 +36,11 @@ export const guides: readonly Guide[] = [];
 export function getGuide(slug: string): Guide | undefined {
   return guides.find((guide) => guide.slug === slug);
 }
+
+/**
+ * Whether a guide has any written body yet. One without is a placeholder: it
+ * stays out of the sitemap and is marked noindex until its text is in.
+ */
+export function guideHasContent(guide: Pick<Guide, 'sections'>): boolean {
+  return guide.sections.some((section) => section.body.some((paragraph) => paragraph.trim().length > 0));
+}

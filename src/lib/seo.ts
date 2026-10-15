@@ -181,6 +181,12 @@ export async function getSeoOverride(path: string): Promise<SeoOverride | null> 
   return pages.find((page) => page.path === path) ?? null;
 }
 
+/** Every override, keyed by path, for code that needs them all at once (the sitemap). */
+export async function getSeoOverridesByPath(): Promise<ReadonlyMap<string, SeoOverride>> {
+  const { pages } = await getSeoData();
+  return new Map(pages.map((page) => [page.path, page]));
+}
+
 function followRedirects(path: string, redirects: readonly SeoRedirect[]): string {
   const targets = new Map(redirects.map((redirect) => [redirect.fromPath, redirect.toPath]));
   const seen = new Set([path]);

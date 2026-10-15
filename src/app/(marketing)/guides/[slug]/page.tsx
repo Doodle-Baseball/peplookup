@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { guides as seedGuides } from '@/data/guides';
+import { guideHasContent, guides as seedGuides } from '@/data/guides';
 import { getGuideBySlug, getGuides } from '@/lib/repository';
 import { GuideCover } from '@/components/guides/guide-cover';
 import { GuideCard } from '@/components/guides/guide-card';
@@ -29,7 +29,9 @@ export async function generateMetadata({
   const { slug } = await params;
   const guide = await getGuideBySlug(slug);
   if (!guide) return {};
-  return withSeo(`/guides/${guide.slug}`, pageMetadata(guideSeoDefaults(guide)));
+  const metadata = await withSeo(`/guides/${guide.slug}`, pageMetadata(guideSeoDefaults(guide)));
+  // A placeholder guide stays out of search until its text is written.
+  return guideHasContent(guide) ? metadata : { ...metadata, robots: { index: false, follow: true } };
 }
 
 export default async function GuidePage({ params }: { params: Promise<{ slug: string }> }) {
@@ -38,7 +40,7 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
   if (!guide) notFound();
   const [seo, allGuides] = await Promise.all([getSeoOverride(`/guides/${guide.slug}`), getGuides()]);
 
-  const more = allGuides.filter((g) => g.slug !== guide.slug).slice(0, 3);
+  const more = allGuides.filter((g) => g.slug !== guide.slug && guideHasContent(g)).slice(0, 3);
 
   return (
     <>
