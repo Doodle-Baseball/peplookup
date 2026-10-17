@@ -46,7 +46,7 @@ function PartnerPill({ promo }: { promo: PromotedSupplier }) {
       target="_blank"
       rel="nofollow noopener noreferrer sponsored"
       title={`Affiliate link: ${site.name} may earn a commission. Featured placement never changes prices or price-per-mg rankings.`}
-      className="group/pill animate-fade-up flex min-w-0 shrink-0 items-center gap-2 whitespace-nowrap rounded-pill bg-surface-raised py-1 pl-1 pr-1 font-mono text-xs font-bold uppercase tracking-wider text-content shadow-lift ring-1 ring-surface-raised/50 transition-all hover:-translate-y-px hover:shadow-panel focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-surface-raised focus-visible:ring-offset-2 focus-visible:ring-offset-accent-strong"
+      className="group/pill animate-fade-up flex min-w-0 shrink items-center lg:shrink-0 gap-2 whitespace-nowrap rounded-pill bg-surface-raised py-1 pl-1 pr-1 font-mono text-xs font-bold uppercase tracking-wider text-content shadow-lift ring-1 ring-surface-raised/50 transition-all hover:-translate-y-px hover:shadow-panel focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-surface-raised focus-visible:ring-offset-2 focus-visible:ring-offset-accent-strong"
     >
       <SupplierLogo
         src={promo.logoUrl}
@@ -84,8 +84,11 @@ function PartnerPill({ promo }: { promo: PromotedSupplier }) {
 }
 
 function PartnerFacts({ promo }: { promo: PromotedSupplier }) {
+  // Fact text comes from the supplier's record, so its length varies. One row
+  // tall with wrapping: a chip that doesn't fit drops to a clipped second row
+  // and disappears whole, rather than being cut off mid-word at the edge.
   return (
-    <ul className="hidden items-center gap-2 lg:flex">
+    <ul className="hidden h-7 min-w-0 flex-1 flex-wrap content-start items-center justify-end gap-2 overflow-hidden lg:flex">
       {promotedFacts(promo).map((fact, index) => {
         const delay = ENTRANCE_DELAYS[Math.min(index, ENTRANCE_DELAYS.length - 1)];
         if (fact.kind === 'coupon' && promo.coupon) {
