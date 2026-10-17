@@ -111,7 +111,8 @@ export default async function SupplierPage({
 
   return (
     <div className="relative isolate overflow-hidden">
-      <PatternBackdrop mask="radial-gradient(ellipse at top, black 10%, transparent 55%)" />
+      {/* Supplier profiles keep the soft colour washes but drop the dot grid. */}
+      <PatternBackdrop dots={false} />
 
       <div className="mx-auto max-w-shell px-4 py-8 sm:py-10">
         <PageSeo
