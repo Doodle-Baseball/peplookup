@@ -5,8 +5,8 @@
  * simply stops showing. Set to null to run without a promotion.
  */
 export const PROMOTED_SUPPLIER: { slug: string; logoUrl: string | null } | null = {
-  slug: 'american-peptides',
-  // The supplier's own site icon, sharper than the Google favicon proxy their
-  // record holds. Null falls back to the record's logo.
-  logoUrl: 'https://www.americanpeptides.us/favicon.ico',
+  slug: 'disguised-alpha',
+  // Null falls back to the record's logo (here its favicon), the same image the
+  // rest of the site shows for this supplier.
+  logoUrl: null,
 };
