@@ -204,6 +204,20 @@ function followRedirects(path: string, redirects: readonly SeoRedirect[]): strin
 const REDIRECT_TTL_MS = 60_000;
 
 /**
+ * Longest a redirect read may block a request. Middleware sits in front of
+ * every product, supplier and guide page, so a hung Supabase must cost each
+ * page this much at most, not the platform's 25s middleware limit (a 504).
+ */
+const REDIRECT_QUERY_TIMEOUT_MS = 2_000;
+
+/**
+ * After a failed read, how long to keep serving the previous snapshot before
+ * trying again. Without it every request during an outage would wait out the
+ * timeout above.
+ */
+const REDIRECT_RETRY_MS = 15_000;
+
+/**
  * Last redirect read, held in module scope. A server instance keeps module
  * state between requests, so this is what stops the read below from running
  * per page view.
@@ -239,10 +253,18 @@ async function fetchRedirectsUncached(): Promise<SeoRedirect[]> {
 
   const client = getSupabaseServerClient();
   if (!client) return [];
-  const { data, error } = await client.from('seo_redirects').select('from_path, to_path, created_at');
+  const { data, error } = await client
+    .from('seo_redirects')
+    .select('from_path, to_path, created_at')
+    .abortSignal(AbortSignal.timeout(REDIRECT_QUERY_TIMEOUT_MS));
   // An unreachable or unmigrated table must not drop live redirects, so a
   // previous snapshot keeps serving until the next attempt succeeds.
-  if (error) return redirectSnapshot?.rows ?? [];
+  if (error) {
+    console.warn('[seo] seo_redirects could not be read, retrying in 15s:', error.message);
+    const rows = redirectSnapshot?.rows ?? [];
+    redirectSnapshot = { rows, expiresAt: now + REDIRECT_RETRY_MS };
+    return rows;
+  }
 
   const rows = (data as SeoRedirectRow[]).map(rowToSeoRedirect);
   redirectSnapshot = { rows, expiresAt: now + REDIRECT_TTL_MS };
