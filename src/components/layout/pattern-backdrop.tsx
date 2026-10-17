@@ -5,10 +5,10 @@
  * nothing to license. The parent needs `relative isolate` so this can sit
  * behind its content with a negative z-index.
  */
-export function PatternBackdrop({ mask }: { mask?: string }) {
+export function PatternBackdrop({ mask, dots = true }: { mask?: string; dots?: boolean }) {
   return (
     <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-      <div className="dot-grid absolute inset-0" style={{ maskImage: mask, WebkitMaskImage: mask }} />
+      {dots ? <div className="dot-grid absolute inset-0" style={{ maskImage: mask, WebkitMaskImage: mask }} /> : null}
       {/* Positioning and drift live on separate elements: the drift animation
           sets `transform`, which would otherwise wipe out the centring. */}
       <div className="absolute left-1/2 top-0 -translate-x-1/2">

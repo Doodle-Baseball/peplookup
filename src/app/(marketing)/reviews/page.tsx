@@ -3,14 +3,14 @@ import { site } from '@/config/site';
 import { staticSeoPage } from '@/config/seo-pages';
 import { pageMetadata } from '@/lib/seo-defaults';
 import { getSeoOverride, withSeo } from '@/lib/seo';
-import { getSupplierSlugsWithReviews, getSuppliers, supplierHasReviews } from '@/lib/repository';
+import { getAllOffers, getProducts, getSupplierSlugsWithReviews, getSuppliers, supplierHasReviews } from '@/lib/repository';
 import { formatReviewCount } from '@/lib/format';
 import { ReviewsBrowser, type ReviewVendor } from '@/components/reviews/reviews-browser';
 import { PageFaqSection } from '@/components/faq/page-faq-section';
 import { StarIcon } from '@/components/icons/icons';
 import { PageSeo } from '@/components/seo/page-seo';
 import { compareReviewVendors, DEFAULT_REVIEW_SORT } from '@/components/reviews/review-sort';
-import { reviewsPagePath } from '@/lib/review-pages';
+import { ratingSourceLabel, reviewsPagePath } from '@/lib/review-pages';
 
 const PAGE = staticSeoPage('/reviews');
 
@@ -24,13 +24,23 @@ export async function generateMetadata(): Promise<Metadata> {
 export const revalidate = 1800;
 
 export default async function ReviewsPage() {
-  const [seo, allSuppliers, storedSlugs] = await Promise.all([
+  const [seo, allSuppliers, storedSlugs, offers, products] = await Promise.all([
     getSeoOverride(PAGE.path),
     getSuppliers(),
     getSupplierSlugsWithReviews(),
+    getAllOffers(),
+    getProducts(),
   ]);
   // A vendor with no reviews has no card here and no reviews page.
   const suppliers = allSuppliers.filter((supplier) => supplierHasReviews(supplier, storedSlugs));
+
+  // Same count as "Products listed" on the supplier page: listings whose compound resolves.
+  const productSlugs = new Set(products.map((product) => product.slug));
+  const productCountBySupplier = new Map<string, number>();
+  for (const offer of offers) {
+    if (!productSlugs.has(offer.productSlug)) continue;
+    productCountBySupplier.set(offer.supplierSlug, (productCountBySupplier.get(offer.supplierSlug) ?? 0) + 1);
+  }
 
   const vendors: ReviewVendor[] = suppliers.map((supplier) => ({
     slug: supplier.slug,
@@ -39,6 +49,10 @@ export default async function ReviewsPage() {
     rating: supplier.reviewRating,
     reviewCountText: formatReviewCount(supplier.reviewCount),
     reviewCountValue: supplier.reviewCount?.value ?? 0,
+    ratingSource: ratingSourceLabel(supplier.reviewsUrl),
+    couponPercentOff: supplier.coupon?.percentOff ?? null,
+    productCount: productCountBySupplier.get(supplier.slug) ?? 0,
+    foundedYear: supplier.foundedYear,
     shopHref: `/go?to=${encodeURIComponent(supplier.affiliateUrl)}`,
   }));
   const ratedCount = vendors.filter((vendor) => vendor.rating !== null).length;

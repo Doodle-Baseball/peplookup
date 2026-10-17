@@ -1,9 +1,9 @@
 import type { Offer, Product, Supplier } from '@/lib/schema';
 import { OfferCard } from '@/components/offer-card/offer-card';
-import { Pagination } from '@/components/ui/pagination';
 import { LiveSearchInput } from '@/components/ui/live-search-input';
 import { BoxIcon, SearchIcon } from '@/components/icons/icons';
 import { CatalogFilterSelect } from './catalog-filter-select';
+import { CatalogPager } from './catalog-pager';
 import { CATALOG_FORM_OPTIONS, isCatalogFormValue } from './catalog-form-options';
 
 /** Product Catalog tiles per page, 3 rows of the 3-column grid. */
@@ -16,8 +16,9 @@ function formatVialSize(vialSizeMcg: number): string {
 
 /**
  * A vendor's "Products from X" catalogue with in-page search and pagination.
- * `basePath` is the page it renders on, so the search form and page links stay
- * on that page, the supplier profile and its coupon page share this section.
+ * `basePath` is the page it renders on, so the search form stays on that page,
+ * the supplier profile and its coupon page share this section. Paging happens
+ * in the browser (CatalogPager) and doesn't touch the URL.
  */
 export function SupplierCatalogSection({
   supplier,
@@ -59,7 +60,7 @@ export function SupplierCatalogSection({
 
   const pageCount = Math.max(1, Math.ceil(catalogueOffers.length / CATALOG_PAGE_SIZE));
   const currentPage = Math.min(Math.max(1, Number(pageParam) || 1), pageCount);
-  const pagedOffers = catalogueOffers.slice((currentPage - 1) * CATALOG_PAGE_SIZE, currentPage * CATALOG_PAGE_SIZE);
+  const filterKey = `${query}-${selectedForm ?? 'all'}-${selectedSize ?? 'all'}`;
 
   return (
     <section
@@ -136,31 +137,24 @@ export function SupplierCatalogSection({
             </p>
           ) : (
             <>
-              <ul key={`${query}-${selectedForm ?? 'all'}-${selectedSize ?? 'all'}-${currentPage}`} className="animate-fade-up mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {pagedOffers.map((offer: Offer) => (
-                  <OfferCard
-                    key={offer.id ?? `${offer.productSlug}-${offer.form}-${offer.vialSize}-${offer.vialCount}`}
-                    offer={offer}
-                    product={productsBySlug.get(offer.productSlug)!}
-                    supplier={supplier}
-                    headingEntity="product"
-                    layout="grid"
-                  />
-                ))}
-              </ul>
-
-              <Pagination
+              <CatalogPager
+                key={filterKey}
                 label="Product catalog pages"
-                currentPage={currentPage}
-                pageCount={pageCount}
-                hrefForPage={(page) =>
-                  `${basePath}?${new URLSearchParams({
-                    ...(query ? { pq: query } : {}),
-                    ...(selectedForm ? { form: selectedForm } : {}),
-                    ...(selectedSize !== undefined ? { size: String(selectedSize) } : {}),
-                    page: String(page),
-                  })}`
-                }
+                initialPage={currentPage}
+                pages={Array.from({ length: pageCount }, (_, pageIndex) => (
+                  <ul key={`${filterKey}-${pageIndex + 1}`} className="animate-fade-up mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {catalogueOffers.slice(pageIndex * CATALOG_PAGE_SIZE, (pageIndex + 1) * CATALOG_PAGE_SIZE).map((offer: Offer) => (
+                      <OfferCard
+                        key={offer.id ?? `${offer.productSlug}-${offer.form}-${offer.vialSize}-${offer.vialCount}`}
+                        offer={offer}
+                        product={productsBySlug.get(offer.productSlug)!}
+                        supplier={supplier}
+                        headingEntity="product"
+                        layout="grid"
+                      />
+                    ))}
+                  </ul>
+                ))}
               />
             </>
           )}

@@ -23,8 +23,12 @@ export default async function MarketingLayout({ children }: { children: React.Re
   // Fetched once here (not per-page) so every public page gets the same
   // directory above the footer, instead of each page opting in separately.
   const [suppliers, seoInjections, offers] = await Promise.all([getSuppliers(), getSeoInjections(), getAllOffers()]);
-  // The spotlight card belongs to the supplier marked Featured in the admin.
-  const featuredSupplier = suppliers.find((supplier) => supplier.isFeatured);
+  // The spotlight card belongs to a supplier marked Featured in the admin. When
+  // several are, the promoted partner wins so the popup matches the top bar and
+  // the featured section.
+  const featuredSuppliers = suppliers.filter((supplier) => supplier.isFeatured);
+  const featuredSupplier =
+    featuredSuppliers.find((supplier) => supplier.slug === PROMOTED_SUPPLIER?.slug) ?? featuredSuppliers[0];
   // The partner promoted in the top bar and above the directory, from its live record.
   const promotedSupplier = buildPromotedSupplier(suppliers, offers, PROMOTED_SUPPLIER);
 

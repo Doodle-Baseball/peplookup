@@ -9,7 +9,7 @@ type PageSlot = number | 'gap';
  * First, last, and the current page ±1. Enough to reach any page in two taps
  * without a row of twenty numbers wrapping across a phone screen.
  */
-function pageSlots(currentPage: number, pageCount: number): PageSlot[] {
+export function pageSlots(currentPage: number, pageCount: number): PageSlot[] {
   const slots: PageSlot[] = [];
   for (let page = 1; page <= pageCount; page++) {
     const isEdge = page === 1 || page === pageCount;
@@ -23,9 +23,9 @@ function pageSlots(currentPage: number, pageCount: number): PageSlot[] {
 }
 
 /** 40px square keeps every page link a comfortable touch target. */
-const ITEM_CLASS =
+export const ITEM_CLASS =
   'flex h-10 min-w-10 items-center justify-center rounded-chip px-3 text-sm font-bold transition-colors';
-const IDLE_CLASS = 'border border-line bg-surface-raised text-content hover:border-brand';
+export const IDLE_CLASS = 'border border-line bg-surface-raised text-content hover:border-brand';
 
 export function Pagination({
   label,

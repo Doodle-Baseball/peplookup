@@ -37,8 +37,13 @@ const nextConfig = {
     // data, so letting the CDN reuse a render for a few minutes means repeat
     // visits and crawlers don't each run the server. Each distinct query string
     // is cached on its own, so every filter, sort and tab still renders correctly.
+    // Next overwrites Cache-Control on these dynamic pages with `no-store`, so on
+    // its own the first header never reaches the CDN and every visit ran the
+    // server. Vercel's CDN reads Vercel-CDN-Cache-Control instead, which Next
+    // leaves alone and Vercel strips before the response reaches the browser.
     const sharedPageCache = [
       { key: 'Cache-Control', value: 'public, s-maxage=300, stale-while-revalidate=600' },
+      { key: 'Vercel-CDN-Cache-Control', value: 's-maxage=300, stale-while-revalidate=600' },
     ];
     // Files served straight from /public are revalidated on every request by default; these change rarely.
     const staticAssetCache = [{ key: 'Cache-Control', value: 'public, max-age=2592000, stale-while-revalidate=86400' }];

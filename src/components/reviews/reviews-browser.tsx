@@ -4,7 +4,16 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { StarRating } from '@/components/ui/star-rating';
 import { SupplierLogo } from '@/components/ui/supplier-logo';
-import { ArrowRightIcon, ChevronDownIcon, ExternalIcon, SearchIcon, StarIcon } from '@/components/icons/icons';
+import {
+  ArrowRightIcon,
+  BoxIcon,
+  CalendarIcon,
+  ChevronDownIcon,
+  ExternalIcon,
+  SearchIcon,
+  StarIcon,
+  TagIcon,
+} from '@/components/icons/icons';
 import { cn } from '@/lib/cn';
 import { reviewsPagePath } from '@/lib/review-pages';
 import { compareReviewVendors, DEFAULT_REVIEW_SORT, type ReviewSortKey } from '@/components/reviews/review-sort';
@@ -20,6 +29,12 @@ export interface ReviewVendor {
   reviewCountText: string | null;
   /** Numeric review count for sorting; 0 when unknown. */
   reviewCountValue: number;
+  /** Where the rating comes from, e.g. "Trustpilot". */
+  ratingSource: string;
+  couponPercentOff: number | null;
+  /** Listings tracked for this supplier, as "Products listed" counts them on its page. */
+  productCount: number;
+  foundedYear: number | null;
   /** Already resolved to the site's outbound redirect. */
   shopHref: string;
 }
@@ -31,6 +46,36 @@ const SORTS: { key: ReviewSortKey; label: string }[] = [
 ];
 
 const PAGE_SIZE = 24;
+
+/** Coupon, catalogue size and founding year, each shown only when the supplier's record holds it. */
+function VendorFacts({ vendor }: { vendor: ReviewVendor }) {
+  const facts = [
+    vendor.couponPercentOff !== null
+      ? { key: 'coupon', icon: <TagIcon className="h-3.5 w-3.5 shrink-0 text-coupon-ink" />, text: `${vendor.couponPercentOff}% off code` }
+      : null,
+    vendor.productCount > 0
+      ? { key: 'products', icon: <BoxIcon className="h-3.5 w-3.5 shrink-0 text-accent" />, text: `${vendor.productCount} products` }
+      : null,
+    vendor.foundedYear !== null
+      ? { key: 'founded', icon: <CalendarIcon className="h-3.5 w-3.5 shrink-0 text-accent" />, text: `Est. ${vendor.foundedYear}` }
+      : null,
+  ].filter((fact) => fact !== null);
+  if (facts.length === 0) return null;
+
+  return (
+    <ul className="mt-3 flex flex-wrap gap-2">
+      {facts.map((fact) => (
+        <li
+          key={fact.key}
+          className="inline-flex items-center gap-1.5 rounded-pill border border-line bg-surface px-2.5 py-1 text-xs font-semibold text-content"
+        >
+          {fact.icon}
+          {fact.text}
+        </li>
+      ))}
+    </ul>
+  );
+}
 
 export function ReviewsBrowser({ vendors }: { vendors: ReviewVendor[] }) {
   const [query, setQuery] = useState('');
@@ -44,6 +89,13 @@ export function ReviewsBrowser({ vendors }: { vendors: ReviewVendor[] }) {
   }, [vendors, query, sort]);
 
   const shown = filtered.slice(0, visible);
+
+  // Picked from every vendor in "Top rated" order, so the badge stays on the
+  // highest-rated supplier whatever the visitor searches or sorts by.
+  const bestReviewedSlug = useMemo(
+    () => [...vendors].sort(compareReviewVendors('rating')).find((vendor) => vendor.rating !== null)?.slug,
+    [vendors],
+  );
 
   return (
     <>
@@ -111,6 +163,12 @@ export function ReviewsBrowser({ vendors }: { vendors: ReviewVendor[] }) {
               // Staggered entrance, capped so a long list doesn't make the last cards wait seconds.
               style={{ animationDelay: `${Math.min(index % PAGE_SIZE, 8) * 50}ms` }}
             >
+              {vendor.slug === bestReviewedSlug ? (
+                <p className="mb-4 inline-flex w-fit items-center gap-1.5 rounded-pill bg-accent-tint px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-accent-strong">
+                  <StarIcon className="h-3.5 w-3.5 fill-current" />
+                  Best reviews
+                </p>
+              ) : null}
               <div className="flex items-center gap-4">
                 <SupplierLogo
                   src={vendor.logo}
@@ -140,7 +198,9 @@ export function ReviewsBrowser({ vendors }: { vendors: ReviewVendor[] }) {
                     <div className="flex flex-col items-end gap-1">
                       <StarRating rating={vendor.rating} starClassName="h-4 w-4" />
                       <span className="text-xs text-muted">
-                        {vendor.reviewCountText ? `${vendor.reviewCountText} reviews` : 'Review count not listed'}
+                        {vendor.reviewCountText
+                          ? `${vendor.reviewCountText} reviews on ${vendor.ratingSource}`
+                          : `on ${vendor.ratingSource}`}
                       </span>
                     </div>
                   </div>
@@ -151,6 +211,8 @@ export function ReviewsBrowser({ vendors }: { vendors: ReviewVendor[] }) {
                   </p>
                 )}
               </div>
+
+              <VendorFacts vendor={vendor} />
 
               <div className="mt-auto flex flex-wrap items-center justify-between gap-3 pt-5">
                 <a
