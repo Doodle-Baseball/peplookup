@@ -2,11 +2,8 @@ import Link from 'next/link';
 import {
   ArrowRightIcon,
   CalendarIcon,
-  DocumentIcon,
   ExternalIcon,
-  FlaskIcon,
   GlobeIcon,
-  ListIcon,
   StarIcon,
   TruckIcon,
   WalletIcon,
@@ -31,13 +28,10 @@ function introText(promo: PromotedSupplier): string {
   return `${list}. See how their live prices compare with every other supplier on their profile.`;
 }
 
-function StatTile({ icon, value, label }: { icon: React.ReactNode; value: number; label: string }) {
+function StatTile({ value, label }: { value: number; label: string }) {
   return (
     <div className="rounded-card border border-line bg-surface p-3 sm:p-5">
-      <span className="flex h-8 w-8 items-center justify-center rounded-chip bg-accent-tint text-accent-strong sm:h-9 sm:w-9">
-        {icon}
-      </span>
-      <p className="mt-3 text-2xl font-black tabular-nums tracking-tight text-content sm:text-4xl">
+      <p className="text-2xl font-black tabular-nums tracking-tight text-content sm:text-4xl">
         {value.toLocaleString('en-US')}
       </p>
       <p className="mt-1 font-mono text-micro font-bold uppercase tracking-wide text-muted">{label}</p>
@@ -94,7 +88,7 @@ function PartnerLogo({ promo }: { promo: PromotedSupplier }) {
       src={promo.logoUrl}
       name={promo.name}
       size={96}
-      className="h-20 w-20 shrink-0 rounded-chip border-0 bg-transparent sm:h-24 sm:w-24"
+      className="h-20 w-20 shrink-0 rounded-chip border-2 bg-transparent sm:h-24 sm:w-24"
       initialClassName="text-3xl font-black"
     />
   );
@@ -144,17 +138,9 @@ export function FeaturedPartnerSection({ promo, now = new Date() }: { promo: Pro
             <p className="mt-6 max-w-2xl text-sm leading-7 text-muted sm:text-base">{introText(promo)}</p>
 
             <div className="mt-6 grid grid-cols-3 gap-2 sm:gap-4">
-              <StatTile
-                icon={<FlaskIcon aria-hidden="true" className="h-4 w-4" />}
-                value={promo.inStockCompoundCount}
-                label="Compounds in stock"
-              />
-              <StatTile icon={<ListIcon aria-hidden="true" className="h-4 w-4" />} value={promo.listingCount} label="Listings tracked" />
-              <StatTile
-                icon={<DocumentIcon aria-hidden="true" className="h-4 w-4" />}
-                value={promo.coaListingCount}
-                label="Listings with COAs"
-              />
+              <StatTile value={promo.inStockCompoundCount} label="Compounds in stock" />
+              <StatTile value={promo.listingCount} label="Listings tracked" />
+              <StatTile value={promo.coaListingCount} label="Listings with COAs" />
             </div>
 
             <FactRow promo={promo} />
