@@ -89,16 +89,34 @@ export default async function SupplierPage({
     .filter((s) => s.slug !== supplier.slug)
     .slice(0, EXPLORE_VENDOR_COUNT);
 
-  // The vendor's real COA record, derived from offers we already loaded rather
-  // than a second query, this is the same data /lab-reports groups by vendor.
-  const labTestedOffers = resolvedOffers.filter((o) => o.labReport !== null);
-  const labSummary = {
-    testCount: labTestedOffers.length,
-    labName: supplier.coaLabName,
-    productNames: [
-      ...new Set(labTestedOffers.map((offer) => productsBySlug.get(offer.productSlug)!.name)),
-    ],
-  };
+  // The vendor's real COA documents, derived from offers we already loaded
+  // rather than a second query, with the same link precedence /lab-reports
+  // uses. Sizes sharing one document collapse into a single entry.
+  const coaReportsByKey = new Map<
+    string,
+    { productName: string; url: string; sizes: Map<string, { vialSize: number; vialCount: number }> }
+  >();
+  for (const offer of resolvedOffers) {
+    const url = offer.labReport?.reportUrl ?? offer.labReport?.labUrl ?? offer.coaUrl ?? null;
+    if (!url) continue;
+    const productName = productsBySlug.get(offer.productSlug)!.name;
+    const key = `${offer.productSlug}|${url}`;
+    const mg = offer.vialSize / 1000;
+    const sizeLabel = offer.vialCount > 1 ? `${mg} mg × ${offer.vialCount}` : `${mg}mg`;
+    const entry = coaReportsByKey.get(key) ?? { productName, url, sizes: new Map() };
+    entry.sizes.set(sizeLabel, { vialSize: offer.vialSize, vialCount: offer.vialCount });
+    coaReportsByKey.set(key, entry);
+  }
+  const coaReports = [...coaReportsByKey.entries()]
+    .map(([key, entry]) => ({
+      key,
+      productName: entry.productName,
+      url: entry.url,
+      sizes: [...entry.sizes.entries()]
+        .sort(([, a], [, b]) => a.vialSize - b.vialSize || a.vialCount - b.vialCount)
+        .map(([label]) => label),
+    }))
+    .sort((a, b) => a.productName.localeCompare(b.productName));
 
   const logo = supplier.logoUrl ?? supplier.faviconUrl;
 
@@ -263,19 +281,20 @@ export default async function SupplierPage({
           className="mt-12"
         />
 
-        {/* About / Why researchers choose / vs other suppliers, editable per
-            vendor from the supplier's popup in /admin/seo. */}
-        <SupplierContentSections vendorName={supplier.name} content={supplierContent} className="mt-12" />
-
-        {/* Reviews appear only when this vendor has some; the unlock box always shows. */}
+        {/* Reviews appear only when this vendor has some; the COA box always shows. */}
         <SupplierTrustPanel
           supplierName={supplier.name}
           supplierSlug={supplier.slug}
           reviews={reviews}
           reviewsUrl={supplier.reviewsUrl}
           reviewRating={supplier.reviewRating}
-          labSummary={labSummary}
+          labName={supplier.coaLabName}
+          coaReports={coaReports}
         />
+
+        {/* About / Why researchers choose / vs other suppliers, editable per
+            vendor from the supplier's popup in /admin/seo. */}
+        <SupplierContentSections vendorName={supplier.name} content={supplierContent} className="mt-12" />
 
         {/* FAQs for this vendor, generated from their own record until a set is
             saved for this path in /admin/seo. */}
