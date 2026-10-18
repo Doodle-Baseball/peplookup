@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { FilterButton } from '@/components/product-card/filter-button';
 import { cn } from '@/lib/cn';
 
 /** Chips shown before the "+N more" toggle. Roughly two rows on a desktop width. */
@@ -17,17 +16,18 @@ function chipClass(isSelected: boolean) {
 /**
  * Supplier filter for the product page's price table. A popular compound is carried
  * by sixty-plus vendors, which buries the first price under a wall of chips, so the
- * list collapses to `COLLAPSED_COUNT` until expanded. Selecting a chip updates the
- * URL (filter state is URL-driven); expanding does not.
+ * list collapses to `COLLAPSED_COUNT` until expanded. Selecting a chip filters the
+ * listings in place without touching the URL.
  */
 export function SupplierChipsExpandable({
   suppliers,
   selectedSlug,
-  allHref,
+  onSelect,
 }: {
-  suppliers: { slug: string; name: string; href: string }[];
+  suppliers: { slug: string; name: string }[];
   selectedSlug: string | null;
-  allHref: string;
+  /** Null selects "All suppliers". */
+  onSelect: (slug: string | null) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
 
@@ -39,18 +39,24 @@ export function SupplierChipsExpandable({
 
   return (
     <div className="scrollbar-hide -mx-5 mt-3 flex gap-1.5 overflow-x-auto px-5 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
-      <FilterButton href={allHref} isSelected={!selectedSlug} className={chipClass(!selectedSlug)}>
+      <button
+        type="button"
+        aria-pressed={!selectedSlug}
+        onClick={() => onSelect(null)}
+        className={chipClass(!selectedSlug)}
+      >
         All suppliers
-      </FilterButton>
+      </button>
       {visible.map((supplier) => (
-        <FilterButton
+        <button
           key={supplier.slug}
-          href={supplier.href}
-          isSelected={selectedSlug === supplier.slug}
+          type="button"
+          aria-pressed={selectedSlug === supplier.slug}
+          onClick={() => onSelect(supplier.slug)}
           className={chipClass(selectedSlug === supplier.slug)}
         >
           {supplier.name}
-        </FilterButton>
+        </button>
       ))}
       {hiddenCount > 0 ? (
         <button type="button" onClick={() => setExpanded(true)} className={cn(chipClass(false), 'border-dashed')}>

@@ -1,36 +1,59 @@
 'use client';
 
-import { FilterButton } from '@/components/product-card/filter-button';
+import { useState } from 'react';
+import { cn } from '@/lib/cn';
+
+/** Sizes shown before the "+N more" chip. */
+const VISIBLE_DOSES = 8;
 
 /**
- * Dosage-chip row for the product page's "Select Dosage" card. Selecting a
- * chip still updates the URL (the page's form/dose state is URL-driven), but
- * "+N More" expands the full list in place, no navigation, matching the
- * homepage product card's dose-expansion behavior.
+ * Dosage-chip row for the product page's price comparison. Selecting a chip
+ * filters the listings in place without touching the URL, and "+N more"
+ * expands the full list, matching the homepage product card's dose expansion.
  */
 export function DoseChipsExpandable({
   doses,
   selectedKey,
+  onSelect,
 }: {
-  doses: { key: string; label: string; href: string }[];
+  doses: { key: string; label: string }[];
   selectedKey: string | null;
+  onSelect: (key: string) => void;
 }) {
+  // A selected size past the cut-off would be hidden, so the row opens expanded.
+  const selectedIndex = doses.findIndex((dose) => dose.key === selectedKey);
+  const [isExpanded, setIsExpanded] = useState(selectedIndex >= VISIBLE_DOSES);
+  const visibleDoses = isExpanded ? doses : doses.slice(0, VISIBLE_DOSES);
+  const hiddenCount = doses.length - visibleDoses.length;
+
   return (
     <div className="mt-2 flex flex-wrap gap-2">
-      {doses.map((dose) => (
-        <FilterButton
+      {visibleDoses.map((dose) => (
+        <button
           key={dose.key}
-          href={dose.href}
-          isSelected={selectedKey === dose.key}
-          className={`h-fit rounded-full border px-3.5 py-2 text-sm font-bold transition-all ${
+          type="button"
+          aria-pressed={selectedKey === dose.key}
+          onClick={() => onSelect(dose.key)}
+          className={cn(
+            'h-fit rounded-full border px-3.5 py-2 text-sm font-bold transition-all',
             selectedKey === dose.key
               ? 'border-content bg-content text-surface shadow-sm'
-              : 'border-line bg-surface text-content hover:border-brand hover:bg-brand hover:text-surface'
-          }`}
+              : 'border-line bg-surface text-content hover:border-brand hover:bg-brand hover:text-surface',
+          )}
         >
           {dose.label}
-        </FilterButton>
+        </button>
       ))}
+      {hiddenCount > 0 ? (
+        <button
+          type="button"
+          onClick={() => setIsExpanded(true)}
+          aria-label={`Show ${hiddenCount} more sizes`}
+          className="h-fit rounded-full border border-dashed border-brand bg-surface px-3.5 py-2 text-sm font-bold text-brand transition-all hover:border-solid hover:bg-brand hover:text-surface"
+        >
+          +{hiddenCount} more
+        </button>
+      ) : null}
     </div>
   );
 }
