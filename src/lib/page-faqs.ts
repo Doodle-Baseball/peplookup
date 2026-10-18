@@ -11,7 +11,8 @@ import {
   defaultSupplierFaqs,
   type FaqItem,
 } from '@/data/default-page-faqs';
-import { getGuideBySlug, getSupplier } from '@/lib/repository';
+import { getGuideBySlug, getSupplier, getVendorCount } from '@/lib/repository';
+import { fillVendorCountDeep } from '@/lib/vendor-count';
 import { supplierSlugFromCouponPath } from '@/lib/coupon-pages';
 import { ratingSourceLabel, supplierSlugFromReviewsPath } from '@/lib/review-pages';
 import { formatReviewCount } from '@/lib/format';
@@ -93,10 +94,9 @@ async function defaultFaqsFor(path: string): Promise<readonly FaqItem[]> {
  * back, so a page's questions can be removed entirely from the admin.
  */
 export async function getFaqsForPath(path: string): Promise<readonly FaqItem[]> {
-  const stored = await getStoredFaqs();
+  const [stored, vendorCount] = await Promise.all([getStoredFaqs(), getVendorCount()]);
   const saved = stored[path];
-  if (saved) return saved;
-  return defaultFaqsFor(path);
+  return fillVendorCountDeep(saved ?? (await defaultFaqsFor(path)), vendorCount);
 }
 
 /** Whether a path's questions come from the database rather than the built-in defaults. */

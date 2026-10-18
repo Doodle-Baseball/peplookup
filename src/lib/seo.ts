@@ -7,6 +7,7 @@ import { CATALOGUE_REVALIDATE_SECONDS } from '@/lib/cache-ttl';
 import { PRODUCT_OFFER_SCHEMA_ENABLED } from '@/config/features';
 import { ownedSchemaTypes } from '@/lib/structured-data/graph';
 import { stripOwnedJsonLd } from '@/lib/structured-data/pasted-json-ld';
+import { fillVendorCountDeep } from '@/lib/vendor-count';
 
 /** Revalidated by every save in /admin/seo. */
 export const SEO_CACHE_TAG = 'seo';
@@ -104,6 +105,7 @@ class SeoNetworkError extends Error {}
  * rather than failing the read outright.
  */
 let lastGoodSeoData: SeoData | null = null;
+let lastGoodVendorCount: number | null = null;
 
 function isNetworkFailure(message: string): boolean {
   return /fetch failed|network|ECONNRESET|ECONNREFUSED|ETIMEDOUT|ENOTFOUND|socket/i.test(message);
@@ -118,9 +120,14 @@ const getSeoDataCached = unstable_cache(
     const client = getSupabaseServerClient();
     if (!client) return { pages: [], redirects: [] };
 
-    const [pages, redirects] = await Promise.all([
+    // The supplier count fills `{vendorCount}` in admin-written titles and
+    // descriptions. It is counted here, with the same active-only filter as
+    // the directory, because middleware imports this module and must not pull
+    // in the repository.
+    const [pages, redirects, activeSuppliers] = await Promise.all([
       client.from('seo_pages').select('*'),
       client.from('seo_redirects').select('from_path, to_path, created_at'),
+      client.from('suppliers').select('slug', { count: 'exact', head: true }).eq('is_active', true),
     ]);
 
     // A dropped connection must not be cached as "no overrides": that would
@@ -129,7 +136,7 @@ const getSeoDataCached = unstable_cache(
     // unlike throwing, doesn't surface a request-level error for what is a
     // recoverable blip. Before any successful read there is nothing safe to
     // serve, so that case still throws and getSeoData() falls back below.
-    const networkFailure = [pages, redirects]
+    const networkFailure = [pages, redirects, activeSuppliers]
       .map((result) => result.error)
       .find((error) => error && isNetworkFailure(error.message));
     if (networkFailure) {
@@ -145,16 +152,24 @@ const getSeoDataCached = unstable_cache(
     // overrides" and says why in the server log.
     if (pages.error) console.warn('[seo] seo_pages could not be read:', pages.error.message);
     if (redirects.error) console.warn('[seo] seo_redirects could not be read:', redirects.error.message);
+    if (activeSuppliers.error) console.warn('[seo] supplier count could not be read:', activeSuppliers.error.message);
+
+    // Without a count, "across {vendorCount} suppliers" still reads naturally as "across all suppliers".
+    const vendorCount = activeSuppliers.count ?? lastGoodVendorCount ?? 'all';
+    if (activeSuppliers.count !== null) lastGoodVendorCount = activeSuppliers.count;
 
     const data: SeoData = {
-      pages: pages.error ? [] : ((pages.data ?? []) as SeoPageRow[]).map(rowToSeoOverride),
+      pages: pages.error
+        ? []
+        : ((pages.data ?? []) as SeoPageRow[]).map((row) => fillVendorCountDeep(rowToSeoOverride(row), vendorCount)),
       redirects: redirects.error ? [] : ((redirects.data ?? []) as SeoRedirectRow[]).map(rowToSeoRedirect),
     };
     lastGoodSeoData = data;
     return data;
   },
   ['seo-data'],
-  { revalidate: CATALOGUE_REVALIDATE_SECONDS, tags: [SEO_CACHE_TAG] },
+  // 'suppliers' is revalidated on every vendor save, so a filled-in count follows the directory straight away.
+  { revalidate: CATALOGUE_REVALIDATE_SECONDS, tags: [SEO_CACHE_TAG, 'suppliers'] },
 );
 
 /**

@@ -25,6 +25,7 @@ import { indexableWhenSeoAdded } from '@/lib/seo-indexing';
 import { cn } from '@/lib/cn';
 import { ChevronDownIcon, CloseIcon, WarningIcon } from '@/components/icons/icons';
 import { FaqEditor } from '@/components/admin/seo/faq-editor';
+import { OTHER_VENDOR_COUNT_TOKEN, VENDOR_COUNT_TOKEN } from '@/lib/vendor-count';
 import { SupplierContentEditor } from '@/components/admin/seo/supplier-content-editor';
 
 const INITIAL_STATE: SeoSaveState = { error: null, fieldErrors: {}, savedAt: null };
@@ -294,7 +295,10 @@ export function SeoEditDialog({ entry, onClose }: { entry: SeoEntry; onClose: ()
               </Section>
             ) : null}
 
-            <Section title="Search appearance" description="Leave a field blank to keep the page's default.">
+            <Section
+              title="Search appearance"
+              description={`Leave a field blank to keep the page's default. Type ${VENDOR_COUNT_TOKEN} anywhere (titles, descriptions, headings, FAQs, page text) to show the live supplier count, or ${OTHER_VENDOR_COUNT_TOKEN} for that count minus one ("vs. 89 other suppliers").`}
+            >
               <div>
                 <div className="flex items-center justify-between gap-3">
                   <label htmlFor="seo-title" className="text-sm font-semibold text-content">

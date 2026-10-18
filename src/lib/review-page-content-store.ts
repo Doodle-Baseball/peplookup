@@ -11,6 +11,8 @@ import {
 import { ratingSourceLabel } from '@/lib/review-pages';
 import type { Supplier } from '@/lib/schema';
 import { CATALOGUE_REVALIDATE_SECONDS } from '@/lib/cache-ttl';
+import { getVendorCount } from '@/lib/repository';
+import { fillVendorCountDeep } from '@/lib/vendor-count';
 
 export const REVIEW_CONTENT_CACHE_TAG = 'review-page-content';
 
@@ -35,9 +37,12 @@ const getSavedReviewPageContent = unstable_cache(
 export async function getReviewPageContent(
   supplier: Pick<Supplier, 'slug' | 'name' | 'description' | 'reviewsUrl'>,
 ): Promise<ReviewPageContent> {
-  const saved = await getSavedReviewPageContent();
-  return resolveReviewPageContent(
-    defaultReviewPageContent(supplier, ratingSourceLabel(supplier.reviewsUrl)),
-    saved[supplier.slug] ?? null,
+  const [saved, vendorCount] = await Promise.all([getSavedReviewPageContent(), getVendorCount()]);
+  return fillVendorCountDeep(
+    resolveReviewPageContent(
+      defaultReviewPageContent(supplier, ratingSourceLabel(supplier.reviewsUrl)),
+      saved[supplier.slug] ?? null,
+    ),
+    vendorCount,
   );
 }

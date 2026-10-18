@@ -131,6 +131,15 @@ export const getSuppliers = cache(async (): Promise<readonly Supplier[]> => {
   return readOr(getSuppliersCached, seedSuppliers);
 });
 
+/**
+ * The one supplier count the whole site quotes: every listed vendor in the
+ * directory. Hero stats, the highlights bar and `{vendorCount}` in admin text
+ * all read it, so no two places can disagree.
+ */
+export async function getVendorCount(): Promise<number> {
+  return (await getSuppliers()).length;
+}
+
 export const getSupplier = cache(async (slug: string): Promise<Supplier | null> => {
   // A vendor in the (already cached) directory list needs no query of its own;
   // before this, every supplier page view read its row from Supabase again.

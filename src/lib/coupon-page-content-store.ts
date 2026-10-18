@@ -10,6 +10,8 @@ import {
 } from '@/lib/coupon-page-content';
 import type { Supplier } from '@/lib/schema';
 import { CATALOGUE_REVALIDATE_SECONDS } from '@/lib/cache-ttl';
+import { getVendorCount } from '@/lib/repository';
+import { fillVendorCountDeep } from '@/lib/vendor-count';
 
 export const COUPON_CONTENT_CACHE_TAG = 'coupon-page-content';
 
@@ -35,6 +37,9 @@ export async function getCouponPageContent(
   supplier: Pick<Supplier, 'slug' | 'name' | 'description' | 'shippingCost'>,
   coupon: NonNullable<Supplier['coupon']>,
 ): Promise<CouponPageContent> {
-  const saved = await getSavedCouponPageContent();
-  return resolveCouponPageContent(defaultCouponPageContent(supplier, coupon), saved[supplier.slug] ?? null);
+  const [saved, vendorCount] = await Promise.all([getSavedCouponPageContent(), getVendorCount()]);
+  return fillVendorCountDeep(
+    resolveCouponPageContent(defaultCouponPageContent(supplier, coupon), saved[supplier.slug] ?? null),
+    vendorCount,
+  );
 }

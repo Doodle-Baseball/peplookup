@@ -29,7 +29,8 @@ export function highlightItems(
   const couponCount = suppliers.filter((supplier) => supplier.coupon !== null).length;
 
   return [
-    countLabel(supplierCount, 'supplier', 'suppliers'),
+    // Exact, never rounded to "80+": every other page quotes the precise supplier count.
+    supplierCount > 0 ? `${supplierCount.toLocaleString('en-US')} ${supplierCount === 1 ? 'supplier' : 'suppliers'}` : null,
     countLabel(compoundCount, 'compound', 'compounds'),
     countLabel(coaCount, 'supplier COA', 'supplier COAs'),
     'Price per mg comparison',

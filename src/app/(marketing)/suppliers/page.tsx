@@ -147,7 +147,7 @@ export default async function SuppliersPage({
             )}
           </h1>
           <p className="animate-fade-up animate-delay-200 mx-auto mt-5 max-w-2xl text-base leading-7 text-muted sm:text-lg">
-            Compare 87+ research peptide suppliers by price per mg, COA links, shipping, payment options and coupon
+            Compare {suppliers.length.toLocaleString('en-US')} research peptide suppliers by price per mg, COA links, shipping, payment options and coupon
             codes in one directory.
           </p>
 
@@ -288,7 +288,7 @@ export default async function SuppliersPage({
         )}
       </section>
 
-      <SupplierEvaluationGuide />
+      <SupplierEvaluationGuide vendorCount={suppliers.length} />
 
       <section className="mx-auto max-w-shell px-4 pb-12">
         <PageFaqSection path="/suppliers" />

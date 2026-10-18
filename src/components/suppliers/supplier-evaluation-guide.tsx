@@ -8,7 +8,7 @@ import { ShieldCheckIcon } from '@/components/icons/icons';
  * treatment): heading on the left from `lg` up, stacked above the text on
  * smaller screens.
  */
-export function SupplierEvaluationGuide() {
+export function SupplierEvaluationGuide({ vendorCount }: { vendorCount: number }) {
   return (
     <section id="supplier-evaluation-guide" className="mx-auto max-w-shell scroll-mt-24 px-4 pb-8">
       <div className="rounded-panel border border-line bg-surface-raised p-5 shadow-card sm:p-8">
@@ -33,7 +33,7 @@ export function SupplierEvaluationGuide() {
                 <ShieldCheckIcon className="h-5 w-5" />
               </span>
               <p className="min-w-0 text-sm leading-7 text-content sm:text-base">
-                PepLookup tracks 80+ suppliers this way: prices normalized to cost per mg and updated as listings
+                PepLookup tracks {vendorCount.toLocaleString('en-US')} suppliers this way: prices normalized to cost per mg and updated as listings
                 change. Being listed is not an endorsement. Some Visit Site links are affiliate links, which
                 doesn&rsquo;t change prices or the order of the list.
               </p>
