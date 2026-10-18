@@ -10,26 +10,17 @@ import {
   getSuppliers,
   toListing,
 } from '@/lib/repository';
-import {
-  effectivePrice,
-  hasDiscount,
-  pricePerMg,
-  discountPercent,
-  rankByPricePerMg,
-  couponAdjustedPrice,
-  pricePerMgFor,
-} from '@/lib/price';
-import { formatMoney, formatPerMg } from '@/lib/money';
+import { effectivePrice, hasDiscount, rankByPricePerMg, couponAdjustedPrice } from '@/lib/price';
+import { formatPerMg } from '@/lib/money';
 import { formatDateTime, timeAgo, isStale } from '@/lib/format';
 import { cn } from '@/lib/cn';
 import { ShareButton } from '@/components/ui/share-button';
-import { SupplierLogo } from '@/components/ui/supplier-logo';
 import { FavoriteButton } from '@/components/supplier-card/favorite-button';
-import { DoseChipsExpandable } from '@/components/product-card/dose-chips-expandable';
-import { SupplierChipsExpandable } from '@/components/product-card/supplier-chips-expandable';
-import { ListingsLoadMore } from '@/components/product-card/listings-load-more';
 import { JumpToNav } from '@/components/product-card/jump-to-nav';
-import { FilterButton } from '@/components/product-card/filter-button';
+import {
+  ProductListingsPanel,
+  type ListingSupplier,
+} from '@/components/product-card/product-listings-panel';
 import { site } from '@/config/site';
 import { compoundImageSrc } from '@/config/compound-images';
 import { compoundSeoDefaults, pageMetadata } from '@/lib/seo-defaults';
@@ -37,58 +28,12 @@ import { getSeoOverride, withSeo } from '@/lib/seo';
 import { PageSeo } from '@/components/seo/page-seo';
 import { PRODUCT_OFFER_SCHEMA_ENABLED } from '@/config/features';
 import { summarizeOffers } from '@/lib/structured-data/product-offers';
-import type { Offer, Supplier, ProductForm } from '@/lib/schema';
-import {
-  ArrowLeftIcon,
-  ChevronDownIcon,
-  ExternalIcon,
-  FlaskIcon,
-  TagIcon,
-} from '@/components/icons/icons';
+import type { Offer } from '@/lib/schema';
+import { ArrowLeftIcon, ChevronDownIcon, ExternalIcon } from '@/components/icons/icons';
 import { splitCategories } from '@/lib/categories';
-
-const FORM_LABELS: Record<ProductForm, string> = {
-  vial: 'Vial',
-  capsule: 'Capsule',
-  spray: 'Spray',
-  kit: 'Kit',
-  pen: 'Pen',
-  serum: 'Serum',
-};
-
-const DISPLAY_FORMS: ProductForm[] = ['vial', 'capsule', 'spray'];
-/** Forms few compounds are sold in; their tabs only show when this compound has such listings. */
-const OCCASIONAL_FORMS: ProductForm[] = ['pen', 'serum'];
-const DOSAGE_OPTIONS: Record<ProductForm, string[]> = {
-  vial: ['2 mg', '5 mg', '6 mg', '10 mg', '15 mg', '20 mg', '30 mg', '40 mg', '50 mg', '100 mg'],
-  capsule: ['250 mcg', '500 mcg', '1 mg', '2 mg', '2.5 mg', '5 mg', '10 mg', '20 mg', '30 mg', '50 mg'],
-  spray: ['1 mg', '2 mg', '5 mg', '10 mg', '15 mg', '20 mg', '30 mg', '50 mg', '15 mL', '30 mL'],
-  kit: [],
-  pen: [],
-  serum: [],
-};
 
 /** Shared by the card and panel shells so every section on the page reads as one system. */
 const PANEL_CLASS = 'rounded-panel border border-line bg-surface-raised shadow-card';
-/** Segmented-control track; items inside use segmentClass(). */
-const SEGMENT_TRACK_CLASS = 'grid gap-1 rounded-pill border border-line bg-surface p-1';
-/**
- * Column count for the Form track. It has to match the number of tabs exactly: the track is
- * pill-shaped, so a tab wrapping onto a second row leaves an orphan and breaks the pill.
- * Tailwind only emits classes it can see, hence the lookup rather than a template string.
- * Three base forms always show, plus pen/serum when this compound has listings in them.
- */
-const SEGMENT_COLS_CLASS: Record<number, string> = {
-  1: 'grid-cols-1',
-  2: 'grid-cols-2',
-  3: 'grid-cols-3',
-  4: 'grid-cols-4',
-  5: 'grid-cols-5',
-};
-/** The Tests tab header row and each report row share these columns from md up. */
-const REPORT_GRID_CLASS = 'md:grid md:grid-cols-[1.4fr_1fr_0.9fr_auto] md:items-center md:gap-3';
-/** Vendor listings shown before the "Load more" button. */
-const LISTINGS_PER_PAGE = 20;
 
 export async function generateStaticParams() {
   const products = await getProducts();
@@ -115,33 +60,6 @@ type SearchParams = {
   view?: string;
   tab?: string;
 };
-
-/** Builds a link to this page preserving every current filter except the ones overridden. */
-function filterHref(slug: string, current: SearchParams, patch: Partial<SearchParams>) {
-  const next = { ...current, ...patch };
-  const params = new URLSearchParams();
-  for (const [key, value] of Object.entries(next)) {
-    if (value) params.set(key, value);
-  }
-  const qs = params.toString();
-  return `/products/${slug}${qs ? `?${qs}` : ''}`;
-}
-
-/**
- * One offer per supplier, form, pack size and pack count, used for React keys
- * and "lowest" matching. Form is part of it because a vendor can sell a vial
- * and a spray of the same compound and size.
- */
-function offerKey(offer: { supplierSlug: string; form: ProductForm; vialSize: number; vialCount: number }) {
-  return `${offer.supplierSlug}-${offer.form}-${offer.vialSize}-${offer.vialCount}`;
-}
-
-function segmentClass(isSelected: boolean) {
-  return cn(
-    'inline-flex items-center justify-center gap-1.5 rounded-pill px-3 py-2 text-sm font-bold transition-colors sm:px-4',
-    isSelected ? 'bg-brand text-surface shadow-sm' : 'text-muted hover:text-content',
-  );
-}
 
 /** Admin-written section titles get the same last-word accent as the built-in headings. */
 function accentLastWord(title: string): ReactNode {
@@ -203,74 +121,11 @@ export default async function ProductPage({
   const bestOverall = lowestPerMg(resolvedOffers);
   const bestOverallSupplier = bestOverall ? suppliersBySlug.get(bestOverall.listing.supplierSlug) : undefined;
 
-  // --- Form tabs (always show Vial / Capsule / Spray, even when a form has no live offers yet) ---
-  const formCounts = new Map<ProductForm, number>();
-  for (const o of resolvedOffers) formCounts.set(o.form, (formCounts.get(o.form) ?? 0) + 1);
-  // Few compounds are sold as pens or serums, so always-on tabs for them would be empty on most pages.
-  const availableForms: ProductForm[] = [...DISPLAY_FORMS, ...OCCASIONAL_FORMS.filter((form) => formCounts.has(form))];
-  const selectedForm: ProductForm | null =
-    (sp.form as ProductForm | undefined) && availableForms.includes(sp.form as ProductForm)
-      ? (sp.form as ProductForm)
-      : (availableForms[0] ?? null);
-  const offersForForm = selectedForm ? resolvedOffers.filter((o) => o.form === selectedForm) : [];
-
-  // --- Dosage chips for the selected form, grouped by vial size × count ---
-  const doseMap = new Map<string, { vialSize: number; vialCount: number; label: string }>();
-  for (const o of offersForForm) {
-    const key = `${o.vialSize}-${o.vialCount}`;
-    if (doseMap.has(key)) continue;
-    const mg = o.vialSize / 1000;
-    const label = o.vialCount > 1 ? `${mg} mg · ${o.vialCount} vials` : `${mg}mg`;
-    doseMap.set(key, { vialSize: o.vialSize, vialCount: o.vialCount, label });
-  }
-
-  const fallbackDoseMap = new Map<string, { vialSize: number; vialCount: number; label: string }>();
-  const fallbackLabels = DOSAGE_OPTIONS[selectedForm ?? 'vial'] ?? [];
-  for (const label of fallbackLabels) {
-    fallbackDoseMap.set(label, { vialSize: 0, vialCount: 1, label });
-  }
-
-  const doseOptions = doseMap.size > 0 ? [...doseMap.entries()].sort((a, b) => a[1].vialSize - b[1].vialSize) : [...fallbackDoseMap.entries()];
-  const selectedDoseKey = sp.dose && doseMap.has(sp.dose)
-    ? sp.dose
-    : sp.dose && fallbackDoseMap.has(sp.dose)
-      ? sp.dose
-      : null;
-  const selectedDoseLabel = selectedDoseKey
-    ? (doseMap.get(selectedDoseKey) ?? fallbackDoseMap.get(selectedDoseKey))?.label
-    : undefined;
-
-  const offersForDose = selectedDoseKey
-    ? offersForForm.filter((o) => `${o.vialSize}-${o.vialCount}` === selectedDoseKey)
-    : offersForForm;
-
-  // --- Prices tab: stock filter, supplier filter, sort ---
-  const stockFilter = sp.stock === 'in' ? 'in' : 'all';
-  const supplierFilter = sp.supplier ?? '';
-  const sort = sp.sort === 'price-desc' ? 'price-desc' : 'price-asc';
-  const view = sp.view === 'permg' ? 'permg' : 'total';
-  const tab = sp.tab === 'tests' || sp.tab === 'history' ? sp.tab : 'prices';
-
-  let priceRows = offersForDose
-    .filter((o) => (stockFilter === 'in' ? o.inStock : true))
-    .filter((o) => (supplierFilter ? o.supplierSlug === supplierFilter : true));
-
-  priceRows = priceRows.sort((a, b) => {
-    const priceA = effectivePrice(toListing(a));
-    const priceB = effectivePrice(toListing(b));
-    // Out-of-stock rows sort after in-stock ones regardless of direction.
-    if (a.inStock !== b.inStock) return a.inStock ? -1 : 1;
-    return sort === 'price-asc' ? priceA - priceB : priceB - priceA;
+  // Only what a listing row shows goes to the client-side filters, not whole supplier records.
+  const listingSuppliers: ListingSupplier[] = [...new Set(resolvedOffers.map((o) => o.supplierSlug))].map((slug) => {
+    const { name, logoUrl, faviconUrl, coupon } = suppliersBySlug.get(slug)!;
+    return { slug, name, logoUrl, faviconUrl, coupon };
   });
-
-  // Only worth flagging when there is something to beat.
-  const bestRow = priceRows.length > 1 ? lowestPerMg(priceRows) : null;
-  // Price rows are all of the selected form, so the best row shares it.
-  const bestRowKey = bestRow && selectedForm ? offerKey({ ...bestRow.listing, form: selectedForm }) : null;
-
-  const supplierOptions = [...new Set(offersForDose.map((o) => o.supplierSlug))]
-    .map((s) => suppliersBySlug.get(s)!)
-    .sort((a, b) => a.name.localeCompare(b.name));
 
   // The price each listing shows in its row below: a coupon only fills in
   // when there's no already-recorded sale price.
@@ -430,194 +285,13 @@ export default async function ProductPage({
       </header>
 
       {/* ------------------------------------------------------ Price compare */}
-      <section
-        id="vendor-listings"
-        aria-labelledby="vendor-listings-heading"
+      <ProductListingsPanel
+        productName={product.name}
+        offers={resolvedOffers}
+        suppliers={listingSuppliers}
+        initialFilters={sp}
         className={cn(PANEL_CLASS, 'mt-6 scroll-mt-24 overflow-hidden')}
-      >
-        <div className="p-5 sm:p-8">
-          <p className="eyebrow">Supplier listings</p>
-          <h2 id="vendor-listings-heading" className="mt-3 text-3xl font-black text-content sm:text-4xl">
-            Compare <span className="text-accent">{product.name}</span> prices.
-          </h2>
-
-          {hasOffers ? (
-            <>
-              <div className="mt-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-                <div>
-                  <p className="eyebrow">Form</p>
-                  <div
-                    className={cn(
-                      SEGMENT_TRACK_CLASS,
-                      'mt-2 sm:inline-grid',
-                      SEGMENT_COLS_CLASS[availableForms.length] ?? 'grid-cols-3',
-                    )}
-                  >
-                    {availableForms.map((form) => {
-                      const isSelected = selectedForm === form;
-                      return (
-                        <FilterButton
-                          key={form}
-                          href={filterHref(product.slug, sp, { form, dose: undefined })}
-                          isSelected={isSelected}
-                          className={segmentClass(isSelected)}
-                        >
-                          {FORM_LABELS[form]}
-                          <span
-                            className={cn(
-                              'rounded-pill px-1.5 text-micro font-black',
-                              isSelected ? 'bg-surface/20 text-surface' : 'bg-surface-sunken text-muted',
-                            )}
-                          >
-                            {formCounts.get(form) ?? 0}
-                          </span>
-                        </FilterButton>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div>
-                  <p className="eyebrow">Show prices as</p>
-                  <div className={cn(SEGMENT_TRACK_CLASS, 'mt-2 grid-cols-2 sm:inline-grid')}>
-                    <FilterButton
-                      href={filterHref(product.slug, sp, { view: undefined })}
-                      isSelected={view === 'total'}
-                      className={segmentClass(view === 'total')}
-                    >
-                      Total price
-                    </FilterButton>
-                    <FilterButton
-                      href={filterHref(product.slug, sp, { view: 'permg' })}
-                      isSelected={view === 'permg'}
-                      className={segmentClass(view === 'permg')}
-                    >
-                      Cost per mg
-                    </FilterButton>
-                  </div>
-                </div>
-              </div>
-
-              {doseOptions.length > 0 ? (
-                <div className="mt-5">
-                  <p className="eyebrow">Size</p>
-                  <DoseChipsExpandable
-                    doses={doseOptions.map(([key, dose]) => ({
-                      key,
-                      label: dose.label,
-                      href: filterHref(product.slug, sp, { dose: key }),
-                    }))}
-                    selectedKey={selectedDoseKey}
-                  />
-                </div>
-              ) : null}
-            </>
-          ) : (
-            <p className="mt-6 rounded-card border border-dashed border-line bg-surface p-8 text-center text-sm text-muted sm:p-10">
-              No supplier prices recorded for {product.name} yet. Listings appear here once the crawler
-              reads them from a live supplier page.
-            </p>
-          )}
-        </div>
-
-        {hasOffers ? (
-          <div className="border-t border-line">
-            <div className="flex gap-6 border-b border-line px-5 sm:px-8">
-              <TabButton
-                href={filterHref(product.slug, sp, { tab: undefined })}
-                isActive={tab === 'prices'}
-                icon={<TagIcon className="h-4 w-4" />}
-              >
-                Prices
-              </TabButton>
-              <TabButton
-                href={filterHref(product.slug, sp, { tab: 'tests' })}
-                isActive={tab === 'tests'}
-                icon={<FlaskIcon className="h-4 w-4" />}
-              >
-                Lab tests
-                <span className="rounded-pill bg-surface-sunken px-1.5 text-micro font-black text-muted">
-                  {offersWithReports.length}
-                </span>
-              </TabButton>
-            </div>
-
-            <div className="p-5 sm:p-8">
-              {tab === 'tests' ? (
-                <TestsPanel productName={product.name} offers={offersWithReports} suppliersBySlug={suppliersBySlug} />
-              ) : (
-                <>
-                  <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                    <p className="text-sm text-muted">
-                      <span className="font-bold text-content">{priceRows.length}</span>{' '}
-                      {priceRows.length === 1 ? 'listing' : 'listings'} · {product.name}
-                      {selectedDoseLabel ? ` · ${selectedDoseLabel}` : ''}
-                    </p>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <div className={cn(SEGMENT_TRACK_CLASS, 'grid-cols-2')}>
-                        <FilterButton
-                          href={filterHref(product.slug, sp, { stock: undefined })}
-                          isSelected={stockFilter === 'all'}
-                          className={cn(segmentClass(stockFilter === 'all'), 'py-1.5 text-xs')}
-                        >
-                          All
-                        </FilterButton>
-                        <FilterButton
-                          href={filterHref(product.slug, sp, { stock: 'in' })}
-                          isSelected={stockFilter === 'in'}
-                          className={cn(segmentClass(stockFilter === 'in'), 'py-1.5 text-xs')}
-                        >
-                          In stock
-                        </FilterButton>
-                      </div>
-                      <FilterButton
-                        href={filterHref(product.slug, sp, {
-                          sort: sort === 'price-asc' ? 'price-desc' : undefined,
-                        })}
-                        className="rounded-pill border border-line bg-surface px-3.5 py-2 text-xs font-bold text-content transition-colors hover:border-brand"
-                      >
-                        Price: {sort === 'price-asc' ? 'Low to High' : 'High to Low'}
-                      </FilterButton>
-                    </div>
-                  </div>
-
-                  {supplierOptions.length > 1 ? (
-                    // Scrolls sideways on phones instead of wrapping into a
-                    // wall of chips above the first price.
-                    <SupplierChipsExpandable
-                      suppliers={supplierOptions.map((s) => ({
-                        slug: s.slug,
-                        name: s.name,
-                        href: filterHref(product.slug, sp, { supplier: s.slug }),
-                      }))}
-                      selectedSlug={supplierFilter ?? null}
-                      allHref={filterHref(product.slug, sp, { supplier: undefined })}
-                    />
-                  ) : null}
-
-                  {priceRows.length === 0 ? (
-                    <p className="mt-6 rounded-card border border-dashed border-line p-8 text-center text-sm text-muted">
-                      No offers match these filters.
-                    </p>
-                  ) : (
-                    <ListingsLoadMore initialCount={LISTINGS_PER_PAGE}>
-                      {priceRows.map((offer) => (
-                        <PriceRow
-                          key={offerKey(offer)}
-                          offer={offer}
-                          supplier={suppliersBySlug.get(offer.supplierSlug)!}
-                          view={view}
-                          isLowestPerMg={offerKey(offer) === bestRowKey}
-                        />
-                      ))}
-                    </ListingsLoadMore>
-                  )}
-                </>
-              )}
-            </div>
-          </div>
-        ) : null}
-      </section>
+      />
 
       {/* ------------------------------------------------------ Research content */}
       <ContentSection
@@ -852,270 +526,5 @@ function ContentSection({
 function EmptyNote({ children }: { children: ReactNode }) {
   return (
     <p className="mt-6 rounded-card border border-dashed border-line p-6 text-center text-sm text-muted">{children}</p>
-  );
-}
-
-function TabButton({
-  href,
-  isActive,
-  icon,
-  children,
-}: {
-  href: string;
-  isActive: boolean;
-  icon: ReactNode;
-  children: ReactNode;
-}) {
-  return (
-    <FilterButton
-      href={href}
-      isSelected={isActive}
-      className={cn(
-        '-mb-px flex items-center gap-1.5 border-b-2 py-4 text-sm font-bold transition-colors',
-        isActive ? 'border-brand text-content' : 'border-transparent text-muted hover:text-content',
-      )}
-    >
-      {icon}
-      {children}
-    </FilterButton>
-  );
-}
-
-function PriceRow({
-  offer,
-  supplier,
-  view,
-  isLowestPerMg,
-}: {
-  offer: Offer;
-  supplier: Supplier;
-  view: 'total' | 'permg';
-  isLowestPerMg: boolean;
-}) {
-  const listing = toListing(offer);
-  const observedPrice = effectivePrice(listing);
-  const observedDiscount = hasDiscount(listing);
-  // A coupon only steps in when there's no already-recorded sale price: a
-  // scraped price is a fact, a coupon is a rule, and the fact wins.
-  const couponPercentOff = !observedDiscount ? (supplier.coupon?.percentOff ?? null) : null;
-  const price = couponPercentOff !== null ? couponAdjustedPrice(observedPrice, couponPercentOff) : observedPrice;
-  const totalText = formatMoney(price, listing.currency);
-  const perMg = couponPercentOff !== null ? pricePerMgFor(price, listing) : pricePerMg(listing);
-  const perMgText = perMg !== null ? formatPerMg(perMg, listing.currency) : null;
-  const discounted = observedDiscount || couponPercentOff !== null;
-  const percentOff = discountPercent(listing) ?? couponPercentOff;
-  const stale = isStale(offer.scrapedAt);
-  const mg = offer.vialSize / 1000;
-  const sizeText = offer.vialCount > 1 ? `${mg} mg · ${offer.vialCount} vials` : `${mg}mg`;
-
-  return (
-    <li
-      className={cn(
-        'flex flex-wrap items-center gap-3 rounded-card border p-3 sm:flex-nowrap sm:gap-4 sm:p-4',
-        isLowestPerMg ? 'border-accent/40 bg-accent-tint' : 'border-line bg-surface',
-      )}
-    >
-      <div className="flex min-w-0 flex-1 basis-full items-center gap-3 sm:basis-auto">
-        <SupplierLogo
-          src={supplier.logoUrl ?? supplier.faviconUrl}
-          name={supplier.name}
-          size={44}
-          className="h-10 w-10 rounded-chip sm:h-11 sm:w-11"
-        />
-
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-            <Link
-              href={`/suppliers/${supplier.slug}`}
-              className="truncate font-bold text-content transition-colors hover:text-accent"
-            >
-              {supplier.name}
-            </Link>
-            {isLowestPerMg ? (
-              <span className="rounded-pill bg-accent px-2 py-0.5 text-micro font-bold uppercase text-surface">
-                Lowest $/mg
-              </span>
-            ) : null}
-          </div>
-          <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-xs text-muted">
-            <span className={cn('inline-flex items-center gap-1 font-semibold', offer.inStock ? 'text-ok' : 'text-danger')}>
-              <span
-                aria-hidden="true"
-                className={cn('h-1.5 w-1.5 rounded-pill', offer.inStock ? 'bg-ok' : 'bg-danger')}
-              />
-              {offer.inStock ? 'In stock' : 'Out of stock'}
-            </span>
-            <span aria-hidden="true">·</span>
-            <span>{sizeText}</span>
-            <span aria-hidden="true">·</span>
-            <span className={cn(stale && 'font-semibold text-warn')}>seen {timeAgo(offer.scrapedAt)}</span>
-          </p>
-        </div>
-      </div>
-
-      {/* On phones the price drops to its own row, so the vendor name keeps
-          the full width instead of truncating to a few letters. */}
-      <div className="flex w-full items-center justify-between gap-3 border-t border-line pt-3 sm:w-auto sm:justify-end sm:border-0 sm:pt-0">
-        <div className="sm:text-right">
-          <p className="text-lg font-black text-content">
-            {view === 'permg' ? (perMgText ?? 'N/A') : totalText}
-          </p>
-          <p className="text-xs text-muted">
-            {discounted && view === 'total' ? (
-              <span className="mr-1 text-faint line-through">{formatMoney(listing.listPrice, listing.currency)}</span>
-            ) : null}
-            {view === 'permg' ? totalText : (perMgText ?? 'per mg n/a')}
-            {percentOff !== null ? <span className="ml-1.5 font-bold text-promo">-{percentOff}%</span> : null}
-          </p>
-          {/* Price above already has the coupon applied, so this tells the buyer which code earns it. */}
-          {couponPercentOff !== null && supplier.coupon ? (
-            <span className="mt-1 inline-block rounded-chip border border-coupon/50 bg-coupon-tint px-1.5 py-0.5 text-micro font-bold uppercase text-coupon-ink">
-              {supplier.coupon.code}
-            </span>
-          ) : null}
-        </div>
-
-        <a
-          href={`/go?to=${encodeURIComponent(offer.productUrl)}`}
-          target="_blank"
-          rel="nofollow sponsored noopener"
-          aria-label={`View offer from ${supplier.name}`}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-chip bg-brand text-surface transition-transform hover:-translate-y-0.5 active:translate-y-0"
-        >
-          <ExternalIcon className="h-4 w-4" />
-        </a>
-      </div>
-    </li>
-  );
-}
-
-/**
- * COA/verification listing for the product's Tests tab. Receives only offers
- * that carry a real report link, one row per brand's own COA for its own
- * listing, never a generic or borrowed link.
- */
-function TestsPanel({
-  productName,
-  offers,
-  suppliersBySlug,
-}: {
-  productName: string;
-  offers: readonly Offer[];
-  suppliersBySlug: Map<string, Supplier>;
-}) {
-  if (offers.length === 0) {
-    return (
-      <p className="rounded-card border border-dashed border-line p-8 text-center text-sm text-muted">
-        No COA-verified listings recorded for {productName} yet.
-      </p>
-    );
-  }
-
-  return (
-    <div>
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h3 className="text-xl font-black text-content">{productName} verification</h3>
-          <p className="mt-1 text-sm text-muted">Independent third-party laboratory analysis for quality assurance.</p>
-        </div>
-        <span className="inline-flex w-fit items-center gap-2 rounded-card border border-ok/30 bg-ok/5 px-4 py-2">
-          <FlaskIcon className="h-5 w-5 shrink-0 text-ok" />
-          <span className="leading-tight">
-            <span className="block text-micro font-bold uppercase tracking-wide text-ok">Tracked tests</span>
-            <span className="block text-sm font-black text-content">
-              {offers.length} {offers.length === 1 ? 'Report' : 'Reports'}
-            </span>
-          </span>
-        </span>
-      </div>
-
-      {/* Column labels only where the rows are actually laid out as columns. */}
-      <div
-        aria-hidden="true"
-        className={cn(
-          'mt-6 hidden rounded-pill bg-surface-sunken px-5 py-2 text-xs font-bold uppercase tracking-wide text-muted',
-          REPORT_GRID_CLASS,
-        )}
-      >
-        <span>Supplier</span>
-        <span>Product</span>
-        <span>Dosage</span>
-        <span className="text-right">Report</span>
-      </div>
-
-      <ul className="mt-4 space-y-2.5 md:mt-2">
-        {offers.map((offer) => {
-          const report = offer.labReport;
-          const supplier = suppliersBySlug.get(offer.supplierSlug)!;
-          const mg = offer.vialSize / 1000;
-          const dosageLabel = offer.vialCount > 1 ? `${mg} mg · ${offer.vialCount} vials` : `${mg}mg`;
-
-          return (
-            <li key={offerKey(offer)} className="rounded-card border border-line bg-surface p-4 md:px-5 md:py-3">
-              <div className={cn('flex flex-col gap-3', REPORT_GRID_CLASS)}>
-                <div className="flex min-w-0 items-center gap-2.5">
-                  <SupplierLogo
-                    src={supplier.logoUrl ?? supplier.faviconUrl}
-                    name={supplier.name}
-                    size={32}
-                    className="h-8 w-8 rounded-chip"
-                    initialClassName="text-xs"
-                  />
-                  <Link
-                    href={`/suppliers/${supplier.slug}`}
-                    className="truncate font-bold text-content transition-colors hover:text-accent"
-                  >
-                    {supplier.name}
-                  </Link>
-                </div>
-                <p className="flex items-center justify-between gap-3 text-sm md:block">
-                  <span className="text-micro font-bold uppercase text-faint md:hidden">Product</span>
-                  <span className="truncate font-bold text-content">{productName}</span>
-                </p>
-                <p className="flex items-center justify-between gap-3 text-sm md:block">
-                  <span className="text-micro font-bold uppercase text-faint md:hidden">Dosage</span>
-                  <span className="text-content">{dosageLabel}</span>
-                </p>
-                <a
-                  href={(report?.reportUrl ?? report?.labUrl ?? offer.coaUrl)!}
-                  target="_blank"
-                  rel="nofollow noopener"
-                  className="inline-flex items-center justify-center gap-1.5 rounded-pill border border-ok/40 bg-ok/10 px-3.5 py-2 text-xs font-black uppercase tracking-wide text-ok transition-colors hover:bg-ok hover:text-surface md:justify-self-end md:py-1.5"
-                >
-                  View Report
-                  <ExternalIcon className="h-3 w-3" />
-                </a>
-              </div>
-
-              <div className="mt-3 flex flex-wrap items-center gap-1.5">
-                {report ? (
-                  <>
-                    <span className="text-micro text-faint">
-                      {report.labName} · Grade {report.grade.toUpperCase()} · {report.score.toFixed(1)}/10
-                    </span>
-                    {Object.entries(report.results).map(([test, result]) => (
-                      <span
-                        key={test}
-                        className={cn(
-                          'rounded-chip px-2 py-1 text-micro font-bold uppercase',
-                          result === 'pass' ? 'bg-ok/10 text-ok' : 'bg-danger/10 text-danger',
-                        )}
-                      >
-                        {test}: {result}
-                      </span>
-                    ))}
-                    {report.testedAt ? (
-                      <span className="text-micro text-faint">Tested {timeAgo(report.testedAt)}</span>
-                    ) : null}
-                  </>
-                ) : (
-                  <span className="text-micro text-faint">Certificate on file, not yet graded.</span>
-                )}
-              </div>
-            </li>
-          );
-        })}
-      </ul>
-    </div>
   );
 }

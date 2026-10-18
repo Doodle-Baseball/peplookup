@@ -10,7 +10,8 @@ import {
   type SupplierContentOverride,
 } from '@/lib/supplier-content';
 import type { Offer, Supplier } from '@/lib/schema';
-import { getAllOffers, getSupplier } from '@/lib/repository';
+import { getAllOffers, getSupplier, getVendorCount } from '@/lib/repository';
+import { fillVendorCountDeep } from '@/lib/vendor-count';
 import { CATALOGUE_REVALIDATE_SECONDS } from '@/lib/cache-ttl';
 
 export const SUPPLIER_CONTENT_CACHE_TAG = 'supplier-page-content';
@@ -34,9 +35,9 @@ const getSavedSupplierContent = unstable_cache(
 
 /** The three boxes a supplier page renders: saved text where there is some, generated text elsewhere. */
 export async function getSupplierContent(supplier: Supplier, allOffers: readonly Offer[]): Promise<SupplierContent> {
-  const saved = await getSavedSupplierContent();
+  const [saved, vendorCount] = await Promise.all([getSavedSupplierContent(), getVendorCount()]);
   const defaults = defaultSupplierContent(supplier, supplierMarketStats(supplier.slug, allOffers));
-  return resolveSupplierContent(defaults, saved[supplier.slug] ?? null);
+  return fillVendorCountDeep(resolveSupplierContent(defaults, saved[supplier.slug] ?? null), vendorCount);
 }
 
 /**

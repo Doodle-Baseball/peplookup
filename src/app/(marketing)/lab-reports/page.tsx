@@ -3,7 +3,11 @@ import Link from 'next/link';
 import { getSuppliers, getProducts, getAllOffers } from '@/lib/repository';
 import { timeAgo } from '@/lib/format';
 import type { ProductForm } from '@/lib/schema';
-import { LabReportsExplorer, type LabVendorGroup } from '@/components/lab-reports/lab-reports-explorer';
+import {
+  LabReportsExplorer,
+  type LabVendorGroup,
+  type QuickSearchTerm,
+} from '@/components/lab-reports/lab-reports-explorer';
 import { DocumentIcon, FlaskIcon } from '@/components/icons/icons';
 import { site } from '@/config/site';
 import { staticSeoPage } from '@/config/seo-pages';
@@ -83,6 +87,8 @@ export default async function LabReportsPage({
       category: product.category,
       formLabel: FORM_LABELS[offer.form],
       doseLabel,
+      vialSize: offer.vialSize,
+      vialCount: offer.vialCount,
       // Prefer the graded report's own document, then the testing lab's own
       // site, then the vendor's published COA. All are real URLs, never a
       // fabricated one.
@@ -104,13 +110,18 @@ export default async function LabReportsPage({
     })
     .sort((a, b) => a.name.localeCompare(b.name));
 
-  const testsTotal = vendorGroups.reduce((sum, v) => sum + v.rows.length, 0);
   const reportItems = vendorGroups.map((group) => ({ name: group.name, url: `/suppliers/${group.slug}` }));
 
-  // Quick search covers every real substance (compound) name plus every
-  // vendor that actually has at least one test on file, nothing curated.
-  const quickSearchTerms = [
-    ...new Set([...products.map((p) => p.name), ...vendorGroups.map((v) => v.name)]),
+  // Quick search covers every vendor that actually has at least one test on
+  // file (first, with its logo) plus every real substance (compound) name,
+  // nothing curated. A name that is both is listed once, as the vendor.
+  const vendorTerms = vendorGroups.map((v) => ({ term: v.name, logo: v.logo, isSupplier: true }));
+  const vendorTermKeys = new Set(vendorTerms.map((t) => t.term.toLowerCase()));
+  const quickSearchTerms: QuickSearchTerm[] = [
+    ...vendorTerms,
+    ...[...new Set(products.map((p) => p.name))]
+      .filter((name) => !vendorTermKeys.has(name.toLowerCase()))
+      .map((name) => ({ term: name, logo: null, isSupplier: false })),
   ];
 
   // Links pass a supplier slug; the search box matches names, so it is shown as
@@ -144,22 +155,12 @@ export default async function LabReportsPage({
           to each original document.
         </p>
 
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 rounded-card border border-line bg-surface-raised px-6 py-5 shadow-card">
-          {mostRecentTestedAt ? (
-            <span className="inline-flex items-center gap-1.5 rounded-pill bg-brand-soft px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-brand-strong">
-              <span aria-hidden="true" className="h-1.5 w-1.5 rounded-pill bg-brand" />
-              Updated {timeAgo(mostRecentTestedAt)}
-            </span>
-          ) : null}
-          <span className="text-center">
-            <span className="block text-2xl font-black text-content">{vendorGroups.length}</span>
-            <span className="block text-micro font-bold uppercase tracking-wide text-faint">Suppliers</span>
+        {mostRecentTestedAt ? (
+          <span className="mt-8 inline-flex items-center gap-1.5 rounded-pill bg-brand-soft px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-brand-strong">
+            <span aria-hidden="true" className="h-1.5 w-1.5 rounded-pill bg-brand" />
+            Updated {timeAgo(mostRecentTestedAt)}
           </span>
-          <span className="text-center">
-            <span className="block text-2xl font-black text-content">{testsTotal}</span>
-            <span className="block text-micro font-bold uppercase tracking-wide text-faint">Tests total</span>
-          </span>
-        </div>
+        ) : null}
       </section>
 
       <section className="mt-10">

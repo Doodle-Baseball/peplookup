@@ -146,6 +146,33 @@
     background: rgb(var(--accent-strong));
   }
 
+  /* Hairline scrollbar for the supplier reviews and COA lists: no arrow
+     buttons and no visible track, just a rounded thumb that darkens while the
+     list is hovered. Chrome would let the standard properties override the
+     ::-webkit rules (and draw arrow buttons), so those are Firefox-only. */
+  .panel-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+  .panel-scrollbar::-webkit-scrollbar-button {
+    display: none;
+  }
+  .panel-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .panel-scrollbar::-webkit-scrollbar-thumb {
+    background: rgb(var(--muted) / 0.3);
+    border-radius: 9999px;
+  }
+  .panel-scrollbar:hover::-webkit-scrollbar-thumb {
+    background: rgb(var(--accent) / 0.55);
+  }
+  @supports not selector(::-webkit-scrollbar) {
+    .panel-scrollbar {
+      scrollbar-width: thin;
+      scrollbar-color: rgb(var(--muted) / 0.3) transparent;
+    }
+  }
+
   /* Horizontally-scrolling chip rows (e.g. "Popular:") stay scrollable by
      touch/trackpad/drag without a visible scrollbar track cluttering the card. */
   .scrollbar-hide {

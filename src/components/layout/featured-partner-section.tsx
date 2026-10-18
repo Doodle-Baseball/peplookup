@@ -48,10 +48,10 @@ function FactChip({ icon, children }: { icon: React.ReactNode; children: React.R
   );
 }
 
-/** Short facts in one line under the tiles; on narrow screens the line swipes sideways inside the panel. */
+/** Short facts under the tiles, wrapping onto a second line so every one shows in full. */
 function FactRow({ promo }: { promo: PromotedSupplier }) {
   return (
-    <ul className="scrollbar-hide -mx-5 mt-4 flex gap-1.5 overflow-x-auto px-5 pb-1 sm:-mx-8 sm:px-8 lg:mx-0 lg:px-0">
+    <ul className="mt-4 flex flex-wrap gap-1.5">
       {promo.rating ? (
         <FactChip icon={<StarIcon aria-hidden="true" className="h-3.5 w-3.5 text-coupon" />}>
           {promo.rating.url ? (
@@ -148,7 +148,7 @@ export function FeaturedPartnerSection({ promo, now = new Date() }: { promo: Pro
 
           <div className="flex flex-col gap-4 lg:col-span-2 lg:justify-center">
             {promo.coupon ? (
-              <div className="card-3d rounded-card border-2 border-dashed border-accent/40 bg-surface-raised p-5 sm:p-6">
+              <div className="rounded-card border-2 border-dashed border-accent/40 bg-surface-raised p-5 sm:p-6">
                 <p className="font-mono text-micro font-bold uppercase tracking-wide text-muted">Partner discount</p>
                 <p className="mt-2 text-5xl font-black tracking-tight text-accent-strong sm:text-6xl">
                   {promo.coupon.percentOff}% off

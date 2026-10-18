@@ -78,7 +78,7 @@ export default async function HomePage() {
             )}
           </h1>
           <p className="animate-fade-up animate-delay-200 mx-auto mt-5 max-w-2xl text-base leading-7 text-muted sm:text-lg">
-            Compare peptide prices across 80+ research suppliers with a free peptide price tool, normalised
+            Compare peptide prices across {suppliers.length.toLocaleString('en-US')} research suppliers with a free peptide price tool, normalised
             to cost per mg.
           </p>
 

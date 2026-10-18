@@ -12,11 +12,11 @@ function offer(supplierSlug: string, productSlug: string, coaUrl: string | null 
 }
 
 describe('highlightItems', () => {
-  it('rounds large counts down so "N+" is always true', () => {
+  it('states the supplier count exactly and rounds the other large counts down so "N+" is always true', () => {
     const suppliers = Array.from({ length: 88 }, (_, index) => supplier(`s${index}`, index < 72));
     const offers = suppliers.flatMap((s, index) => [offer(s.slug, `p${index % 36}`, 'https://coa.example/x.pdf')]);
     expect(highlightItems(suppliers, offers)).toEqual([
-      '80+ suppliers',
+      '88 suppliers',
       '30+ compounds',
       '80+ supplier COAs',
       'Price per mg comparison',
