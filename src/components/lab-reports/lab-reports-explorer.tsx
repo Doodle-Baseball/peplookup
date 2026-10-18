@@ -328,7 +328,10 @@ function VendorReports({
             value={query}
             onChange={(event) => onQueryChange(event.target.value)}
             placeholder={`Search ${vendor.name} products…`}
-            className="w-full min-w-0 bg-transparent text-sm font-semibold text-content outline-none placeholder:font-normal placeholder:text-faint focus:ring-0 focus-visible:ring-0"
+            // 16px on phones: iOS Safari zooms the whole page into any input
+            // under 16px on focus, which threw the cards and page off-screen.
+            // appearance-none drops iOS's own search-field padding and shading.
+            className="w-full min-w-0 appearance-none bg-transparent text-base font-semibold text-content outline-none placeholder:font-normal placeholder:text-faint focus:ring-0 focus-visible:ring-0 sm:text-sm"
           />
         </div>
 
