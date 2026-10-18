@@ -1,6 +1,6 @@
 import type { SupplierReview } from '@/lib/schema';
 import { formatRating, formatReviewDate } from '@/lib/format';
-import { StarRating } from '@/components/ui/star-rating';
+import { StarTiles } from '@/components/ui/star-tiles';
 import { ExternalIcon, StarIcon } from '@/components/icons/icons';
 
 /**
@@ -53,28 +53,22 @@ export function ReviewListSection({
         <ul className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
           {reviews.map((review, index) => (
             <li key={review.id ?? `${review.author}-${index}`} className="min-w-0">
-              <article className="flex h-full flex-col rounded-card border border-line bg-surface p-5 transition-all duration-150 hover:-translate-y-0.5 hover:border-accent/40 hover:shadow-card">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex min-w-0 items-center gap-3">
-                    <span
-                      aria-hidden="true"
-                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-pill bg-accent-soft text-sm font-black uppercase text-accent-strong"
-                    >
-                      {review.author.charAt(0)}
-                    </span>
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-bold text-content">{review.author}</p>
-                      {review.reviewedAt ? (
-                        <p className="text-xs text-faint">{formatReviewDate(review.reviewedAt)}</p>
-                      ) : null}
-                    </div>
-                  </div>
-                  <span className="flex shrink-0 items-center gap-1.5">
-                    <StarRating rating={review.rating} />
-                    <span className="text-xs font-bold text-muted">{formatRating(review.rating)}</span>
-                  </span>
+              <article className="flex h-full flex-col rounded-card border border-line bg-surface p-5 transition-shadow hover:shadow-card sm:p-6">
+                <div className="flex items-center justify-between gap-3">
+                  <StarTiles rating={review.rating} />
+                  <span className="text-xs font-bold text-muted">{formatRating(review.rating)}</span>
                 </div>
-                <p className="mt-4 text-sm leading-6 text-muted">&ldquo;{review.body}&rdquo;</p>
+                <p className="mt-3 text-base leading-7 text-content">{review.body}</p>
+                {/* Pinned to the bottom so the names line up across a row of cards. */}
+                <p className="mt-auto flex min-w-0 flex-wrap items-center gap-x-1.5 pt-4 text-sm text-muted">
+                  <span className="truncate font-bold text-content">{review.author}</span>
+                  {review.reviewedAt ? (
+                    <>
+                      <span aria-hidden="true">·</span>
+                      <time dateTime={review.reviewedAt}>{formatReviewDate(review.reviewedAt)}</time>
+                    </>
+                  ) : null}
+                </p>
               </article>
             </li>
           ))}
