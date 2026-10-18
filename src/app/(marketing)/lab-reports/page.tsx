@@ -133,7 +133,7 @@ export default async function LabReportsPage({
     : (sp.q ?? '').trim();
 
   return (
-    <div className="mx-auto max-w-shell px-4 py-14">
+    <div className="mx-auto max-w-shell px-4 py-10 sm:py-14">
       <PageSeo seo={PAGE} itemList={reportItems} dataDates={[mostRecentTestedAt]} />
       <section className="mx-auto max-w-2xl text-center">
         <p className="flex items-center justify-center gap-3 text-xs font-bold uppercase tracking-[0.2em] text-brand">
@@ -141,7 +141,7 @@ export default async function LabReportsPage({
           Laboratory Verification
           <span aria-hidden="true" className="h-px w-8 bg-brand/40" />
         </p>
-        <h1 className="mt-3 text-4xl font-black tracking-tight text-content sm:text-5xl">
+        <h1 className="mt-3 text-3xl font-black tracking-tight text-content sm:text-5xl">
           {seo?.h1 ? (
             <AccentedHeading text={seo.h1} />
           ) : (
@@ -163,7 +163,7 @@ export default async function LabReportsPage({
         ) : null}
       </section>
 
-      <section className="mt-10">
+      <section className="mt-8 sm:mt-10">
         {vendorGroups.length === 0 ? (
           <div className="rounded-card border border-dashed border-line bg-surface-raised p-10 text-center text-sm text-muted">
             <FlaskIcon className="mx-auto h-6 w-6 text-faint" />

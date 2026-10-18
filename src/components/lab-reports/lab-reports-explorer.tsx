@@ -170,7 +170,7 @@ export function LabReportsExplorer({
 
   return (
     <div>
-      <div className="rounded-card border border-line bg-surface-raised p-6 shadow-card">
+      <div className="rounded-card border border-line bg-surface-raised p-4 shadow-card sm:p-6">
         <div className="search-field flex items-center gap-3 border px-4 py-3.5">
           <SearchIcon className="h-5 w-5 shrink-0 text-brand" />
           <input
@@ -183,9 +183,9 @@ export function LabReportsExplorer({
         </div>
 
         {quickSearchTerms.length > 0 ? (
-          <div className="mt-4 flex items-center gap-3 border-t border-line pt-4">
+          <div className="mt-4 flex flex-col gap-2 border-t border-line pt-4 sm:flex-row sm:items-center sm:gap-3">
             <span className="shrink-0 text-xs font-bold uppercase tracking-wide text-muted">Quick Search:</span>
-            <div className="scrollbar-hide flex items-center gap-2 overflow-x-auto">
+            <div className="scrollbar-hide flex w-full min-w-0 items-center gap-2 overflow-x-auto">
               {quickSearchTerms.map(({ term, logo, isSupplier }) => (
                 <button
                   key={term}
@@ -241,9 +241,9 @@ export function LabReportsExplorer({
                   type="button"
                   onClick={() => toggle(vendor.slug)}
                   aria-expanded={open}
-                  className="flex w-full items-center gap-4 px-5 py-4 text-left transition-colors hover:bg-brand-tint"
+                  className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-brand-tint sm:gap-4 sm:px-5 sm:py-4"
                 >
-                  <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-chip border border-line bg-surface shadow-sm">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-chip border border-line bg-surface shadow-sm sm:h-12 sm:w-12">
                     {vendor.logo ? (
                       <Image src={vendor.logo} alt={`${vendor.name} logo`} width={48} height={48} className="h-full w-full object-contain" unoptimized />
                     ) : (
@@ -255,11 +255,11 @@ export function LabReportsExplorer({
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-base font-black text-content">{vendor.name}</span>
                     {vendor.labName ? (
-                      <span className="block text-micro font-bold uppercase tracking-wide text-faint">{vendor.labName}</span>
+                      <span className="line-clamp-2 text-micro font-bold uppercase tracking-wide text-faint sm:line-clamp-none">{vendor.labName}</span>
                     ) : null}
                   </span>
-                  <span className="shrink-0 rounded-chip bg-brand-soft px-3 py-1.5 text-center">
-                    <span className="block text-lg font-black leading-none text-brand-strong">{vendor.rows.length}</span>
+                  <span className="shrink-0 rounded-chip bg-brand-soft px-2.5 py-1.5 text-center sm:px-3">
+                    <span className="block text-base font-black leading-none text-brand-strong sm:text-lg">{vendor.rows.length}</span>
                     <span className="block text-micro font-bold uppercase tracking-wide text-brand-strong/70">Tests</span>
                   </span>
                   <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-chip bg-surface-sunken text-muted transition-colors group-hover:text-brand">
@@ -314,8 +314,8 @@ function VendorReports({
   const trimmedQuery = query.trim();
 
   return (
-    <div className="border-t border-line bg-surface-sunken/40 px-5 pb-5 pt-4">
-      <div className="flex gap-2.5">
+    <div className="border-t border-line bg-surface-sunken/40 px-3 pb-4 pt-3 sm:px-5 sm:pb-5 sm:pt-4">
+      <div className="flex flex-col gap-2.5 sm:flex-row">
         <label htmlFor={searchId} className="sr-only">
           Search {vendor.name} reports
         </label>
@@ -372,13 +372,13 @@ function ReportCard({ card }: { card: ReportCardGroup }) {
 
   return (
     <li className="flex flex-col gap-4 rounded-card border border-line bg-surface-raised p-4 shadow-card">
-      <div className="flex min-w-0 gap-4">
+      <div className="flex min-w-0 gap-3 sm:gap-4">
         {/* The name beside it is the real link; this one only widens the click target. */}
         <Link
           href={productHref}
           tabIndex={-1}
           aria-hidden="true"
-          className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-chip border border-line bg-surface"
+          className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-chip border border-line bg-surface lg:h-20 lg:w-20"
         >
           {card.productImage ? (
             <Image src={card.productImage} alt="" width={80} height={80} className="h-full w-full object-cover" unoptimized />
@@ -609,7 +609,7 @@ function FormSelect({
     // still do, for touch screens and keyboard users.
     <div
       ref={containerRef}
-      className="relative shrink-0"
+      className="relative w-full shrink-0 sm:w-auto"
       onMouseEnter={() => !isOpen && open()}
       onMouseLeave={() => setIsOpen(false)}
     >
@@ -625,7 +625,7 @@ function FormSelect({
         onClick={() => !isOpen && open()}
         onKeyDown={handleKeyDown}
         className={cn(
-          'inline-flex h-full items-center gap-2 rounded-card border bg-surface py-3 pl-4 pr-3.5 text-sm font-bold transition-colors focus-visible:ring-0',
+          'inline-flex h-full w-full items-center justify-between gap-2 rounded-card border bg-surface py-3 pl-4 pr-3.5 text-sm font-bold transition-colors focus-visible:ring-0 sm:w-auto sm:justify-start',
           value ? 'border-accent/40 text-accent-strong' : 'border-line text-content hover:border-accent/40',
         )}
       >
