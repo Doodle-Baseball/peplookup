@@ -86,6 +86,7 @@ export const footerNav: readonly { heading: string; links: readonly NavChild[] }
       { label: 'Price Checker', href: '/price-checker' },
       { label: 'Supplier Listing', href: '/supplier-listing' },
       { label: 'Community', href: '/community' },
+      { label: 'Chrome Extension', href: '/extension' },
     ],
   },
   {
@@ -120,6 +121,7 @@ export const footerNav: readonly { heading: string; links: readonly NavChild[] }
     links: [
       { label: 'Disclaimer', href: '/disclaimer' },
       { label: 'Privacy Policy', href: '/privacy' },
+      { label: 'Extension Privacy', href: '/extension/privacy' },
       { label: 'Terms of Service', href: '/terms' },
     ],
   },

@@ -10,6 +10,7 @@ import { PageFaqSection } from '@/components/faq/page-faq-section';
 import { PageSeo } from '@/components/seo/page-seo';
 import { compareCouponVendors, DEFAULT_COUPON_SORT } from '@/components/coupons/coupon-sort';
 import { couponPagePath } from '@/lib/coupon-pages';
+import { ExtensionBanner } from '@/components/extension/extension-banner';
 
 const PAGE = staticSeoPage('/coupons');
 
@@ -70,6 +71,8 @@ export default async function CouponsPage() {
           Every active discount code we track, with the supplier it belongs to. Tap a code to copy it, then
           apply it at checkout on the supplier&rsquo;s own site. {site.name} never handles the order.
         </p>
+
+        <ExtensionBanner />
 
         {vendors.length === 0 ? (
           <p className="mt-10 rounded-card border border-dashed border-line p-10 text-center text-sm text-muted">

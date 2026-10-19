@@ -198,6 +198,22 @@ export const STATIC_SEO_PAGES = [
     description: `Join the free Peptides Lookup community on Skool: plain-language peptide education, COA reading, study breakdowns and supplier comparisons. Research use only.`,
     h1: 'Peptides Skool Community.',
   },
+  {
+    path: '/extension',
+    name: 'Chrome extension',
+    group: 'Main pages',
+    title: `Free Chrome Extension for Peptide Coupon Codes | ${site.name}`,
+    description: `The free ${site.name} Chrome extension shows verified coupon codes on supported peptide supplier sites. Copy or fill a code in one click.`,
+    h1: `${site.name} Coupon Codes: Free Chrome Extension`,
+  },
+  {
+    path: '/extension/privacy',
+    name: 'Extension privacy policy',
+    group: 'Legal',
+    title: `Chrome Extension Privacy Policy | ${site.name}`,
+    description: `What the ${site.name} Chrome extension reads, what it sends to ${site.name}, what it never collects, and how to reach us.`,
+    h1: 'Chrome Extension Privacy Policy',
+  },
 ] as const satisfies readonly StaticSeoPage[];
 
 export type StaticSeoPath = (typeof STATIC_SEO_PAGES)[number]['path'];

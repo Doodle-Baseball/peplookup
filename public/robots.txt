@@ -5,6 +5,10 @@ Allow: /
  
 # Outbound affiliate/redirect links - no crawl value, keep link equity internal
 Disallow: /go?
+
+# JSON endpoints (the watchlist lookups and the Chrome extension coupon feed) are
+# read by browsers and the extension, never needed to render a page, so crawlers skip them.
+Disallow: /api/
  
 # Supplier catalog searches and lab-report searches repeat the page itself (its
 # canonical is the clean URL) and each one costs a full server render, so crawlers
