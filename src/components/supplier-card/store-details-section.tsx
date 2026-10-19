@@ -102,7 +102,7 @@ export function StoreDetailsSection({ supplier, className }: { supplier: Supplie
           >
             <ShippingModalContent
               supplierName={supplier.name}
-              affiliateUrl={supplier.affiliateUrl}
+              supplierSlug={supplier.slug}
               shippingCost={supplier.shippingCost}
               shippingSpeed={supplier.shippingSpeed}
             />
@@ -121,7 +121,7 @@ export function StoreDetailsSection({ supplier, className }: { supplier: Supplie
           >
             <PaymentModalContent
               supplierName={supplier.name}
-              affiliateUrl={supplier.affiliateUrl}
+              supplierSlug={supplier.slug}
               paymentMethods={supplier.paymentMethods}
             />
           </Popover>
