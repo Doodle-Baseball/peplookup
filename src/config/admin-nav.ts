@@ -1,6 +1,7 @@
 import {
   DocumentIcon,
   FlaskIcon,
+  GlobeIcon,
   GridIcon,
   SearchIcon,
   StarIcon,
@@ -19,4 +20,5 @@ export const ADMIN_NAV = [
   { label: 'SEO', href: '/admin/seo', icon: SearchIcon },
   { label: 'Supplier Listing', href: '/admin/vendor-listing', icon: WalletIcon },
   { label: 'Coupon Pages', href: '/admin/coupon-pages', icon: TagIcon },
+  { label: 'Chrome Extension', href: '/admin/extension', icon: GlobeIcon },
 ] as const;
