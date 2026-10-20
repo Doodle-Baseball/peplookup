@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import type { Supplier } from '@/lib/schema';
 import { couponPagePath } from '@/lib/coupon-pages';
+import { supplierGoPath } from '@/lib/go-links';
 import { ArrowRightIcon, CheckIcon, CopyIcon, ExternalIcon, SearchIcon } from '@/components/icons/icons';
 import { compareCouponVendors, DEFAULT_COUPON_SORT, type CouponSortKey } from '@/components/coupons/coupon-sort';
 
@@ -164,7 +165,7 @@ export function CouponBrowser({ vendors }: { vendors: CouponVendor[] }) {
 
               <div className="mt-auto flex items-center justify-between gap-3 pt-5">
                 <a
-                  href={vendor.affiliateUrl}
+                  href={supplierGoPath(vendor.slug, 'website')}
                   target="_blank"
                   rel="nofollow sponsored noopener noreferrer"
                   className="btn-3d inline-flex items-center gap-2 rounded-chip bg-brand px-5 py-2.5 text-sm font-bold text-white"

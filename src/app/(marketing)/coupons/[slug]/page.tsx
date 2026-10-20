@@ -4,6 +4,7 @@ import { getOffersForSupplier, getProducts, getSuppliers } from '@/lib/repositor
 import { site } from '@/config/site';
 import { couponPageIndexable, couponPagePath } from '@/lib/coupon-pages';
 import { loadCouponPageOrExit } from '@/lib/coupon-page-route';
+import { supplierGoPath } from '@/lib/go-links';
 import { COUPON_DETAIL_KEYS, COUPON_DETAIL_LABELS } from '@/lib/coupon-page-content';
 import { getCouponPageContent } from '@/lib/coupon-page-content-store';
 import { couponPageSeoDefaults, pageMetadata } from '@/lib/seo-defaults';
@@ -93,7 +94,7 @@ export default async function CouponCodePage({
 
   const logo = supplier.logoUrl ?? supplier.faviconUrl;
   const defaults = couponPageSeoDefaults(supplier, coupon);
-  const shopHref = `/go?to=${encodeURIComponent(supplier.affiliateUrl)}`;
+  const shopHref = supplierGoPath(supplier.slug, 'website');
   const profilePath = `/suppliers/${supplier.slug}`;
 
   // Only facts we actually hold for this vendor, no placeholder figures.

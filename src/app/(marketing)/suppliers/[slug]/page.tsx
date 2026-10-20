@@ -10,6 +10,7 @@ import {
   getSupplierReviews,
 } from '@/lib/repository';
 import { cn } from '@/lib/cn';
+import { supplierGoPath } from '@/lib/go-links';
 import { site } from '@/config/site';
 import { pageMetadata, supplierSeoDefaults } from '@/lib/seo-defaults';
 import { getSeoOverride, withSeo } from '@/lib/seo';
@@ -197,7 +198,7 @@ export default async function SupplierPage({
 
                 <div className="mt-6 flex items-center gap-2">
                   <a
-                    href={`/go?to=${encodeURIComponent(supplier.affiliateUrl)}`}
+                    href={supplierGoPath(supplier.slug, 'website')}
                     target="_blank"
                     rel="nofollow sponsored noopener"
                     className="btn-3d group/cta inline-flex min-w-0 flex-1 items-center justify-center gap-2 rounded-pill bg-brand px-6 py-3 text-sm font-bold text-surface transition-colors hover:bg-brand-strong sm:flex-none"

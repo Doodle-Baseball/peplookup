@@ -1,13 +1,14 @@
 import Link from 'next/link';
+import { supplierGoPath } from '@/lib/go-links';
 import { ExternalIcon, ShieldCheckIcon } from '@/components/icons/icons';
 
 export function PaymentModalContent({
   supplierName,
-  affiliateUrl,
+  supplierSlug,
   paymentMethods,
 }: {
   supplierName: string;
-  affiliateUrl: string;
+  supplierSlug: string;
   paymentMethods: readonly string[];
 }) {
   return (
@@ -27,7 +28,7 @@ export function PaymentModalContent({
       </ul>
 
       <Link
-        href={`/go?to=${encodeURIComponent(affiliateUrl || 'https://')}`}
+        href={supplierGoPath(supplierSlug, 'website')}
         target="_blank"
         rel="nofollow sponsored noopener"
         className="inline-flex w-full items-center justify-center gap-2 rounded-chip bg-brand px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-brand-strong"

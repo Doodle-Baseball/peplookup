@@ -12,6 +12,15 @@ import { resolveAffiliateUrl } from '@/data/vendor-affiliate-links';
 import { lookupDomainRegisteredAt } from '@/lib/whois';
 import type { Supplier, SupplierReview } from '@/lib/schema';
 import { getSupplierSlugsWithReviews, orderSuppliersForDisplay } from '@/lib/repository';
+import {
+  ExtensionMigrationMissingError,
+  extensionColumnsExist,
+  fetchVendorExtensionFields,
+  findSuppliersSharingDomains,
+  updateVendorExtensionFields,
+  updateVendorReviewCount,
+} from '@/lib/supabase/supplier-extension';
+import type { VendorExtensionFields, VendorExtensionSubmission } from '@/lib/extension/vendor-fields';
 
 export class AdminDbError extends Error {}
 
@@ -190,6 +199,68 @@ export async function deleteVendor(slug: string): Promise<void> {
   const client = requireClient();
   const { error } = await client.from('suppliers').delete().eq('slug', slug);
   if (error) throw new AdminDbError(error.message);
+}
+
+/**
+ * The Chrome extension fields for the supplier form, or null when
+ * 0029_chrome_extension.sql hasn't run yet (the form then says so instead).
+ * With no slug (the new-supplier form) the defaults are returned.
+ */
+export async function getVendorExtensionFields(slug: string | null): Promise<VendorExtensionFields | null> {
+  const client = requireClient();
+  if (slug === null) {
+    if (!(await extensionColumnsExist(client))) return null;
+    return { storeDomains: [], showInExtension: true, ratingUpdatedAt: null, couponVerifiedAt: null };
+  }
+  try {
+    return await fetchVendorExtensionFields(client, slug);
+  } catch (error) {
+    throw new AdminDbError(error instanceof Error ? error.message : 'Extension settings could not be read.');
+  }
+}
+
+/**
+ * Other suppliers using any of this supplier's store domains. Allowed (two
+ * brands can share a storefront) but usually a typo, so the form warns.
+ */
+export async function getVendorDomainConflicts(
+  slug: string,
+  domains: readonly string[],
+): Promise<{ slug: string; name: string; domains: string[] }[]> {
+  try {
+    return await findSuppliersSharingDomains(requireClient(), slug, domains);
+  } catch (error) {
+    throw new AdminDbError(error instanceof Error ? error.message : 'Could not check for shared domains.');
+  }
+}
+
+/**
+ * Saves the extension fields and the review count the form shows beside the
+ * rating. Runs after the supplier itself saved, so a failure says so.
+ */
+export async function saveVendorExtensionFields(
+  slug: string,
+  submission: VendorExtensionSubmission,
+  storedReviewCount: Supplier['reviewCount'],
+): Promise<void> {
+  const client = requireClient();
+  const reviewCount =
+    submission.reviewCount === null
+      ? null
+      : storedReviewCount && storedReviewCount.value === submission.reviewCount
+        ? storedReviewCount
+        : { kind: 'exact' as const, value: submission.reviewCount };
+  try {
+    await updateVendorReviewCount(client, slug, reviewCount);
+    await updateVendorExtensionFields(client, slug, submission.fields);
+  } catch (error) {
+    if (error instanceof ExtensionMigrationMissingError) {
+      throw new AdminDbError(`The supplier saved, but its extension settings did not. ${error.message}`);
+    }
+    throw new AdminDbError(
+      `The supplier saved, but its extension settings did not. (${error instanceof Error ? error.message : 'unknown error'})`,
+    );
+  }
 }
 
 /**

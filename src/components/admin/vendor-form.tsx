@@ -20,6 +20,8 @@ import { formatReviewDate } from '@/lib/format';
 import { Field, Select, MultiSelect, TextArea } from '@/components/admin/form-fields';
 import { ChevronDownIcon } from '@/components/icons/icons';
 import { StarRating } from '@/components/ui/star-rating';
+import { VendorExtensionFieldsBox, type DomainConflict } from '@/components/admin/vendor-extension-fields';
+import type { VendorExtensionFields } from '@/lib/extension/vendor-fields';
 import {
   offerToVendorProductEntry,
   parseVendorProductsCsv,
@@ -80,6 +82,8 @@ export function VendorForm({
   existingProducts,
   initialStep,
   storedCoupon,
+  extensionFields,
+  domainConflicts,
 }: {
   action: (prevState: VendorFormState, formData: FormData) => Promise<VendorFormState>;
   vendor?: Supplier;
@@ -95,6 +99,10 @@ export function VendorForm({
    * which `vendor.coupon` can't represent. Omitted on the new-vendor form.
    */
   storedCoupon?: { code: string | null; percentOff: number | null };
+  /** Chrome extension settings: null when 0029 hasn't run, omitted to leave them off the form. */
+  extensionFields?: VendorExtensionFields | null;
+  /** Other suppliers sharing one of this supplier's store domains. */
+  domainConflicts?: readonly DomainConflict[];
 }) {
   const router = useRouter();
   const [rawState, formAction, pending] = useActionState(action, INITIAL_STATE);
@@ -524,8 +532,26 @@ export function VendorForm({
                 />
                 <p className="mt-1 text-xs text-muted">What buyers save when they use this coupon code.</p>
               </div>
+              {extensionFields ? (
+                <Field
+                  label="Coupon last verified"
+                  name="couponVerifiedAt"
+                  type="date"
+                  defaultValue={extensionFields.couponVerifiedAt ?? undefined}
+                  hint="The day the code was last tested. Admin only."
+                />
+              ) : null}
             </div>
           </div>
+
+          {extensionFields !== undefined ? (
+            <VendorExtensionFieldsBox
+              fields={extensionFields}
+              affiliateUrl={affiliateUrl}
+              couponCode={couponCode}
+              domainConflicts={domainConflicts}
+            />
+          ) : null}
       </section>
 
       <section className={stepIndex === 1 ? 'rounded-card border border-line bg-surface-raised p-4 sm:p-6' : 'hidden'}>
@@ -937,6 +963,27 @@ export function VendorForm({
                 placeholder="https://www.trustpilot.com/review/example.com"
                 hint="Full URL to the supplier's public reviews profile."
               />
+              {extensionFields ? (
+                <>
+                  <Field
+                    label="Trustpilot review count"
+                    name="reviewCountValue"
+                    type="number"
+                    step="1"
+                    min="0"
+                    defaultValue={vendor?.reviewCount ? String(vendor.reviewCount.value) : undefined}
+                    placeholder="120"
+                    hint="Optional. Shown next to the rating on the site and in the extension."
+                  />
+                  <Field
+                    label="Rating last updated"
+                    name="ratingUpdatedAt"
+                    type="date"
+                    defaultValue={extensionFields.ratingUpdatedAt ?? undefined}
+                    hint="Set to today automatically when the rating changes. Enter it by hand from Trustpilot."
+                  />
+                </>
+              ) : null}
             </div>
           </div>
 

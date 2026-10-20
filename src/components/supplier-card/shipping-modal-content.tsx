@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { supplierGoPath } from '@/lib/go-links';
 import { formatShipping, shippingSteps } from '@/lib/format';
 import { formatMoney } from '@/lib/money';
 import { cents } from '@/lib/money';
@@ -7,12 +8,12 @@ import { ExternalIcon, TruckIcon } from '@/components/icons/icons';
 
 export function ShippingModalContent({
   supplierName,
-  affiliateUrl,
+  supplierSlug,
   shippingCost,
   shippingSpeed,
 }: {
   supplierName: string;
-  affiliateUrl: string;
+  supplierSlug: string;
   shippingCost: ShippingCost;
   shippingSpeed: string | null;
 }) {
@@ -55,7 +56,7 @@ export function ShippingModalContent({
       ) : null}
 
       <Link
-        href={`/go?to=${encodeURIComponent(affiliateUrl || 'https://')}`}
+        href={supplierGoPath(supplierSlug, 'website')}
         target="_blank"
         rel="nofollow sponsored noopener"
         className="inline-flex w-full items-center justify-center gap-2 rounded-chip bg-brand px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-brand-strong"

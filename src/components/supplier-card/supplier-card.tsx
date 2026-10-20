@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { cn } from '@/lib/cn';
+import { supplierGoPath } from '@/lib/go-links';
 import { formatRating, formatReviewCount, formatShipping, shippingSteps } from '@/lib/format';
 import { site } from '@/config/site';
 import type { Supplier } from '@/lib/schema';
@@ -171,7 +172,7 @@ export function SupplierCard({ supplier, productCount }: { supplier: Supplier; p
           >
             <ShippingModalContent
               supplierName={supplier.name}
-              affiliateUrl={supplier.affiliateUrl}
+              supplierSlug={supplier.slug}
               shippingCost={supplier.shippingCost}
               shippingSpeed={supplier.shippingSpeed}
             />
@@ -208,7 +209,7 @@ export function SupplierCard({ supplier, productCount }: { supplier: Supplier; p
           >
             <PaymentModalContent
               supplierName={supplier.name}
-              affiliateUrl={supplier.affiliateUrl}
+              supplierSlug={supplier.slug}
               paymentMethods={supplier.paymentMethods}
             />
           </Popover>
@@ -246,7 +247,7 @@ export function SupplierCard({ supplier, productCount }: { supplier: Supplier; p
             <ChevronRightIcon className="h-3.5 w-3.5 transition-transform group-hover/profile:translate-x-0.5" />
           </Link>
           <Link
-            href={supplier.affiliateUrl || supplier.homepageUrl}
+            href={supplierGoPath(supplier.slug, 'website')}
             target="_blank"
             rel="nofollow noopener noreferrer sponsored"
             className="inline-flex items-center justify-center gap-2 rounded-chip border border-line bg-surface px-3 py-2.5 text-sm font-bold text-content transition-colors hover:border-accent hover:text-accent-strong"

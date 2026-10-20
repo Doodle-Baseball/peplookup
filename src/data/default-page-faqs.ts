@@ -104,6 +104,29 @@ export const DEFAULT_PAGE_FAQS: Readonly<Record<string, readonly FaqItem[]>> = {
     },
   ],
 
+  '/extension': [
+    {
+      question: `What does the ${site.name} Chrome extension do?`,
+      answer: `When you open the store of a supplier we list, it shows that supplier's current ${site.name} coupon code and the discount it gives. You can copy the code, or fill it into the discount field, in one click.`,
+    },
+    {
+      question: 'Does it place or submit orders for me?',
+      answer: `No. It never submits an order, a form or a payment. Filling a code only puts the text into the discount field; you still review your cart and check out yourself on the supplier's own site.`,
+    },
+    {
+      question: 'Which browsers does it work in?',
+      answer: `Desktop Google Chrome. It is not available for Chrome on phones or tablets, or for Safari or Firefox.`,
+    },
+    {
+      question: 'Where do the codes come from?',
+      answer: `From the same list as our coupons page. When we add or update a supplier's code, the extension picks up the change by itself, with no update to install.`,
+    },
+    {
+      question: `Does ${site.name} earn money from the extension?`,
+      answer: `Sometimes. Offer links in the extension are our affiliate links, so we may earn a commission if you buy through them, at no extra cost to you. Commission never decides which suppliers or codes the extension shows.`,
+    },
+  ],
+
   '/lab-reports': [
     {
       question: 'What is a certificate of analysis?',

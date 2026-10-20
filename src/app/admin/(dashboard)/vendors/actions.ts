@@ -11,8 +11,11 @@ import {
   setVendorFeatured,
   saveVendorReviews,
   refreshAllVendorImages,
+  getVendorExtensionFields,
+  saveVendorExtensionFields,
   AdminDbError,
 } from '@/lib/admin/vendors';
+import { parseVendorExtensionForm, type VendorExtensionSubmission } from '@/lib/extension/vendor-fields';
 import { createOffer, deleteOffer, getOfferRow, updateOffer } from '@/lib/admin/offers';
 import { discountPercentText, type VendorProductEntry } from '@/lib/vendor-products';
 import type { VendorInput } from '@/lib/supabase/suppliers';
@@ -303,6 +306,30 @@ function readVendorInput(formData: FormData): VendorInput {
   };
 }
 
+function todayUtc(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+/**
+ * The extension fields from the form, validated before anything is written so
+ * a rejected value never leaves the supplier half-saved. A changed rating whose
+ * "last updated" date was left as it was gets today's date.
+ */
+function readVendorExtensionSubmission(
+  formData: FormData,
+  input: VendorInput,
+  previous: { reviewRating: number | null; ratingUpdatedAt: string | null } | null,
+): VendorExtensionSubmission | null {
+  const submission = parseVendorExtensionForm(formData, { affiliateUrl: input.affiliateUrl });
+  if (!submission) return null;
+  const ratingChanged = input.reviewRating !== (previous?.reviewRating ?? null);
+  const dateUntouched = submission.fields.ratingUpdatedAt === (previous?.ratingUpdatedAt ?? null);
+  if (input.reviewRating !== null && ratingChanged && dateUntouched) {
+    return { ...submission, fields: { ...submission.fields, ratingUpdatedAt: todayUtc() } };
+  }
+  return submission;
+}
+
 /**
  * The vendor a form was opened for, by its current slug. A slug renamed in
  * /admin/seo while the edit page was open would otherwise save to the old
@@ -327,10 +354,12 @@ export async function createVendorAction(
   const currentStep = String(formData.get('currentStep') ?? '0');
   try {
     const input = readVendorInput(formData);
+    const extension = readVendorExtensionSubmission(formData, input, null);
     const createdVendor = await createVendor(input);
     createdVendorSlug = createdVendor.slug;
 
     await saveVendorReviews(createdVendor.slug, readVendorReviews(formData));
+    if (extension) await saveVendorExtensionFields(createdVendor.slug, extension, null);
 
     if (await saveVendorProducts(createdVendor.slug, readVendorProducts(formData), [])) {
       revalidateTag('offers');
@@ -356,9 +385,15 @@ export async function updateVendorAction(
     // absent field means "unchanged", not "off": reading it as off disabled
     // every vendor whenever its form was saved.
     if (!formData.has('isActive')) input = { ...input, isActive: existing.isActive };
+    const storedExtension = await getVendorExtensionFields(slug);
+    const extension = readVendorExtensionSubmission(formData, input, {
+      reviewRating: existing.reviewRating,
+      ratingUpdatedAt: storedExtension?.ratingUpdatedAt ?? null,
+    });
     await updateVendor(slug, input);
 
     await saveVendorReviews(slug, readVendorReviews(formData));
+    if (extension) await saveVendorExtensionFields(slug, extension, existing.reviewCount);
 
     const productsChanged = await saveVendorProducts(
       slug,

@@ -5,6 +5,7 @@ import { pageMetadata } from '@/lib/seo-defaults';
 import { getSeoOverride, withSeo } from '@/lib/seo';
 import { getAllOffers, getProducts, getSupplierSlugsWithReviews, getSuppliers, supplierHasReviews } from '@/lib/repository';
 import { formatReviewCount } from '@/lib/format';
+import { supplierGoPath } from '@/lib/go-links';
 import { ReviewsBrowser, type ReviewVendor } from '@/components/reviews/reviews-browser';
 import { PageFaqSection } from '@/components/faq/page-faq-section';
 import { StarIcon } from '@/components/icons/icons';
@@ -53,7 +54,7 @@ export default async function ReviewsPage() {
     couponPercentOff: supplier.coupon?.percentOff ?? null,
     productCount: productCountBySupplier.get(supplier.slug) ?? 0,
     foundedYear: supplier.foundedYear,
-    shopHref: `/go?to=${encodeURIComponent(supplier.affiliateUrl)}`,
+    shopHref: supplierGoPath(supplier.slug, 'website'),
   }));
   const ratedCount = vendors.filter((vendor) => vendor.rating !== null).length;
 

@@ -111,9 +111,15 @@ const SECTIONS: LegalSection[] = [
     body: (
       <>
         <p>
-          {site.name} does not set advertising or cross-site tracking cookies on the public site. The only
-          cookie we set is a session cookie for the private administrator dashboard, and it is only ever
-          issued to a signed-in operator of this site.
+          {site.name} does not set advertising or cross-site tracking cookies on the public site. The
+          private administrator dashboard uses a session cookie, only ever issued to a signed-in operator of
+          this site.
+        </p>
+        <p>
+          Two short-lived cookies hold no personal information, just the value &ldquo;1&rdquo;. After you
+          follow a link to a supplier, one is kept for 10 minutes so a repeat click on that supplier is not
+          counted twice. After you answer the Chrome extension uninstall question, another is kept for 10
+          minutes so the same answer is not sent again.
         </p>
         <p>
           Third-party sites you reach from here set their own cookies under their own policies, which we do
@@ -130,7 +136,9 @@ const SECTIONS: LegalSection[] = [
         <p>
           Outbound links to suppliers pass through a redirect on this site before forwarding you to the
           supplier. The redirect exists to attach our affiliate reference and to keep links maintainable, and
-          it does not require or record any personal information about you.
+          it does not require or record any personal information about you. For links to a supplier&rsquo;s
+          store it counts the click (which supplier, whether it came from the website or our Chrome extension,
+          and when), without anything that identifies you.
         </p>
         <p>
           Once you arrive at a supplier&rsquo;s website you are subject to that company&rsquo;s privacy
@@ -219,7 +227,7 @@ export default async function PrivacyPage() {
       structuredData={<PageSeo seo={PAGE} />}
       eyebrow="Legal"
       title={seo?.h1 || 'Privacy Policy'}
-      updated="September 2026"
+      updated="October 2026"
       sections={SECTIONS}
       intro={
         <>

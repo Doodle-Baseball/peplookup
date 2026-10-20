@@ -9,6 +9,7 @@ import {
   supplierHasReviews,
 } from '@/lib/repository';
 import { loadReviewsSupplierOrExit } from '@/lib/reviews-page-route';
+import { supplierGoPath } from '@/lib/go-links';
 import { site } from '@/config/site';
 import { formatRating, formatReviewCount } from '@/lib/format';
 import { ratingSourceLabel, reviewsPageIndexable, reviewsPagePath } from '@/lib/review-pages';
@@ -86,7 +87,7 @@ export default async function VendorReviewsPage({
 
   const logo = supplier.logoUrl ?? supplier.faviconUrl;
   const defaults = reviewsPageSeoDefaults(supplier);
-  const shopHref = `/go?to=${encodeURIComponent(supplier.affiliateUrl)}`;
+  const shopHref = supplierGoPath(supplier.slug, 'website');
   const reviewCountText = formatReviewCount(supplier.reviewCount);
   const sourceLabel = ratingSourceLabel(supplier.reviewsUrl);
   const rating = supplier.reviewRating;

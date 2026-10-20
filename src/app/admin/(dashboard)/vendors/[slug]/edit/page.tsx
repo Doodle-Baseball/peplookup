@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
-import { getStoredCoupon, getVendor } from '@/lib/admin/vendors';
+import { getStoredCoupon, getVendor, getVendorDomainConflicts, getVendorExtensionFields } from '@/lib/admin/vendors';
 import { getRedirectTarget } from '@/lib/seo';
 import { listOffersForVendor } from '@/lib/admin/offers';
 import { getProducts, getSupplierReviews } from '@/lib/repository';
@@ -41,10 +41,15 @@ export default async function EditVendorPage({
     notFound();
   }
 
-  const [reviews, storedCoupon] = await Promise.all([
+  const [reviews, storedCoupon, extensionFields] = await Promise.all([
     getSupplierReviews(vendor).catch(() => []),
     getStoredCoupon(vendor.slug),
+    getVendorExtensionFields(vendor.slug),
   ]);
+  // Only a warning, so a failed check never stops the supplier being edited.
+  const domainConflicts = extensionFields
+    ? await getVendorDomainConflicts(vendor.slug, extensionFields.storeDomains).catch(() => [])
+    : [];
   const boundAction = updateVendorAction.bind(null, slug);
 
   return (
@@ -55,6 +60,8 @@ export default async function EditVendorPage({
           action={boundAction}
           vendor={vendor}
           storedCoupon={storedCoupon}
+          extensionFields={extensionFields}
+          domainConflicts={domainConflicts}
           reviews={[...reviews]}
           submitLabel="Save changes"
           products={products.map((product) => ({ slug: product.slug, name: product.name }))}
