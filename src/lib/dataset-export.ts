@@ -12,6 +12,8 @@ export const DATASET_COLUMNS = [
   'peptide_name',
   'supplier_name',
   'vial_size_mg',
+  'vial_count',
+  'total_mg',
   'form',
   'price_usd',
   'price_per_mg_usd',
@@ -21,7 +23,7 @@ export const DATASET_COLUMNS = [
   'last_checked',
 ] as const;
 
-export const OUTLIER_COLUMNS = [...DATASET_COLUMNS, 'peptide_median_price_per_mg_usd', 'ratio_to_median'] as const;
+export const OUTLIER_COLUMNS = [...DATASET_COLUMNS, 'peptide_form_median_price_per_mg_usd', 'ratio_to_median'] as const;
 
 /** Listings last checked longer ago than this are left out rather than published stale. */
 export const MAX_AGE_DAYS = 30;
@@ -60,6 +62,13 @@ const BLEND_NAMES: Readonly<Record<string, string>> = {
 /** Listed on the site as a reconstitution supply, not a peptide; its size is not in mg. */
 const NON_PEPTIDE_SLUGS: ReadonlySet<string> = new Set(['bacteriostatic-water']);
 
+/**
+ * Nasal sprays whose stored mg doesn't fit their price (NAD+ at ~87x and SS-31
+ * at ~36x the vial median), most likely a volume entered as mg. Left out until
+ * the listings are corrected rather than published with a wrong price per mg.
+ */
+const SUSPECT_NASAL_SLUGS: ReadonlySet<string> = new Set(['nad', 'ss-31-elamipretide']);
+
 export type ExclusionReason =
   | 'inactiveSupplier'
   | 'outOfStock'
@@ -68,6 +77,7 @@ export type ExclusionReason =
   | 'notUsd'
   | 'unknownCompound'
   | 'notAPeptide'
+  | 'suspectNasalSize'
   | 'duplicate';
 
 export type ExclusionCounts = Record<ExclusionReason, number>;
@@ -76,6 +86,9 @@ export interface DatasetRow {
   readonly peptideName: string;
   readonly supplierName: string;
   readonly supplierSlug: string;
+  /** One vial (or capsule). */
+  readonly vialMcg: number;
+  readonly vialCount: number;
   /** Whole pack: vial size times vial count, so a 10-vial kit's price per mg is right. */
   readonly totalMcg: number;
   readonly form: DatasetForm;
@@ -95,7 +108,7 @@ interface Fraction {
 
 export interface OutlierRow {
   readonly row: DatasetRow;
-  /** Cents per microgram. */
+  /** Cents per microgram, across rows of the same peptide and form. */
   readonly peptideMedian: Fraction;
 }
 
@@ -181,6 +194,7 @@ export function buildPriceDataset({
     notUsd: 0,
     unknownCompound: 0,
     notAPeptide: 0,
+    suspectNasalSize: 0,
     duplicate: 0,
   };
 
@@ -218,20 +232,28 @@ export function buildPriceDataset({
       excluded.unknownCompound++;
       continue;
     }
+    const form = DATASET_FORM[offer.form];
+    if (form === 'nasal' && SUSPECT_NASAL_SLUGS.has(offer.productSlug)) {
+      excluded.suspectNasalSize++;
+      continue;
+    }
 
     const row = {
       peptideName: BLEND_NAMES[product.slug] ?? product.name,
       supplierName: supplier.name,
       supplierSlug: supplier.slug,
+      vialMcg: offer.vialSize,
+      vialCount: offer.vialCount,
       totalMcg,
-      form: DATASET_FORM[offer.form],
+      form,
       priceCents: offer.listPrice,
       inStock: offer.inStock,
       hasCoa: hasPublishedCoa(offer),
       lastChecked: offer.scrapedAt.slice(0, 10),
       scrapedAt: offer.scrapedAt,
     };
-    const key = [row.supplierSlug, row.peptideName, row.totalMcg, row.form].join('|');
+    // A single 100mg vial and a 10 x 10mg kit are different products, not duplicates.
+    const key = [row.supplierSlug, row.peptideName, row.vialMcg, row.vialCount, row.form].join('|');
     const existing = byItem.get(key);
     if (existing) excluded.duplicate++;
     byItem.set(key, existing ? preferred(existing, row) : row);
@@ -244,18 +266,22 @@ export function buildPriceDataset({
         a.peptideName.localeCompare(b.peptideName, 'en') ||
         a.supplierName.localeCompare(b.supplierName, 'en') ||
         a.totalMcg - b.totalMcg ||
+        a.vialCount - b.vialCount ||
         a.form.localeCompare(b.form, 'en'),
     );
 
-  const pricesByPeptide = new Map<string, Fraction[]>();
+  // Capsules and sprays are priced differently from vials of the same peptide,
+  // so each row is only measured against rows of its own form.
+  const outlierGroup = (row: DatasetRow) => `${row.peptideName}|${row.form}`;
+  const pricesByGroup = new Map<string, Fraction[]>();
   for (const row of rows) {
-    const prices = pricesByPeptide.get(row.peptideName) ?? [];
+    const prices = pricesByGroup.get(outlierGroup(row)) ?? [];
     prices.push(pricePerMcg(row));
-    pricesByPeptide.set(row.peptideName, prices);
+    pricesByGroup.set(outlierGroup(row), prices);
   }
   const outliers: OutlierRow[] = [];
   for (const row of rows) {
-    const peptideMedian = median(pricesByPeptide.get(row.peptideName) ?? []);
+    const peptideMedian = median(pricesByGroup.get(outlierGroup(row)) ?? []);
     if (peptideMedian && isOutlier(pricePerMcg(row), peptideMedian)) outliers.push({ row, peptideMedian });
   }
 
@@ -299,6 +325,8 @@ function datasetCells(row: DatasetRow): string[] {
   return [
     row.peptideName,
     row.supplierName,
+    formatMg(row.vialMcg),
+    String(row.vialCount),
     formatMg(row.totalMcg),
     row.form,
     formatDecimal(BigInt(row.priceCents), 100n, 2),

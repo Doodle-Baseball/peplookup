@@ -24,7 +24,8 @@ const EXCLUSION_LABELS: Record<ExclusionReason, string> = {
   notUsd: 'Not priced in USD',
   unknownCompound: 'Compound not in the catalogue',
   notAPeptide: 'Not a peptide (bacteriostatic water)',
-  duplicate: 'Duplicate of another row (same supplier, peptide, mg and form)',
+  suspectNasalSize: 'Nasal NAD+ or SS-31 whose listed mg does not fit the price',
+  duplicate: 'Duplicate of another row (same supplier, peptide, vial size, vial count and form)',
 };
 
 export default async function AdminDatasetPage() {

@@ -20,6 +20,7 @@ const suppliers = [
 
 const products = [
   { slug: 'bpc-157', name: 'BPC-157' },
+  { slug: 'ss-31-elamipretide', name: 'SS-31 (Elamipretide)' },
   { slug: 'bpc-157-tb-500', name: 'BPC-157 + TB-500' },
   { slug: 'wolverine', name: 'Wolverine' },
   { slug: 'glow', name: 'GLOW' },
@@ -100,7 +101,30 @@ describe('buildPriceDataset naming and sizes', () => {
   it('uses the whole pack for kits so price per mg is right', () => {
     const csv = datasetToCsv(build([offer({ vialSize: 10_000, vialCount: 10, listPrice: 20_000 })]));
     // 10 x 10mg for $200 is 100mg at $2.0000/mg, not $20/mg.
-    expect(csvLines(csv)[1]).toContain(',100,vial,200.00,2.0000,');
+    expect(csvLines(csv)[1]).toContain(',10,10,100,vial,200.00,2.0000,');
+  });
+
+  it('keeps a single vial and a kit of the same total as separate rows', () => {
+    const dataset = build([
+      offer({ vialSize: 100_000, listPrice: 15_000 }),
+      offer({ vialSize: 10_000, vialCount: 10, listPrice: 20_000 }),
+    ]);
+    expect(dataset.rows.map((row) => [row.vialMcg, row.vialCount, row.totalMcg])).toEqual([
+      [100_000, 1, 100_000],
+      [10_000, 10, 100_000],
+    ]);
+    expect(dataset.excluded.duplicate).toBe(0);
+  });
+
+  it('leaves out nasal NAD+ and SS-31 but keeps their vials and other sprays', () => {
+    const dataset = build([
+      offer({ productSlug: 'nad', form: 'spray' }),
+      offer({ productSlug: 'ss-31-elamipretide', form: 'spray' }),
+      offer({ productSlug: 'nad', vialSize: 500_000, listPrice: 6500 }),
+      offer({ form: 'spray' }),
+    ]);
+    expect(dataset.rows.map((row) => `${row.peptideName} ${row.form}`)).toEqual(['BPC-157 nasal', 'NAD+ vial']);
+    expect(dataset.excluded.suspectNasalSize).toBe(2);
   });
 
   it('names blends by their ingredients and merges Wolverine into BPC-157 + TB-500', () => {
@@ -172,6 +196,18 @@ describe('outliers', () => {
     expect(dataset.outliers).toHaveLength(0);
   });
 
+  it('compares capsules with capsules, not with vials of the same peptide', () => {
+    // Three vials at $3/mg and two capsule packs at $0.03/mg: neither group has an outlier.
+    const dataset = build([
+      offer(),
+      offer({ vialSize: 5000, listPrice: 1500 }),
+      offer({ vialSize: 20_000, listPrice: 6000 }),
+      offer({ form: 'capsule', vialSize: 500, vialCount: 60, listPrice: 90 }),
+      offer({ form: 'capsule', vialSize: 500, vialCount: 120, listPrice: 180 }),
+    ]);
+    expect(dataset.outliers).toHaveLength(0);
+  });
+
   it('does not flag a row at exactly 5x the median', () => {
     // Three rows at $1, $1 and $5 per mg: median $1, top row exactly 5x.
     const dataset = build([
@@ -200,20 +236,22 @@ describe('outliers', () => {
       offer({ listPrice: 30_000, vialSize: 30_000 }),
     ]);
     const lines = csvLines(outliersToCsv(dataset));
-    expect(lines[0]).toBe([...DATASET_COLUMNS, 'peptide_median_price_per_mg_usd', 'ratio_to_median'].join(','));
+    expect(lines[0]).toBe([...DATASET_COLUMNS, 'peptide_form_median_price_per_mg_usd', 'ratio_to_median'].join(','));
     expect(lines[1]?.endsWith(',1.0000,10.00')).toBe(true);
   });
 });
 
 describe('datasetToCsv', () => {
   it('writes the columns in the published order', () => {
-    expect(csvLines(datasetToCsv(build([])))).toEqual([DATASET_COLUMNS.join(',')]);
+    expect(csvLines(datasetToCsv(build([])))).toEqual([
+      'peptide_name,supplier_name,vial_size_mg,vial_count,total_mg,form,price_usd,price_per_mg_usd,in_stock,has_coa,supplier_profile_url,last_checked',
+    ]);
   });
 
   it('formats one full row', () => {
     const csv = datasetToCsv(build([offer({ listPrice: 3333, coaUrl: 'https://lab.example/coa.pdf' })]));
     expect(csvLines(csv)[1]).toBe(
-      'BPC-157,Acme Peptides,10,vial,33.33,3.3330,true,true,https://www.peplookup.com/suppliers/acme,2026-10-20',
+      'BPC-157,Acme Peptides,10,1,10,vial,33.33,3.3330,true,true,https://www.peplookup.com/suppliers/acme,2026-10-20',
     );
   });
 
