@@ -525,12 +525,9 @@ const COA_LINKS: Readonly<Record<string, string>> = {
   // linked here. The vendor lists one certificate for both BPC-157 sizes and both GHK-Cu sizes, and
   // shares a Retatrutide certificate across 30 mg/60 mg and a Tirzepatide one across 20 mg/30 mg.
   'axis-peptide-labs-2/bpc-157/vial/5000': `${AXIS_UPLOADS}2026/02/AXIS-COA-BPC5.webp`,
-  'axis-peptide-labs-2/bpc-157/vial/10000': `${AXIS_UPLOADS}2026/02/AXIS-COA-BPC5.webp`,
   'axis-peptide-labs-2/tb-500/vial/5000': `${AXIS_UPLOADS}2026/02/AXIS-COA-TB5.webp`,
   'axis-peptide-labs-2/wolverine/vial/10000': `${AXIS_UPLOADS}2026/09/AXIS-COA-WOLV10-FD.webp`,
-  'axis-peptide-labs-2/wolverine/vial/20000': `${AXIS_UPLOADS}2026/09/AXIS-COA-WOLV10-FD.webp`,
   'axis-peptide-labs-2/ghk-cu/vial/50000': `${AXIS_UPLOADS}2026/09/AXIS-COA-GHKCu50-FD.webp`,
-  'axis-peptide-labs-2/ghk-cu/vial/100000': `${AXIS_UPLOADS}2026/09/AXIS-COA-GHKCu50-FD.webp`,
   'axis-peptide-labs-2/retatrutide/vial/10000': `${AXIS_UPLOADS}2026/09/AXIS-COA-RT10-APL.pdf`,
   'axis-peptide-labs-2/retatrutide/vial/30000': `${AXIS_UPLOADS}2026/09/AXIS-COA-RT30-FD-v2.webp`,
   'axis-peptide-labs-2/retatrutide/vial/60000': `${AXIS_UPLOADS}2026/09/AXIS-COA-RT30-FD-v2.webp`,
