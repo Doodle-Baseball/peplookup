@@ -41,7 +41,8 @@ describe('withPublishedCoaLink', () => {
     expect(withPublishedCoaLink(selank)).toBe(selank);
     const otherSize = offer({ productSlug: 'mots-c', vialSize: 30_000 });
     expect(withPublishedCoaLink(otherSize).coaUrl).toBeUndefined();
-    const otherVendor = offer({ supplierSlug: 'axis-peptide-labs-2' });
+    // Fictional on purpose: a real vendor with no COAs today can publish one later and break this.
+    const otherVendor = offer({ supplierSlug: 'vendor-without-coas' });
     expect(withPublishedCoaLink(otherVendor).coaUrl).toBeUndefined();
   });
 
@@ -64,6 +65,6 @@ describe('withPublishedCoaLink', () => {
   it("falls back to a vendor's general COA page only for that vendor's listings", () => {
     const aminoClubSpray = offer({ supplierSlug: 'amino-club-2', productSlug: 'semax', form: 'spray', vialSize: 25_000 });
     expect(withPublishedCoaLink(aminoClubSpray).coaUrl).toBe('https://www.aminoclub.com/us/coa');
-    expect(withPublishedCoaLink(offer({ supplierSlug: 'axis-peptide-labs-2' })).coaUrl).toBeUndefined();
+    expect(withPublishedCoaLink(offer({ supplierSlug: 'vendor-without-coas' })).coaUrl).toBeUndefined();
   });
 });
