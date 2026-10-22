@@ -89,10 +89,11 @@ export function SupplierTrustPanel({
     observer.observe(wrapper);
     return () => observer.disconnect();
   }, [matchingCoaReports]);
-  // The COA box shows for every supplier; the reviews card only when there is something to show.
+  // Each card shows only when there is something to show.
   const listRef = useRef<HTMLUListElement>(null);
   const [listMaxHeight, setListMaxHeight] = useState<number | 'none' | null>(null);
   const hasReviewSection = reviews.length > 0 || reviewsUrl !== null;
+  const hasCoaSection = coaReports.length > 0;
 
   // Cards differ in height, so the cap is measured: the top of the first
   // hidden card marks exactly where the fourth visible one ends.
@@ -115,6 +116,8 @@ export function SupplierTrustPanel({
     return () => observer.disconnect();
   }, [reviews]);
 
+  if (!hasReviewSection && !hasCoaSection) return null;
+
   return (
     <section aria-labelledby="trust-panel-heading" className="reveal mt-12">
       <h2 id="trust-panel-heading" className="sr-only">
@@ -124,7 +127,13 @@ export function SupplierTrustPanel({
       <div className="grid items-stretch gap-6 lg:grid-cols-2">
         {/* ------------------------------------------------------ Reviews */}
         {hasReviewSection ? (
-        <div className="flex flex-col rounded-panel border border-line bg-surface-raised p-5 shadow-card sm:p-6">
+        <div
+          className={cn(
+            'flex flex-col rounded-panel border border-line bg-surface-raised p-5 shadow-card sm:p-6',
+            // Alone in the row (no COAs to sit beside): spans the full width.
+            !hasCoaSection && 'lg:col-span-2',
+          )}
+        >
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-3">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-chip bg-accent-tint text-rating">
@@ -191,6 +200,7 @@ export function SupplierTrustPanel({
         ) : null}
 
         {/* --------------------------------------------------- COA reports */}
+        {hasCoaSection ? (
         <div
           className={cn(
             'flex h-full w-full flex-col rounded-panel border border-line bg-surface-raised p-5 shadow-card sm:p-6',
@@ -205,11 +215,9 @@ export function SupplierTrustPanel({
               </span>
               <h3 className="truncate text-xl font-black text-content sm:text-2xl">Lab Reports &amp; COAs</h3>
             </div>
-            {coaReports.length > 0 ? (
-              <span className="inline-flex shrink-0 items-center rounded-pill border border-accent/30 bg-accent-tint px-3 py-1.5 text-micro font-bold uppercase text-accent-strong">
-                {coaReports.length} {coaReports.length === 1 ? 'report' : 'reports'}
-              </span>
-            ) : null}
+            <span className="inline-flex shrink-0 items-center rounded-pill border border-accent/30 bg-accent-tint px-3 py-1.5 text-micro font-bold uppercase text-accent-strong">
+              {coaReports.length} {coaReports.length === 1 ? 'report' : 'reports'}
+            </span>
           </div>
 
           {labName ? (
@@ -218,95 +226,88 @@ export function SupplierTrustPanel({
             </p>
           ) : null}
 
-          {coaReports.length > 0 ? (
-            <>
-              <label className="sr-only" htmlFor={`coa-search-${supplierSlug}`}>
-                Search {supplierName} COA reports
-              </label>
-              <div className="mt-5 flex items-center gap-2.5 rounded-card border border-line bg-surface px-4 py-3 transition-colors focus-within:border-accent">
-                <SearchIcon className="h-4 w-4 shrink-0 text-faint" />
-                <input
-                  id={`coa-search-${supplierSlug}`}
-                  type="search"
-                  autoComplete="off"
-                  value={coaQuery}
-                  onChange={(event) => setCoaQuery(event.target.value)}
-                  placeholder="Search products…"
-                  className="w-full min-w-0 bg-transparent text-sm font-semibold text-content outline-none placeholder:font-normal placeholder:text-faint"
-                />
-              </div>
+          <label className="sr-only" htmlFor={`coa-search-${supplierSlug}`}>
+            Search {supplierName} COA reports
+          </label>
+          <div className="mt-5 flex items-center gap-2.5 rounded-card border border-line bg-surface px-4 py-3 transition-colors focus-within:border-accent">
+            <SearchIcon className="h-4 w-4 shrink-0 text-faint" />
+            <input
+              id={`coa-search-${supplierSlug}`}
+              type="search"
+              autoComplete="off"
+              value={coaQuery}
+              onChange={(event) => setCoaQuery(event.target.value)}
+              placeholder="Search products…"
+              className="w-full min-w-0 bg-transparent text-sm font-semibold text-content outline-none placeholder:font-normal placeholder:text-faint"
+            />
+          </div>
 
-              {matchingCoaReports.length > 0 ? (
-                // Beside the reviews card the list fills whatever height that
-                // card sets, absolutely positioned so its own length doesn't
-                // stretch the row and no blank strip is left under it.
-                <div
-                  ref={coaWrapperRef}
-                  className={cn('relative mt-4', hasReviewSection && 'lg:min-h-80 lg:flex-1')}
-                >
-                <ul
-                  ref={coaListRef}
-                  className={cn(
-                    'panel-scrollbar grid max-h-96 snap-y snap-mandatory grid-cols-1 content-start gap-2.5 overflow-y-auto pr-1 sm:grid-cols-2',
-                    hasReviewSection ? 'lg:absolute lg:inset-0 lg:max-h-none' : 'lg:grid-cols-3',
-                  )}
-                  tabIndex={0}
-                  aria-label={`${supplierName} COA reports`}
-                >
-                  {matchingCoaReports.map((report) => (
-                    <li
-                      key={report.key}
-                      className="flex snap-start flex-col gap-3 rounded-card border border-line bg-surface p-4 transition-shadow hover:shadow-card"
-                    >
-                      <div className="flex min-w-0 items-start gap-3">
-                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-chip bg-accent-tint text-accent-strong">
-                          <DocumentIcon className="h-4 w-4" />
-                        </span>
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-bold text-content" title={report.productName}>
-                            {report.productName}
-                          </p>
-                          <p className="text-xs text-muted">Certificate of analysis</p>
-                        </div>
-                      </div>
-                      {report.sizes.length > 0 ? (
-                        <ul className="flex flex-wrap gap-1.5" aria-label={`${report.productName} sizes covered`}>
-                          {report.sizes.map((size) => (
-                            <li
-                              key={size}
-                              className="rounded-pill border border-line bg-surface-raised px-2 py-0.5 text-micro font-bold text-muted"
-                            >
-                              {size}
-                            </li>
-                          ))}
-                        </ul>
-                      ) : null}
-                      <a
-                        href={report.url}
-                        target="_blank"
-                        rel="nofollow noopener noreferrer"
-                        aria-label={`View ${report.productName} COA`}
-                        className="mt-auto inline-flex items-center justify-center gap-1.5 rounded-pill bg-accent px-3 py-2 text-xs font-bold uppercase tracking-wide text-surface transition-colors hover:bg-accent-strong"
-                      >
-                        View COA
-                        <ExternalIcon className="h-3 w-3" />
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-                </div>
-              ) : (
-                <p className="mt-4 rounded-card border border-dashed border-line bg-surface p-6 text-center text-sm text-muted">
-                  No reports match &ldquo;{coaQuery.trim()}&rdquo;.
-                </p>
+          {matchingCoaReports.length > 0 ? (
+            // Beside the reviews card the list fills whatever height that
+            // card sets, absolutely positioned so its own length doesn't
+            // stretch the row and no blank strip is left under it.
+            <div
+              ref={coaWrapperRef}
+              className={cn('relative mt-4', hasReviewSection && 'lg:min-h-80 lg:flex-1')}
+            >
+            <ul
+              ref={coaListRef}
+              className={cn(
+                'panel-scrollbar grid max-h-96 snap-y snap-mandatory grid-cols-1 content-start gap-2.5 overflow-y-auto pr-1 sm:grid-cols-2',
+                hasReviewSection ? 'lg:absolute lg:inset-0 lg:max-h-none' : 'lg:grid-cols-3',
               )}
-            </>
+              tabIndex={0}
+              aria-label={`${supplierName} COA reports`}
+            >
+              {matchingCoaReports.map((report) => (
+                <li
+                  key={report.key}
+                  className="flex snap-start flex-col gap-3 rounded-card border border-line bg-surface p-4 transition-shadow hover:shadow-card"
+                >
+                  <div className="flex min-w-0 items-start gap-3">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-chip bg-accent-tint text-accent-strong">
+                      <DocumentIcon className="h-4 w-4" />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-bold text-content" title={report.productName}>
+                        {report.productName}
+                      </p>
+                      <p className="text-xs text-muted">Certificate of analysis</p>
+                    </div>
+                  </div>
+                  {report.sizes.length > 0 ? (
+                    <ul className="flex flex-wrap gap-1.5" aria-label={`${report.productName} sizes covered`}>
+                      {report.sizes.map((size) => (
+                        <li
+                          key={size}
+                          className="rounded-pill border border-line bg-surface-raised px-2 py-0.5 text-micro font-bold text-muted"
+                        >
+                          {size}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                  <a
+                    href={report.url}
+                    target="_blank"
+                    rel="nofollow noopener noreferrer"
+                    aria-label={`View ${report.productName} COA`}
+                    className="mt-auto inline-flex items-center justify-center gap-1.5 rounded-pill bg-accent px-3 py-2 text-xs font-bold uppercase tracking-wide text-surface transition-colors hover:bg-accent-strong"
+                  >
+                    View COA
+                    <ExternalIcon className="h-3 w-3" />
+                  </a>
+                </li>
+              ))}
+            </ul>
+            </div>
           ) : (
-            <p className="mt-5 rounded-card border border-dashed border-line bg-surface p-6 text-center text-sm text-muted">
-              No COA reports published for {supplierName} yet.
+            <p className="mt-4 rounded-card border border-dashed border-line bg-surface p-6 text-center text-sm text-muted">
+              No reports match &ldquo;{coaQuery.trim()}&rdquo;.
             </p>
           )}
         </div>
+        ) : null}
       </div>
     </section>
   );
