@@ -89,7 +89,7 @@ export default async function ReviewsPage() {
           {seo?.h1 ? seo.h1 : <>Supplier <span className="italic text-accent">reviews.</span></>}
         </h1>
         <p className="mt-5 max-w-2xl text-base leading-relaxed text-muted sm:text-lg">
-          Honest, independent reviews — the overall rating for every supplier we track, with a full reviews page for
+          Honest, independent reviews of every supplier we track, with the overall rating and a full reviews page for
           each. Ratings come from the public review source linked on each page, and {site.name} never writes or edits
           them.
         </p>
@@ -115,7 +115,7 @@ export default async function ReviewsPage() {
 
         {/* The supplier directory that follows on every page lists all of them, rated or not. */}
         <p className="mt-10 text-sm text-muted">
-          Not every supplier has a public review source yet — see the full list below.
+          Not every supplier has a public review source yet. See the full list below.
         </p>
       </div>
     </div>
