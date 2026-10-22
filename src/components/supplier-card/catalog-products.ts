@@ -2,7 +2,7 @@ import type { Offer, Product, ProductForm, Supplier } from '@/lib/schema';
 import { toListing } from '@/lib/listing';
 import { couponAdjustedPrice, effectivePrice, hasDiscount, pricePerMg, pricePerMgFor } from '@/lib/price';
 import { formatMoney, formatPerMg } from '@/lib/money';
-import { isStale, timeAgo } from '@/lib/format';
+import { isStale, seenAgo } from '@/lib/format';
 
 /**
  * One option (form, size or pack) of a product in a supplier's catalogue, with
@@ -102,7 +102,7 @@ function toVariant(offer: Offer, supplier: Pick<Supplier, 'coupon'>, now: Date):
     listPriceText: observedDiscount || couponPercentOff !== null ? formatMoney(listing.listPrice, listing.currency) : null,
     couponApplied: couponPercentOff !== null,
     perMgText: perMg !== null ? formatPerMg(perMg, listing.currency) : 'Price per mg unavailable',
-    seenText: timeAgo(offer.scrapedAt, now),
+    seenText: seenAgo(offer.scrapedAt, now),
     stale: isStale(offer.scrapedAt, now),
     coaHref: offer.labReport?.reportUrl ?? offer.labReport?.labUrl ?? offer.coaUrl ?? null,
     buyHref: `/go?to=${encodeURIComponent(offer.productUrl)}`,

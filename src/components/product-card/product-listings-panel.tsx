@@ -13,7 +13,7 @@ import {
   pricePerMgFor,
 } from '@/lib/price';
 import { formatMoney, formatPerMg } from '@/lib/money';
-import { timeAgo, isStale } from '@/lib/format';
+import { seenAgo, timeAgo, isStale } from '@/lib/format';
 import { cn } from '@/lib/cn';
 import { SupplierLogo } from '@/components/ui/supplier-logo';
 import { DoseChipsExpandable } from '@/components/product-card/dose-chips-expandable';
@@ -515,7 +515,7 @@ function PriceRow({
             <span aria-hidden="true">·</span>
             {/* Relative time can tick over between the server render and hydration. */}
             <span suppressHydrationWarning className={cn(stale && 'font-semibold text-warn')}>
-              seen {timeAgo(offer.scrapedAt)}
+              seen {seenAgo(offer.scrapedAt)}
             </span>
           </p>
         </div>

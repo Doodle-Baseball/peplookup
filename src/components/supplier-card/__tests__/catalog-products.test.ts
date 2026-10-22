@@ -105,7 +105,7 @@ describe('groupCatalogProducts', () => {
       NOW,
     );
     expect(product!.variants.map((variant) => [variant.inStock, variant.seenText, variant.stale])).toEqual([
-      [false, '1mo ago', true],
+      [false, '4w ago', true],
       [true, '1d ago', false],
     ]);
   });
