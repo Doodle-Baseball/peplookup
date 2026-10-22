@@ -79,6 +79,10 @@ export const DEFAULT_PAGE_FAQS: Readonly<Record<string, readonly FaqItem[]>> = {
       question: 'A review or rating looks out of date. What should I do?',
       answer: `Ratings are read from the supplier's public review page and can change at any time. Open the source link on the supplier's reviews page for the live figure, and tell us through the contact page if something here looks wrong so we can recheck it.`,
     },
+    {
+      question: 'Which peptide suppliers have published COAs?',
+      answer: `Suppliers marked with a COA badge on this page have published certificates of analysis for their listings, and the badge shows what share of their listings is currently backed by one. Sort by "COA Verified" to see the best-covered first, and open a supplier's Full Details page for the certificate linked to each product.`,
+    },
   ],
 
   '/coupons': [

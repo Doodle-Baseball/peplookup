@@ -38,9 +38,14 @@ export default async function ReviewsPage() {
   // Same count as "Products listed" on the supplier page: listings whose compound resolves.
   const productSlugs = new Set(products.map((product) => product.slug));
   const productCountBySupplier = new Map<string, number>();
+  // Of those, the ones backed by a published COA, by the same test as the Partner Spotlight's "Listings with COAs".
+  const coaListingCountBySupplier = new Map<string, number>();
   for (const offer of offers) {
     if (!productSlugs.has(offer.productSlug)) continue;
     productCountBySupplier.set(offer.supplierSlug, (productCountBySupplier.get(offer.supplierSlug) ?? 0) + 1);
+    if (offer.coaUrl || offer.labReport?.reportUrl || offer.labReport?.labUrl) {
+      coaListingCountBySupplier.set(offer.supplierSlug, (coaListingCountBySupplier.get(offer.supplierSlug) ?? 0) + 1);
+    }
   }
 
   const vendors: ReviewVendor[] = suppliers.map((supplier) => ({
@@ -53,10 +58,13 @@ export default async function ReviewsPage() {
     ratingSource: ratingSourceLabel(supplier.reviewsUrl),
     couponPercentOff: supplier.coupon?.percentOff ?? null,
     productCount: productCountBySupplier.get(supplier.slug) ?? 0,
+    coaListingCount: coaListingCountBySupplier.get(supplier.slug) ?? 0,
     foundedYear: supplier.foundedYear,
     shopHref: supplierGoPath(supplier.slug, 'website'),
   }));
   const ratedCount = vendors.filter((vendor) => vendor.rating !== null).length;
+  // Every listed supplier, the same total as `{vendorCount}` and the "listed" count in the directory below.
+  const totalSupplierCount = allSuppliers.length;
 
   const reviewItems = [...vendors].sort(compareReviewVendors(DEFAULT_REVIEW_SORT)).map((vendor) => ({
     name: vendor.name,
@@ -81,18 +89,17 @@ export default async function ReviewsPage() {
           {seo?.h1 ? seo.h1 : <>Supplier <span className="italic text-accent">reviews.</span></>}
         </h1>
         <p className="mt-5 max-w-2xl text-base leading-relaxed text-muted sm:text-lg">
-          The overall rating for every supplier we track, with a full reviews page for each. Ratings come from the public
-          review source linked on each page, and {site.name} never writes or edits them.
+          Honest, independent reviews — the overall rating for every supplier we track, with a full reviews page for
+          each. Ratings come from the public review source linked on each page, and {site.name} never writes or edits
+          them.
         </p>
 
-        <dl className="mt-8 grid max-w-md grid-cols-2 gap-3">
-          <div className="rounded-card border border-line bg-surface-raised p-4">
-            <dt className="eyebrow">Suppliers</dt>
-            <dd className="mt-1 text-2xl font-black text-content">{vendors.length}</dd>
-          </div>
+        <dl className="mt-8 max-w-md">
           <div className="rounded-card border border-accent/30 bg-accent-tint p-4">
-            <dt className="eyebrow">Rated</dt>
-            <dd className="mt-1 text-2xl font-black text-accent-strong">{ratedCount}</dd>
+            <dt className="eyebrow">Ratings</dt>
+            <dd className="mt-1 text-2xl font-black text-accent-strong">
+              {ratedCount} of {totalSupplierCount} <span className="text-base font-bold">suppliers rated</span>
+            </dd>
           </div>
         </dl>
 
@@ -105,6 +112,11 @@ export default async function ReviewsPage() {
         )}
 
         <PageFaqSection path="/reviews" className="mt-14" />
+
+        {/* The supplier directory that follows on every page lists all of them, rated or not. */}
+        <p className="mt-10 text-sm text-muted">
+          Not every supplier has a public review source yet — see the full list below.
+        </p>
       </div>
     </div>
   );

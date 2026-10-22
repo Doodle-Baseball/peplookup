@@ -10,6 +10,7 @@ import {
   CalendarIcon,
   ChevronDownIcon,
   ExternalIcon,
+  FlaskIcon,
   SearchIcon,
   StarIcon,
   TagIcon,
@@ -34,6 +35,8 @@ export interface ReviewVendor {
   couponPercentOff: number | null;
   /** Listings tracked for this supplier, as "Products listed" counts them on its page. */
   productCount: number;
+  /** How many of those listings are backed by a published COA. */
+  coaListingCount: number;
   foundedYear: number | null;
   /** Already resolved to the site's outbound redirect. */
   shopHref: string;
@@ -43,18 +46,30 @@ const SORTS: { key: ReviewSortKey; label: string }[] = [
   { key: 'rating', label: 'Top rated' },
   { key: 'reviews', label: 'Most reviews' },
   { key: 'name', label: 'A–Z' },
+  { key: 'coa', label: 'COA Verified' },
 ];
 
 const PAGE_SIZE = 24;
 
-/** Coupon, catalogue size and founding year, each shown only when the supplier's record holds it. */
+/** Coupon, catalogue size, COA coverage and founding year, each shown only when the supplier's record holds it. */
 function VendorFacts({ vendor }: { vendor: ReviewVendor }) {
+  const coaPercent =
+    vendor.coaListingCount > 0 && vendor.productCount > 0
+      ? Math.round((vendor.coaListingCount / vendor.productCount) * 100)
+      : null;
   const facts = [
     vendor.couponPercentOff !== null
       ? { key: 'coupon', icon: <TagIcon className="h-3.5 w-3.5 shrink-0 text-coupon-ink" />, text: `${vendor.couponPercentOff}% off code` }
       : null,
     vendor.productCount > 0
       ? { key: 'products', icon: <BoxIcon className="h-3.5 w-3.5 shrink-0 text-accent" />, text: `${vendor.productCount} products` }
+      : null,
+    coaPercent !== null
+      ? {
+          key: 'coa',
+          icon: <FlaskIcon className="h-3.5 w-3.5 shrink-0 text-accent" />,
+          text: `COA on ${coaPercent}% of listings`,
+        }
       : null,
     vendor.foundedYear !== null
       ? { key: 'founded', icon: <CalendarIcon className="h-3.5 w-3.5 shrink-0 text-accent" />, text: `Est. ${vendor.foundedYear}` }
