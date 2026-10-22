@@ -15,13 +15,6 @@ export type CouponVendor = Supplier & {
   listingCount: number;
 };
 
-/** A "Find a coupon by compound" chip: the suppliers with a code that have this compound in stock. */
-export interface CouponCompound {
-  slug: string;
-  name: string;
-  supplierSlugs: string[];
-}
-
 const SORTS: { key: CouponSortKey; label: string }[] = [
   { key: 'discount', label: 'Biggest discount' },
   { key: 'listings', label: 'Largest catalogue' },
@@ -71,33 +64,28 @@ function CouponCodeBlock({ code }: { code: string }) {
 
 export function CouponBrowser({
   vendors,
-  compounds,
   totalSupplierCount,
 }: {
   vendors: CouponVendor[];
-  compounds: CouponCompound[];
   /** Every listed supplier, with or without a code, the same total as the directory's "listed" count. */
   totalSupplierCount: number;
 }) {
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState<CouponSortKey>(DEFAULT_COUPON_SORT);
-  const [compoundSlug, setCompoundSlug] = useState<string | null>(null);
-  const compound = compounds.find((candidate) => candidate.slug === compoundSlug) ?? null;
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    const stockists = compound ? new Set(compound.supplierSlugs) : null;
-    const matched = vendors.filter(
-      (vendor) =>
-        (!stockists || stockists.has(vendor.slug)) &&
-        (!q ||
-          vendor.name.toLowerCase().includes(q) ||
-          vendor.coupon.code.toLowerCase().includes(q) ||
-          (vendor.description ?? '').toLowerCase().includes(q)),
-    );
+    const matched = q
+      ? vendors.filter(
+          (vendor) =>
+            vendor.name.toLowerCase().includes(q) ||
+            vendor.coupon.code.toLowerCase().includes(q) ||
+            (vendor.description ?? '').toLowerCase().includes(q),
+        )
+      : vendors;
 
     return [...matched].sort(compareCouponVendors(sort));
-  }, [vendors, query, sort, compound]);
+  }, [vendors, query, sort]);
 
   return (
     <>
@@ -146,44 +134,15 @@ export function CouponBrowser({
         </div>
       </div>
 
-      {compounds.length > 0 ? (
-        <div className="mt-5">
-          <p className="eyebrow">Find a coupon by compound</p>
-          <div role="group" aria-label="Find a coupon by compound" className="mt-2 flex flex-wrap gap-2">
-            {compounds.map((option) => {
-              const isSelected = option.slug === compoundSlug;
-              return (
-                <button
-                  key={option.slug}
-                  type="button"
-                  onClick={() => setCompoundSlug(isSelected ? null : option.slug)}
-                  aria-pressed={isSelected}
-                  className={`rounded-pill border px-3.5 py-1.5 text-xs font-bold transition-colors ${
-                    isSelected
-                      ? 'border-brand bg-brand text-surface'
-                      : 'border-line bg-surface-raised text-content hover:border-brand'
-                  }`}
-                >
-                  {option.name}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      ) : null}
-
       <p className="mt-3 text-sm text-muted" aria-live="polite">
         <span className="font-bold text-content">{filtered.length}</span> of {totalSupplierCount}{' '}
         {totalSupplierCount === 1 ? 'supplier has' : 'suppliers have'} an active code
-        {compound ? ` and ${compound.name} in stock` : ''}
         {query ? ` matching “${query}”` : ''}
       </p>
 
       {filtered.length === 0 ? (
         <p className="mt-8 rounded-card border border-dashed border-line p-10 text-center text-sm text-muted">
-          {query
-            ? `No supplier or code matches “${query}”${compound ? ` among ${compound.name} stockists` : ''}.`
-            : `No supplier with an active code has ${compound?.name ?? 'this compound'} in stock right now.`}
+          No supplier or code matches “{query}”.
         </p>
       ) : (
         <ul className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">

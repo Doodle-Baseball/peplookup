@@ -3,9 +3,9 @@ import { site } from '@/config/site';
 import { staticSeoPage } from '@/config/seo-pages';
 import { pageMetadata } from '@/lib/seo-defaults';
 import { getSeoOverride, withSeo } from '@/lib/seo';
-import { getAllOffers, getProducts, getSuppliers } from '@/lib/repository';
-import { CouponBrowser, type CouponCompound, type CouponVendor } from '@/components/coupons/coupon-browser';
-import { TagIcon } from '@/components/icons/icons';
+import { getAllOffers, getSuppliers } from '@/lib/repository';
+import { CouponBrowser, type CouponVendor } from '@/components/coupons/coupon-browser';
+import { ShieldCheckIcon, TagIcon } from '@/components/icons/icons';
 import { PageFaqSection } from '@/components/faq/page-faq-section';
 import { PageSeo } from '@/components/seo/page-seo';
 import { compareCouponVendors, DEFAULT_COUPON_SORT } from '@/components/coupons/coupon-sort';
@@ -13,9 +13,6 @@ import { couponPagePath } from '@/lib/coupon-pages';
 import { ExtensionBanner } from '@/components/extension/extension-banner';
 
 const PAGE = staticSeoPage('/coupons');
-
-/** "Find a coupon by compound" chips: the compounds stocked by the most suppliers with a code. */
-const COMPOUND_CHIP_COUNT = 6;
 
 export async function generateMetadata(): Promise<Metadata> {
   return withSeo(PAGE.path, pageMetadata(PAGE));
@@ -30,11 +27,10 @@ export async function generateMetadata(): Promise<Metadata> {
 export const revalidate = 1800;
 
 export default async function CouponsPage() {
-  const [seo, suppliers, offers, products] = await Promise.all([
+  const [seo, suppliers, offers] = await Promise.all([
     getSeoOverride(PAGE.path),
     getSuppliers(),
     getAllOffers(),
-    getProducts(),
   ]);
 
   // One pass over the catalogue rather than a count query per vendor card.
@@ -50,21 +46,6 @@ export default async function CouponsPage() {
       coupon: supplier.coupon!,
       listingCount: listingCounts.get(supplier.slug) ?? 0,
     }));
-  // Which suppliers with a code have each compound in stock, for the compound chips.
-  const couponSlugs = new Set(vendors.map((vendor) => vendor.slug));
-  const stockistsByProduct = new Map<string, Set<string>>();
-  for (const offer of offers) {
-    if (!offer.inStock || !couponSlugs.has(offer.supplierSlug)) continue;
-    const stockists = stockistsByProduct.get(offer.productSlug) ?? new Set<string>();
-    stockists.add(offer.supplierSlug);
-    stockistsByProduct.set(offer.productSlug, stockists);
-  }
-  const compounds: CouponCompound[] = products
-    .map((product) => ({ slug: product.slug, name: product.name, supplierSlugs: [...(stockistsByProduct.get(product.slug) ?? [])] }))
-    .filter((compound) => compound.supplierSlugs.length > 0)
-    .sort((a, b) => b.supplierSlugs.length - a.supplierSlugs.length || a.name.localeCompare(b.name))
-    .slice(0, COMPOUND_CHIP_COUNT);
-
   const couponItems = [...vendors].sort(compareCouponVendors(DEFAULT_COUPON_SORT)).map((vendor) => ({
     name: vendor.name,
     url: couponPagePath(vendor.slug),
@@ -86,7 +67,7 @@ export default async function CouponsPage() {
         <h1 className="mt-3 text-4xl font-black tracking-tight text-content sm:text-5xl">
           {seo?.h1 ? seo.h1 : <>Supplier <span className="italic text-brand">coupon codes.</span></>}
         </h1>
-        <p className="mt-5 max-w-2xl text-base leading-relaxed text-muted sm:text-lg">
+        <p className="mt-5 text-base leading-relaxed text-muted sm:text-lg">
           Every active peptide coupon code we track, with the supplier it belongs to, its discount and its rating.
           Tap a code to copy it, then apply it at checkout on the supplier&rsquo;s own site. {site.name} never
           handles the order.
@@ -99,36 +80,59 @@ export default async function CouponsPage() {
             No coupon codes are active right now. Check back soon.
           </p>
         ) : (
-          <CouponBrowser vendors={vendors} compounds={compounds} totalSupplierCount={suppliers.length} />
+          <CouponBrowser vendors={vendors} totalSupplierCount={suppliers.length} />
         )}
 
-        <div className="mt-10 rounded-panel border border-line bg-surface-raised p-5 shadow-card sm:p-8">
-          <p className="eyebrow">Research Peptide Coupon Codes and Discount Codes</p>
-          <p className="mt-3 text-sm leading-relaxed text-muted sm:text-base">
-            Active peptide discount codes from verified suppliers, collected and tracked by {site.name}.
-            Every code is checked against the supplier&rsquo;s own checkout, and prices on the site already
-            reflect the discount where a sitewide code applies. Most codes work sitewide, so they apply to
-            popular compounds like BPC-157, TB-500, Retatrutide and Semaglutide. Tap any code to copy it,
-            then paste it at the supplier&rsquo;s checkout.
-          </p>
-        </div>
+        {/* Same panel, heading and callout treatment as the supplier guide on /suppliers:
+            heading on the left from `lg` up, stacked above the text on smaller screens. */}
+        <section className="mt-10 rounded-panel border border-line bg-surface-raised p-5 shadow-card sm:p-8">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-10">
+            <div>
+              <span className="flex h-10 w-10 items-center justify-center rounded-chip bg-coupon-tint text-coupon-ink">
+                <TagIcon className="h-5 w-5" />
+              </span>
+              <h2 className="mt-4 text-[clamp(1.75rem,7vw,3rem)] font-black leading-[1.05] text-content">
+                Research Peptide Coupon Codes and <span className="italic text-accent">Discount Codes</span>
+              </h2>
+            </div>
+            <p className="text-base leading-7 text-muted sm:text-lg sm:leading-8 lg:col-span-2">
+              Active peptide discount codes from verified suppliers, collected and tracked by {site.name}.
+              Every code is checked against the supplier&rsquo;s own checkout, and prices on the site already
+              reflect the discount where a sitewide code applies. Most codes work sitewide, so they apply to
+              popular compounds like BPC-157, TB-500, Retatrutide and Semaglutide. Tap any code to copy it,
+              then paste it at the supplier&rsquo;s checkout.
+            </p>
+          </div>
+        </section>
 
         <section className="mt-10 rounded-panel border border-line bg-surface-raised p-5 shadow-card sm:p-8">
-          <h2 className="text-lg font-black text-content sm:text-xl">
-            How We Verify <span className="text-brand">Peptide Coupon Codes</span>
-          </h2>
-          <div className="mt-4 space-y-3 text-sm leading-relaxed text-muted sm:text-base">
-            <p>
-              {site.name} monitors supplier sites for published discount codes and verifies each one at
-              checkout before listing it here. When a supplier runs a sitewide coupon, every listing from
-              that supplier shows the discounted price alongside the original, so price per mg comparisons
-              reflect what you would actually pay.
-            </p>
-            <p>
-              Codes are set by the suppliers, not by {site.name}. They can expire, carry conditions such
-              as minimum orders or first-time-customer restrictions, or be withdrawn at any time. If a
-              peptide coupon code stops working, let us know through the contact page and we will recheck it.
-            </p>
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-10">
+            <div>
+              <span className="flex h-10 w-10 items-center justify-center rounded-chip bg-accent-tint text-accent-strong">
+                <ShieldCheckIcon className="h-5 w-5" />
+              </span>
+              <h2 className="mt-4 text-[clamp(1.75rem,7vw,3rem)] font-black leading-[1.05] text-content">
+                How We Verify Peptide <span className="italic text-accent">Coupon Codes</span>
+              </h2>
+            </div>
+            <div className="space-y-4 lg:col-span-2">
+              <p className="text-base leading-7 text-muted sm:text-lg sm:leading-8">
+                {site.name} monitors supplier sites for published discount codes and verifies each one at
+                checkout before listing it here. When a supplier runs a sitewide coupon, every listing from
+                that supplier shows the discounted price alongside the original, so price per mg comparisons
+                reflect what you would actually pay.
+              </p>
+              <div className="flex items-start gap-3 rounded-card border border-accent/25 bg-accent-tint p-4 sm:p-5">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-chip bg-surface-raised text-accent-strong shadow-card">
+                  <TagIcon className="h-5 w-5" />
+                </span>
+                <p className="min-w-0 text-sm leading-7 text-content sm:text-base">
+                  Codes are set by the suppliers, not by {site.name}. They can expire, carry conditions such
+                  as minimum orders or first-time-customer restrictions, or be withdrawn at any time. If a
+                  peptide coupon code stops working, let us know through the contact page and we will recheck it.
+                </p>
+              </div>
+            </div>
           </div>
         </section>
 
