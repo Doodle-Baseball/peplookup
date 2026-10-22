@@ -87,7 +87,7 @@ export function SupplierCatalogBrowser({
             >
               {matching.slice(pageIndex * CATALOG_PAGE_SIZE, (pageIndex + 1) * CATALOG_PAGE_SIZE).map((product) => (
                 <OfferVariantCard
-                  key={product.slug}
+                  key={product.key}
                   product={product}
                   supplierName={supplierName}
                   couponCode={couponCode}

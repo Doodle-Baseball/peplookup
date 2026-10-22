@@ -30,7 +30,7 @@ function offer(over: Partial<Offer> = {}): Offer {
   };
 }
 
-const noCoupon = { coupon: null };
+const noCoupon = { slug: 'acme', coupon: null };
 
 describe('groupCatalogProducts', () => {
   it('puts every size, pack and form of a product on one card', () => {
@@ -78,7 +78,7 @@ describe('groupCatalogProducts', () => {
   });
 
   it('applies the coupon like the offer cards do, keeping the list price to strike through', () => {
-    const [product] = groupCatalogProducts([offer({ listPrice: 6000 })], products, { coupon: { code: 'PEP', percentOff: 10 } }, NOW);
+    const [product] = groupCatalogProducts([offer({ listPrice: 6000 })], products, { slug: 'acme', coupon: { code: 'PEP', percentOff: 10 } }, NOW);
     expect(product!.variants[0]).toMatchObject({ priceText: '$54.00', listPriceText: '$60.00', couponApplied: true });
   });
 
@@ -86,7 +86,7 @@ describe('groupCatalogProducts', () => {
     const [product] = groupCatalogProducts(
       [offer({ listPrice: 6000, salePrice: 5000 })],
       products,
-      { coupon: { code: 'PEP', percentOff: 10 } },
+      { slug: 'acme', coupon: { code: 'PEP', percentOff: 10 } },
       NOW,
     );
     expect(product!.variants[0]).toMatchObject({ priceText: '$50.00', listPriceText: '$60.00', couponApplied: false });
@@ -112,5 +112,29 @@ describe('groupCatalogProducts', () => {
 
   it('drops listings whose compound is unknown', () => {
     expect(groupCatalogProducts([offer({ productSlug: 'mystery' })], products, noCoupon, NOW)).toEqual([]);
+  });
+});
+
+describe('supplier catalogue overrides', () => {
+  const water = new Map([['bacteriostatic-water', { slug: 'bacteriostatic-water', name: 'Bacteriostatic Water' }]]);
+  const hospira = { slug: 'hospira-bacteriostatic-water', coupon: null };
+  const packs = [1, 5, 10, 25, 100].map((count) =>
+    offer({ productSlug: 'bacteriostatic-water', vialSize: 30_000, vialCount: count, listPrice: 2299 * count }),
+  );
+
+  it('shows each Hospira pack on its own card under the Hospira product name', () => {
+    const cards = groupCatalogProducts([...packs].reverse(), water, hospira, NOW);
+    expect(cards).toHaveLength(5);
+    expect(new Set(cards.map((card) => card.key)).size).toBe(5);
+    expect(cards.every((card) => card.name === 'Hospira Bacteriostatic Water' && card.variants.length === 1)).toBe(true);
+    expect(cards.map((card) => card.variants[0]!.optionLabel)).toEqual(['30mg', '30mg × 5', '30mg × 10', '30mg × 25', '30mg × 100']);
+    expect(cards[0]!.compareHref).toBe('/products/bacteriostatic-water');
+  });
+
+  it('keeps one card per product for every other supplier', () => {
+    const cards = groupCatalogProducts(packs, water, noCoupon, NOW);
+    expect(cards).toHaveLength(1);
+    expect(cards[0]).toMatchObject({ key: 'bacteriostatic-water', name: 'Bacteriostatic Water' });
+    expect(cards[0]!.variants).toHaveLength(5);
   });
 });

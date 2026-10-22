@@ -3,6 +3,7 @@ import { toListing } from '@/lib/listing';
 import { couponAdjustedPrice, effectivePrice, hasDiscount, pricePerMg, pricePerMgFor } from '@/lib/price';
 import { formatMoney, formatPerMg } from '@/lib/money';
 import { isStale, seenAgo } from '@/lib/format';
+import { SUPPLIER_CATALOG_OVERRIDES } from '@/config/supplier-catalog-overrides';
 
 /**
  * One option (form, size or pack) of a product in a supplier's catalogue, with
@@ -32,6 +33,8 @@ export interface CatalogVariant {
 }
 
 export interface CatalogProduct {
+  /** Unique per card: the product slug, or the listing's key when a supplier shows listings on separate cards. */
+  key: string;
   slug: string;
   name: string;
   compareHref: string;
@@ -109,17 +112,23 @@ function toVariant(offer: Offer, supplier: Pick<Supplier, 'coupon'>, now: Date):
   };
 }
 
+function byFormThenSize(a: Offer, b: Offer): number {
+  return FORM_ORDER.indexOf(a.form) - FORM_ORDER.indexOf(b.form) || a.vialSize - b.vialSize || a.vialCount - b.vialCount;
+}
+
 /**
  * One entry per product, each holding all of that product's listings as
  * options, in the order the listings first appear so the catalogue keeps its
- * existing running order.
+ * existing running order. A supplier in SUPPLIER_CATALOG_OVERRIDES can show
+ * each listing on its own card instead, and/or rename a product on its cards.
  */
 export function groupCatalogProducts(
   offers: readonly Offer[],
   productsBySlug: ReadonlyMap<string, Pick<Product, 'slug' | 'name'>>,
-  supplier: Pick<Supplier, 'coupon'>,
+  supplier: Pick<Supplier, 'slug' | 'coupon'>,
   now: Date = new Date(),
 ): CatalogProduct[] {
+  const override = SUPPLIER_CATALOG_OVERRIDES[supplier.slug];
   const bySlug = new Map<string, { product: Pick<Product, 'slug' | 'name'>; offers: Offer[] }>();
   for (const offer of offers) {
     const product = productsBySlug.get(offer.productSlug);
@@ -128,17 +137,16 @@ export function groupCatalogProducts(
     group.offers.push(offer);
     bySlug.set(product.slug, group);
   }
-  return [...bySlug.values()].map(({ product, offers: productOffers }) => ({
-    slug: product.slug,
-    name: product.name,
-    compareHref: `/products/${product.slug}`,
-    variants: [...productOffers]
-      .sort(
-        (a, b) =>
-          FORM_ORDER.indexOf(a.form) - FORM_ORDER.indexOf(b.form) ||
-          a.vialSize - b.vialSize ||
-          a.vialCount - b.vialCount,
-      )
-      .map((offer) => toVariant(offer, supplier, now)),
-  }));
+  return [...bySlug.values()].flatMap(({ product, offers: productOffers }) => {
+    const card = {
+      slug: product.slug,
+      name: override?.productNames?.[product.slug] ?? product.name,
+      compareHref: `/products/${product.slug}`,
+    };
+    const variants = [...productOffers].sort(byFormThenSize).map((offer) => toVariant(offer, supplier, now));
+    if (override?.separateCards) {
+      return variants.map((variant) => ({ ...card, key: variant.key, variants: [variant] }));
+    }
+    return [{ ...card, key: product.slug, variants }];
+  });
 }

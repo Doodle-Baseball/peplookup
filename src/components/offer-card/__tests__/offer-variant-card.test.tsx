@@ -26,6 +26,7 @@ function variant(over: Partial<CatalogVariant>): CatalogVariant {
 }
 
 const PRODUCT: CatalogProduct = {
+  key: 'bpc-157',
   slug: 'bpc-157',
   name: 'BPC-157',
   compareHref: '/products/bpc-157',
