@@ -84,6 +84,8 @@ export function OfferCard({
               height={320}
               className="h-full w-full object-contain transition-transform duration-200 group-hover:scale-105"
               unoptimized
+              // Some vendors (e.g. GenX) refuse image requests that name another site as the referrer.
+              referrerPolicy="no-referrer"
             />
           ) : (
             <BoxIcon className="h-10 w-10 text-faint transition-transform duration-200 group-hover:-translate-y-1 group-hover:text-accent" />
