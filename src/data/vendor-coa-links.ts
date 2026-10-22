@@ -24,7 +24,6 @@ const JANOSHIK_TESTS = 'https://verify.janoshik.com/tests/';
 const AMEANO_UPLOADS = 'https://ameanopeptides.com/wp-content/uploads/';
 const ELEVATE_SITE = 'https://elevateresearchco.com';
 const DYNOTIDES_COAS = 'https://dynotides.shop/wp-content/plugins/dynotides-catalog/app/certificates/previews/';
-const LA_PEPTIDES_UPLOADS = 'https://lapeptides.net/wp-content/uploads/';
 const LA_PEPTIDES_LAB_TEST = 'https://lapeptides.net/lab-test/';
 const TRUSTED_PEPS_UPLOADS = 'https://trustedpeps.us/wp-content/uploads/';
 const AXIS_UPLOADS = 'https://axispeptidelabs.com/wp-content/uploads/';
@@ -47,6 +46,16 @@ const AS_DPL1 = 'dpl=dpl_GkgVG1GTAC1bj5EqrgCcoqEV8o5Y&ref=PRODUCTS';
 const AS_DPL2 = 'dpl=dpl_BLWgjHPNvUoAEk6E1FRwgAcDUXyd&ref=PRODUCTS';
 const AS_DPL3 = 'dpl=dpl_qVNmsBMNTBaw1buEq2w7a4U7iF6L&ref=PRODUCTS';
 const AS_DPL4 = 'dpl=dpl_GmkY1o7fe2XEQkbVn7aLGwgNwhw3&ref=PRODUCTS';
+// A vendor's main COA page, carrying our referral the way its affiliate link does, for
+// listings whose own certificate link stopped working (deleted file or members-only page).
+const VANTAGE_COA_PAGE = 'https://vantageaminos.co/request-coa/ref/peplookup/';
+const ELEVATE_COA_PAGE = 'https://elevateresearchco.com/coa/?ref=PRODUCTS';
+const DYNOTIDES_COA_PAGE = 'https://dynotides.shop/certificates/?aff=31';
+const LA_PEPTIDES_COA_PAGE = 'https://lapeptides.net/coa-portal/?ref=products';
+const TRUSTED_PEPS_COA_PAGE = 'https://trustedpeps.us/coas/?aff=13';
+const AXIS_COA_PAGE = 'https://axispeptidelabs.com/coas-test-results/ref/peplookup/';
+const AVERIX_COA_PAGE = `https://averixlabs.com/coa/${AVERIX_REF}`;
+const AMINOVAULT_COA_PAGE = 'https://aminovault.com/lab-tests/crew/112/';
 
 const COA_LINKS: Readonly<Record<string, string>> = {
   // Pure Amino
@@ -356,13 +365,13 @@ const COA_LINKS: Readonly<Record<string, string>> = {
 
   // Vantage Aminos
   // Only listings supplied with a COA. The vendor lists its BPC-157 vial certificate for the nasal spray as well.
-  'vantage-aminos-2/bpc-157/vial/5000': `${VANTAGE_UPLOADS}2026/08/bpc-157-coa-VA-2512-8344.pdf`,
-  'vantage-aminos-2/bpc-157/spray/5000': `${VANTAGE_UPLOADS}2026/08/bpc-157-coa-VA-2512-8344.pdf`,
-  'vantage-aminos-2/ghk-cu/vial/50000': `${VANTAGE_UPLOADS}2026/08/ghk-cu-coa-VA-2512-0552.pdf`,
-  'vantage-aminos-2/retatrutide/vial/10000': `${VANTAGE_UPLOADS}2026/07/glp-3-reta-coa-VA-2512-4676.pdf`,
-  'vantage-aminos-2/tirzepatide/vial/5000': `${VANTAGE_UPLOADS}2026/07/glp-2-tirz-coa-VA-2512-0836.pdf`,
-  'vantage-aminos-2/semaglutide/vial/5000': `${VANTAGE_UPLOADS}2026/07/glp-1-sema-coa-VA-2512-4447-1.pdf`,
-  'vantage-aminos-2/cjc-1295-no-dac/vial/5000': `${VANTAGE_UPLOADS}2026/08/cjc-1295-no-dac-coa-VA-2512-9601.pdf`,
+  'vantage-aminos-2/bpc-157/vial/5000': VANTAGE_COA_PAGE,
+  'vantage-aminos-2/bpc-157/spray/5000': VANTAGE_COA_PAGE,
+  'vantage-aminos-2/ghk-cu/vial/50000': VANTAGE_COA_PAGE,
+  'vantage-aminos-2/retatrutide/vial/10000': VANTAGE_COA_PAGE,
+  'vantage-aminos-2/tirzepatide/vial/5000': VANTAGE_COA_PAGE,
+  'vantage-aminos-2/semaglutide/vial/5000': VANTAGE_COA_PAGE,
+  'vantage-aminos-2/cjc-1295-no-dac/vial/5000': VANTAGE_COA_PAGE,
   'vantage-aminos-2/glow-ghk-cu-bpc-157-tb-500/vial/70000': `${VANTAGE_UPLOADS}2026/07/glow-coa-VA-2602-7527.pdf`,
 
   // Certa Peptides
@@ -468,7 +477,7 @@ const COA_LINKS: Readonly<Record<string, string>> = {
   'elevate-research-co-2/semax/vial/10000': `${ELEVATE_SITE}/coa/semax.html`,
   'elevate-research-co-2/melanotan-2/vial/10000': `${ELEVATE_SITE}/coa/melanotan-2.html`,
   'elevate-research-co-2/melanotan-1/vial/10000': `${ELEVATE_SITE}/coa/melanotan-1.html`,
-  'elevate-research-co-2/bacteriostatic-water/vial/3000': `${ELEVATE_SITE}/quality-coa.html`,
+  'elevate-research-co-2/bacteriostatic-water/vial/3000': ELEVATE_COA_PAGE,
 
   // Dynotides
   // Where the vendor publishes one certificate for several sizes of a compound, every size links to it.
@@ -487,7 +496,7 @@ const COA_LINKS: Readonly<Record<string, string>> = {
   'dynotides-2/epitalon/vial/10000': `${DYNOTIDES_COAS}epitalon-10mg-coa-js.webp`,
   'dynotides-2/semax/vial/10000': `${DYNOTIDES_COAS}semax-coa-js.webp`,
   'dynotides-2/selank/vial/10000': `${DYNOTIDES_COAS}selank-coa-js.webp`,
-  'dynotides-2/dsip/vial/10000': `${DYNOTIDES_COAS}dsip-10mg-coa-endo.webp`,
+  'dynotides-2/dsip/vial/10000': DYNOTIDES_COA_PAGE,
   'dynotides-2/melanotan-2/vial/10000': `${DYNOTIDES_COAS}melanotan-ii-coa-js.webp`,
   'dynotides-2/glow-ghk-cu-bpc-157-tb-500/vial/70000': `${DYNOTIDES_COAS}glow-blend-coa-js.webp`,
   'dynotides-2/klow-bpc-157-tb-500-kpv-ghk-cu/vial/80000': `${DYNOTIDES_COAS}klow-blend-coa-js.webp`,
@@ -496,17 +505,17 @@ const COA_LINKS: Readonly<Record<string, string>> = {
   // TB500, GLOW and the water use the vendor's general certificates page (VENDOR_COA_PAGES below);
   // every other listing has its own certificate or lab-test page. The vendor lists one certificate
   // for all three LAP-3 (R) sizes, and one for both LAP-2 (T) sizes.
-  'la-peptides-2/bpc-157/capsule/500': `${LA_PEPTIDES_UPLOADS}2025/06/bpc_157_LAPe2509150143.png`,
+  'la-peptides-2/bpc-157/capsule/500': LA_PEPTIDES_COA_PAGE,
   'la-peptides-2/bpc-157-tb-500/vial/20000': `${LA_PEPTIDES_LAB_TEST}bpc-tb500-blend/`,
   'la-peptides-2/bpc-157-tb-500/vial/40000': `${LA_PEPTIDES_LAB_TEST}bpc-tb500-blend/`,
   'la-peptides-2/bpc-157-tb-500/capsule/1000': `${LA_PEPTIDES_LAB_TEST}repair-fix/`,
   'la-peptides-2/ghk-cu/vial/100000': `${LA_PEPTIDES_LAB_TEST}ghk-cu/`,
   'la-peptides-2/ghk-cu/capsule/2500': `${LA_PEPTIDES_LAB_TEST}ghk-cu-capsules/`,
-  'la-peptides-2/retatrutide/vial/10000': `${LA_PEPTIDES_UPLOADS}2025/06/GLP3-R_10mg_COA3135-scaled.png`,
-  'la-peptides-2/retatrutide/vial/20000': `${LA_PEPTIDES_UPLOADS}2025/06/GLP3-R_10mg_COA3135-scaled.png`,
-  'la-peptides-2/retatrutide/vial/30000': `${LA_PEPTIDES_UPLOADS}2025/06/GLP3-R_10mg_COA3135-scaled.png`,
-  'la-peptides-2/tirzepatide/vial/15000': `${LA_PEPTIDES_UPLOADS}2026/05/glp2-t-15mg-COA520-scaled.png`,
-  'la-peptides-2/tirzepatide/vial/30000': `${LA_PEPTIDES_UPLOADS}2026/05/glp2-t-15mg-COA520-scaled.png`,
+  'la-peptides-2/retatrutide/vial/10000': LA_PEPTIDES_COA_PAGE,
+  'la-peptides-2/retatrutide/vial/20000': LA_PEPTIDES_COA_PAGE,
+  'la-peptides-2/retatrutide/vial/30000': LA_PEPTIDES_COA_PAGE,
+  'la-peptides-2/tirzepatide/vial/15000': LA_PEPTIDES_COA_PAGE,
+  'la-peptides-2/tirzepatide/vial/30000': LA_PEPTIDES_COA_PAGE,
   'la-peptides-2/tesamorelin/vial/10000': `${LA_PEPTIDES_LAB_TEST}tesamorelin/`,
   'la-peptides-2/mots-c/vial/10000': `${LA_PEPTIDES_LAB_TEST}mots-c/`,
   'la-peptides-2/ipamorelin-cjc-1295-no-dac/vial/20000': `${LA_PEPTIDES_LAB_TEST}cjc-no-dac-ipamorelin-blend/`,
@@ -514,18 +523,18 @@ const COA_LINKS: Readonly<Record<string, string>> = {
   // Trusted Peps
   // Only listings supplied with their own certificate image; everything else uses the vendor's
   // general COA page (VENDOR_COA_PAGES below).
-  'trusted-peps-2/ghk-cu/vial/50000': `${TRUSTED_PEPS_UPLOADS}2026/07/COA-GHK-Cu-50MG.png`,
-  'trusted-peps-2/tesamorelin/vial/10000': `${TRUSTED_PEPS_UPLOADS}2026/07/COA-Tesa-10MG.png`,
-  'trusted-peps-2/nad/vial/500000': `${TRUSTED_PEPS_UPLOADS}2026/07/COA-NAD-500MG.png`,
-  'trusted-peps-2/mots-c/vial/10000': `${TRUSTED_PEPS_UPLOADS}2026/07/COA-MOTS-C-10MG-3.png`,
+  'trusted-peps-2/ghk-cu/vial/50000': TRUSTED_PEPS_COA_PAGE,
+  'trusted-peps-2/tesamorelin/vial/10000': TRUSTED_PEPS_COA_PAGE,
+  'trusted-peps-2/nad/vial/500000': TRUSTED_PEPS_COA_PAGE,
+  'trusted-peps-2/mots-c/vial/10000': TRUSTED_PEPS_COA_PAGE,
   'trusted-peps-2/klow-bpc-157-tb-500-kpv-ghk-cu/vial/80000': `${TRUSTED_PEPS_UPLOADS}2026/06/img_1227.jpeg`,
 
   // Axis Peptide Labs
   // No general COA page was supplied for this vendor; only listings with their own certificate are
   // linked here. The vendor lists one certificate for both BPC-157 sizes and both GHK-Cu sizes, and
   // shares a Retatrutide certificate across 30 mg/60 mg and a Tirzepatide one across 20 mg/30 mg.
-  'axis-peptide-labs-2/bpc-157/vial/5000': `${AXIS_UPLOADS}2026/02/AXIS-COA-BPC5.webp`,
-  'axis-peptide-labs-2/bpc-157/vial/10000': `${AXIS_UPLOADS}2026/02/AXIS-COA-BPC5.webp`,
+  'axis-peptide-labs-2/bpc-157/vial/5000': AXIS_COA_PAGE,
+  'axis-peptide-labs-2/bpc-157/vial/10000': AXIS_COA_PAGE,
   'axis-peptide-labs-2/tb-500/vial/5000': `${AXIS_UPLOADS}2026/02/AXIS-COA-TB5.webp`,
   'axis-peptide-labs-2/wolverine/vial/10000': `${AXIS_UPLOADS}2026/09/AXIS-COA-WOLV10-FD.webp`,
   'axis-peptide-labs-2/wolverine/vial/20000': `${AXIS_UPLOADS}2026/09/AXIS-COA-WOLV10-FD.webp`,
@@ -800,7 +809,7 @@ const COA_LINKS: Readonly<Record<string, string>> = {
 
   // Averix Labs
   // Each listing came with its own certificate image or PDF; no general COA page was supplied.
-  'averix-labs-2/bpc-157/vial/10000': `${AVERIX_UPLOADS}2026/07/BPC-157-10mg-BPC157-2601-A01.png${AVERIX_REF}`,
+  'averix-labs-2/bpc-157/vial/10000': AVERIX_COA_PAGE,
   'averix-labs-2/tb-500/vial/10000': `${AVERIX_UPLOADS}2026/07/TB-500-10MG-TB500-2601-A01.png${AVERIX_REF}`,
   'averix-labs-2/ghk-cu/vial/50000': 'https://app.horizonanalytical.com/api/public/certificates/p3tiXaMpvMwdwMYe4dIJv',
   'averix-labs-2/ghk-cu/vial/100000': 'https://app.horizonanalytical.com/api/public/certificates/2BUV3XOWb_p7On1hAoDT4',
@@ -817,10 +826,10 @@ const COA_LINKS: Readonly<Record<string, string>> = {
   'averix-labs-2/nad/vial/500000': `${AVERIX_UPLOADS}2026/07/NAD-500MG-NAD-2601-A01.png${AVERIX_REF}`,
   'averix-labs-2/nad/vial/1000000': `${AVERIX_UPLOADS}2026/07/NAD-1000MG-NAD-2601-A02.png${AVERIX_REF}`,
   'averix-labs-2/mots-c/vial/10000': 'https://app.horizonanalytical.com/api/public/certificates/2vUjMyLYprYQkbpIC9NSn',
-  'averix-labs-2/epitalon/vial/10000': `${AVERIX_UPLOADS}2026/07/Epitalon-10MG-EPIT-2602-A01.png${AVERIX_REF}`,
-  'averix-labs-2/semax/vial/10000': `${AVERIX_UPLOADS}2026/07/Semax-10MG-SMX-2605-A01.png${AVERIX_REF}`,
-  'averix-labs-2/selank/vial/10000': `${AVERIX_UPLOADS}2026/07/Selank-10MG-SLK-2605-A01_.png${AVERIX_REF}`,
-  'averix-labs-2/pt-141/vial/10000': `${AVERIX_UPLOADS}2026/06/PT-141-PT141-2606-A01.png${AVERIX_REF}`,
+  'averix-labs-2/epitalon/vial/10000': AVERIX_COA_PAGE,
+  'averix-labs-2/semax/vial/10000': AVERIX_COA_PAGE,
+  'averix-labs-2/selank/vial/10000': AVERIX_COA_PAGE,
+  'averix-labs-2/pt-141/vial/10000': AVERIX_COA_PAGE,
   'averix-labs-2/5-amino-1mq/vial/50000': `${AVERIX_UPLOADS}2026/07/5-Amino-1MQ-50mg-AMQ-2607-A01.png${AVERIX_REF}`,
   'averix-labs-2/ss-31-elamipretide/vial/10000': `${AVERIX_UPLOADS}2026/07/SS-31-10MG-SS31-2601-A01.png${AVERIX_REF}`,
   'averix-labs-2/dsip/vial/10000': `${AVERIX_UPLOADS}2026/07/DSIP-10MG-DSIP-2602-A01.png${AVERIX_REF}`,
@@ -929,15 +938,15 @@ const COA_LINKS: Readonly<Record<string, string>> = {
   // uses the vendor's general lab-tests page (VENDOR_COA_PAGES below).
   'aminovault-2/ghk-cu/vial/100000': 'https://aminovault.com/wp-content/uploads/2026/02/GHK_Cu.pdf?ref=112',
   'aminovault-2/retatrutide/vial/10000':
-    'https://aminovault.com/wp-content/uploads/2025/07/COA-251462-QC251075-Retatrutide.pdf?ref=112',
+    AMINOVAULT_COA_PAGE,
   'aminovault-2/retatrutide/vial/20000':
-    'https://aminovault.com/wp-content/uploads/2025/07/COA-251462-QC251075-Retatrutide.pdf?ref=112',
+    AMINOVAULT_COA_PAGE,
   'aminovault-2/retatrutide/vial/30000':
-    'https://aminovault.com/wp-content/uploads/2025/07/COA-251462-QC251075-Retatrutide.pdf?ref=112',
+    AMINOVAULT_COA_PAGE,
   'aminovault-2/tirzepatide/vial/10000':
-    'https://aminovault.com/wp-content/uploads/2025/07/COA-251464-QC250877-Tirzepatide.pdf?ref=112',
+    AMINOVAULT_COA_PAGE,
   'aminovault-2/tirzepatide/vial/20000':
-    'https://aminovault.com/wp-content/uploads/2025/07/COA-251464-QC250877-Tirzepatide.pdf?ref=112',
+    AMINOVAULT_COA_PAGE,
 
   // Rejuven8 Peptides
   // These five listings came with their own certificate PDF; every other listing uses the general
