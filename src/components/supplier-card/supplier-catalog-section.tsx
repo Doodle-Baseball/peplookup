@@ -1,13 +1,9 @@
 import type { Offer, Product, Supplier } from '@/lib/schema';
-import { OfferCard } from '@/components/offer-card/offer-card';
-import { LiveSearchInput } from '@/components/ui/live-search-input';
-import { BoxIcon, SearchIcon } from '@/components/icons/icons';
+import { BoxIcon } from '@/components/icons/icons';
 import { CatalogFilterSelect } from './catalog-filter-select';
-import { CatalogPager } from './catalog-pager';
 import { CATALOG_FORM_OPTIONS, isCatalogFormValue } from './catalog-form-options';
-
-/** Product Catalog tiles per page, 3 rows of the 3-column grid. */
-const CATALOG_PAGE_SIZE = 9;
+import { groupCatalogProducts } from './catalog-products';
+import { SupplierCatalogBrowser } from './supplier-catalog-browser';
 
 /** Same label the offer cards print, so a size reads identically in the filter and on the card. */
 function formatVialSize(vialSizeMcg: number): string {
@@ -15,16 +11,16 @@ function formatVialSize(vialSizeMcg: number): string {
 }
 
 /**
- * A vendor's "Products from X" catalogue with in-page search and pagination.
- * `basePath` is the page it renders on, so the search form stays on that page,
- * the supplier profile and its coupon page share this section. Paging happens
- * in the browser (CatalogPager) and doesn't touch the URL.
+ * A vendor's "Products from X" catalogue: one card per product, with its
+ * forms, sizes and packs as options on the card. The supplier profile, coupon
+ * and reviews pages share this section. Search and paging happen in the
+ * browser and don't touch the URL; the Form and Size filters do, so a filtered
+ * view can still be shared.
  */
 export function SupplierCatalogSection({
   supplier,
   offers,
   productsBySlug,
-  basePath,
   id,
   query,
   pageParam,
@@ -36,9 +32,9 @@ export function SupplierCatalogSection({
   /** Offers whose product resolves; the caller drops the rest. */
   offers: readonly Offer[];
   productsBySlug: ReadonlyMap<string, Product>;
-  basePath: string;
   /** Anchor id, so a page can link to the catalogue (e.g. from a jump-to bar). */
   id?: string;
+  /** Starting search text, from an old `?pq=` link. */
   query: string;
   pageParam: string | undefined;
   /** The `form` URL param; anything other than a known form shows every form. */
@@ -52,15 +48,11 @@ export function SupplierCatalogSection({
   const vialSizes = [...new Set(offers.map((o) => o.vialSize))].sort((a, b) => a - b);
   const selectedSize = vialSizes.find((size) => String(size) === sizeParam);
   const catalogueOffers = offers.filter(
-    (o) =>
-      (!selectedForm || o.form === selectedForm) &&
-      (selectedSize === undefined || o.vialSize === selectedSize) &&
-      (!query || productsBySlug.get(o.productSlug)!.name.toLowerCase().includes(query.toLowerCase())),
+    (o) => (!selectedForm || o.form === selectedForm) && (selectedSize === undefined || o.vialSize === selectedSize),
   );
-
-  const pageCount = Math.max(1, Math.ceil(catalogueOffers.length / CATALOG_PAGE_SIZE));
-  const currentPage = Math.min(Math.max(1, Number(pageParam) || 1), pageCount);
-  const filterKey = `${query}-${selectedForm ?? 'all'}-${selectedSize ?? 'all'}`;
+  const catalogueProducts = groupCatalogProducts(catalogueOffers, productsBySlug, supplier);
+  const filterKey = `${selectedForm ?? 'all'}-${selectedSize ?? 'all'}`;
+  const filterSuffix = `${selectedForm ? ` in ${selectedForm} form` : ''}${selectedSize !== undefined ? ` at ${formatVialSize(selectedSize)}` : ''}`;
 
   return (
     <section
@@ -110,55 +102,17 @@ export function SupplierCatalogSection({
           them from the supplier&rsquo;s live product pages.
         </p>
       ) : (
-        <>
-          <form action={basePath} className="mt-6">
-            {selectedForm ? <input type="hidden" name="form" value={selectedForm} /> : null}
-            {selectedSize !== undefined ? <input type="hidden" name="size" value={selectedSize} /> : null}
-            <label htmlFor="pq" className="sr-only">
-              Search within {supplier.name} catalog
-            </label>
-            <div className="search-field flex items-center gap-3 border px-4 py-3">
-              <SearchIcon className="h-5 w-5 shrink-0 text-accent" />
-              <LiveSearchInput
-                id="pq"
-                name="pq"
-                defaultValue={query}
-                placeholder={`Search within ${supplier.name} catalog`}
-                className="min-w-0 flex-1 bg-transparent text-sm text-content outline-none placeholder:text-faint"
-              />
-            </div>
-          </form>
-
-          {catalogueOffers.length === 0 ? (
-            <p className="mt-4 rounded-card border border-dashed border-line bg-surface p-10 text-center text-sm text-muted">
-              {query
-                ? <>No products match &ldquo;{query}&rdquo;{selectedForm ? ` in ${selectedForm} form` : ''}{selectedSize !== undefined ? ` at ${formatVialSize(selectedSize)}` : ''}.</>
-                : <>No {selectedForm} products{selectedSize !== undefined ? ` at ${formatVialSize(selectedSize)}` : ''} listed for {supplier.name}.</>}
-            </p>
-          ) : (
-            <>
-              <CatalogPager
-                key={filterKey}
-                label="Product catalog pages"
-                initialPage={currentPage}
-                pages={Array.from({ length: pageCount }, (_, pageIndex) => (
-                  <ul key={`${filterKey}-${pageIndex + 1}`} className="animate-fade-up mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    {catalogueOffers.slice(pageIndex * CATALOG_PAGE_SIZE, (pageIndex + 1) * CATALOG_PAGE_SIZE).map((offer: Offer) => (
-                      <OfferCard
-                        key={offer.id ?? `${offer.productSlug}-${offer.form}-${offer.vialSize}-${offer.vialCount}`}
-                        offer={offer}
-                        product={productsBySlug.get(offer.productSlug)!}
-                        supplier={supplier}
-                        headingEntity="product"
-                        layout="grid"
-                      />
-                    ))}
-                  </ul>
-                ))}
-              />
-            </>
-          )}
-        </>
+        <SupplierCatalogBrowser
+          // A narrower Form/Size filter starts the grid again from its first page.
+          key={filterKey}
+          products={catalogueProducts}
+          supplierName={supplier.name}
+          couponCode={supplier.coupon?.code ?? null}
+          initialQuery={query}
+          initialPage={Number(pageParam) || 1}
+          noMatchSuffix={filterSuffix}
+          emptyFilteredMessage={`No ${selectedForm ? `${selectedForm} ` : ''}products${selectedSize !== undefined ? ` at ${formatVialSize(selectedSize)}` : ''} listed for ${supplier.name}.`}
+        />
       )}
     </section>
   );

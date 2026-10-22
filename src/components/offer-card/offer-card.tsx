@@ -4,7 +4,7 @@ import type { Offer, Product, Supplier } from '@/lib/schema';
 import { toListing } from '@/lib/repository';
 import { effectivePrice, hasDiscount, pricePerMg, discountPercent, couponAdjustedPrice, pricePerMgFor } from '@/lib/price';
 import { formatMoney, formatPerMg } from '@/lib/money';
-import { timeAgo, isStale } from '@/lib/format';
+import { seenAgo, isStale } from '@/lib/format';
 import { cn } from '@/lib/cn';
 import { BoxIcon, ExternalIcon, FlaskIcon } from '@/components/icons/icons';
 import { CopyCode } from '@/components/ui/copy-code';
@@ -125,7 +125,7 @@ export function OfferCard({
         <div className="flex items-center justify-between gap-3">
           <p className={cn('text-xs', stale ? 'font-semibold text-warn' : 'text-muted')}>
             {perMg !== null ? formatPerMg(perMg, listing.currency) : 'Price per mg unavailable'} · seen{' '}
-            {timeAgo(offer.scrapedAt)}
+            {seenAgo(offer.scrapedAt)}
           </p>
           {coaHref ? (
             <a
@@ -235,7 +235,7 @@ export function OfferCard({
             {perMg !== null ? formatPerMg(perMg, listing.currency) : 'Price per mg unavailable'}
           </p>
           <p className={`text-micro ${stale ? 'font-bold text-warn' : 'text-faint'}`}>
-            {offer.inStock ? 'In stock' : 'Out of stock'} · seen {timeAgo(offer.scrapedAt)}
+            {offer.inStock ? 'In stock' : 'Out of stock'} · seen {seenAgo(offer.scrapedAt)}
           </p>
           {/* Price above already has the coupon applied, so this tells the buyer which code earns it. */}
           {couponPercentOff !== null && supplier.coupon ? (

@@ -274,7 +274,6 @@ export default async function SupplierPage({
           supplier={supplier}
           offers={resolvedOffers}
           productsBySlug={productsBySlug}
-          basePath={`/suppliers/${supplier.slug}`}
           query={catalogueQuery}
           pageParam={pageParam}
           formParam={formParam}

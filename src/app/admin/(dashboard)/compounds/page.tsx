@@ -8,6 +8,7 @@ import { AdminDbError } from '@/lib/admin/vendors';
 import { AdminPageHeader } from '@/components/admin/page-header';
 import { CompoundFlagToggle } from './compound-flag-toggle';
 import { CompoundDeleteButton } from './compound-delete-button';
+import { CompoundSizes } from './compound-sizes';
 import { SearchIcon, PencilIcon, WarningIcon } from '@/components/icons/icons';
 import { LiveSearchInput } from '@/components/ui/live-search-input';
 
@@ -45,10 +46,11 @@ export default async function AdminCompoundsPage({
     ? []
     : compounds.map((compound) => {
         const offers = offersByProduct.get(compound.slug) ?? [];
-        const doses = [...new Set(offers.map((o) => `${o.vialSize / 1000}mg`))];
+        const sizes = [...new Set([...offers].sort((a, b) => a.vialSize - b.vialSize).map((o) => `${o.vialSize / 1000}mg`))];
         const vendorCount = new Set(offers.map((o) => o.supplierSlug)).size;
-        const coaCount = offers.filter((o) => o.labReport !== null).length;
-        return { compound, doses, vendorCount, coaCount };
+        // Listings with a COA document the site links to, the same rule as the public pages.
+        const coaCount = offers.filter((o) => o.coaUrl || o.labReport?.reportUrl || o.labReport?.labUrl).length;
+        return { compound, sizes, vendorCount, coaCount };
       });
 
   return (
@@ -118,7 +120,7 @@ export default async function AdminCompoundsPage({
                         <span className="sr-only">Reorder</span>
                       </th>
                       <th scope="col" className="px-5 py-3">Name</th>
-                      <th scope="col" className="px-5 py-3">Doses</th>
+                      <th scope="col" className="px-5 py-3">Sizes</th>
                       <th scope="col" className="px-5 py-3">Suppliers</th>
                       <th scope="col" className="px-5 py-3">COA</th>
                       <th scope="col" className="px-5 py-3">Compound</th>
@@ -135,15 +137,14 @@ export default async function AdminCompoundsPage({
                         query ? 'Clear the search to reorder. Dragging a filtered list would only renumber the rows you can see.' : undefined
                       }
                     >
-                    {rows.map(({ compound, doses, vendorCount, coaCount }) => (
+                    {rows.map(({ compound, sizes, vendorCount, coaCount }) => (
                       <tr key={compound.slug} className="border-b border-line last:border-0">
                         <td className="px-5 py-4">
                           <p className="font-bold text-content">{compound.name}</p>
-                          {compound.forms.length > 0 ? (
-                            <p className="text-xs capitalize text-muted">{compound.forms.join(', ')}</p>
-                          ) : null}
                         </td>
-                        <td className="px-5 py-4 text-content">{doses.length ? doses.join(', ') : ''}</td>
+                        <td className="px-5 py-4 text-content">
+                          {sizes.length ? <CompoundSizes name={compound.name} sizes={sizes} /> : null}
+                        </td>
                         <td className="px-5 py-4 text-content">{vendorCount}</td>
                         <td className="px-5 py-4 text-content">{coaCount}</td>
                         <td className="px-5 py-4">

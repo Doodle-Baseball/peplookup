@@ -18,6 +18,18 @@ export function timeAgo(iso: string, now: Date = new Date()): string {
   return months < 12 ? `${months}mo ago` : `${Math.floor(months / 12)}y ago`;
 }
 
+/**
+ * The "seen …" age on a price: like {@link timeAgo} up to six days, then in
+ * whole weeks ("4w ago"), never months. The number of weeks is the real age.
+ */
+export function seenAgo(iso: string, now: Date = new Date()): string {
+  const then = new Date(iso).getTime();
+  if (Number.isNaN(then)) return 'unknown';
+  const days = Math.floor(Math.max(0, now.getTime() - then) / 86_400_000);
+  if (days < 7) return timeAgo(iso, now);
+  return `${Math.floor(days / 7)}w ago`;
+}
+
 /** Hours after which a price is shown as stale rather than served silently. */
 export const STALE_AFTER_HOURS = 48;
 
