@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import {
   getSuppliers,
   getAllOffers,
@@ -9,14 +8,18 @@ import {
 import { cn } from '@/lib/cn';
 import { SupplierCard } from '@/components/supplier-card/supplier-card';
 import { CountUp } from '@/components/ui/count-up';
-import { Pagination } from '@/components/ui/pagination';
-import { SupplierLogo } from '@/components/ui/supplier-logo';
-import { ArrowRightIcon, CloseIcon, SearchIcon } from '@/components/icons/icons';
+import { ArrowRightIcon } from '@/components/icons/icons';
 import { staticSeoPage } from '@/config/seo-pages';
 import { pageMetadata } from '@/lib/seo-defaults';
 import { getSeoOverride, withSeo } from '@/lib/seo';
 import { SupplierSearchBox } from '@/components/supplier-card/supplier-search-box';
 import { SupplierOrderWatcher } from '@/components/supplier-card/supplier-order-watcher';
+import {
+  SupplierDirectoryProvider,
+  SupplierDirectorySearchForm,
+} from '@/components/suppliers/supplier-directory-state';
+import { PopularSupplierChips } from '@/components/suppliers/popular-supplier-chips';
+import { SupplierDirectoryResults } from '@/components/suppliers/supplier-directory-results';
 import { PageFaqSection } from '@/components/faq/page-faq-section';
 import { SupplierEvaluationGuide } from '@/components/suppliers/supplier-evaluation-guide';
 import { PageSeo } from '@/components/seo/page-seo';
@@ -30,17 +33,6 @@ export async function generateMetadata(): Promise<Metadata> {
 /** Quick-pick chips under the search field, sized to sit on a single row. */
 const POPULAR_SUPPLIER_COUNT = 5;
 const SUPPLIERS_PER_PAGE = 21;
-/** Cards past this index share the last delay, so a full page never waits long to appear. */
-const MAX_STAGGERED_CARDS = 8;
-
-/** Search and page both live in the URL, so a filtered view is a link someone can share. */
-function suppliersHref(query: string, page = 1) {
-  const params = new URLSearchParams();
-  if (query) params.set('q', query);
-  if (page > 1) params.set('page', String(page));
-  const qs = params.toString();
-  return `/suppliers${qs ? `?${qs}` : ''}`;
-}
 
 function HeroStat({ label, value }: { label: string; value: number }) {
   return (
@@ -58,8 +50,10 @@ export default async function SuppliersPage({
 }: {
   searchParams: Promise<{ q?: string; page?: string }>;
 }) {
+  // Search and paging happen in the browser; these only set the starting view for an old `?q=`/`?page=` link.
   const { q, page: pageParam } = await searchParams;
   const query = (q ?? '').trim();
+  const initialPage = Math.max(1, Number(pageParam) || 1);
 
   const [suppliers, seo, slugsWithReviews, allOffers] = await Promise.all([
     getSuppliers(),
@@ -67,25 +61,16 @@ export default async function SuppliersPage({
     getSupplierSlugsWithReviews(),
     getAllOffers(),
   ]);
-  const matching = query
-    ? suppliers.filter((s) => s.name.toLowerCase().includes(query.toLowerCase()))
-    : suppliers;
-
   // Same ranking as /admin/vendors (see orderSuppliersForDisplay): a
   // drag-and-drop position from the admin wins outright, Featured and the
   // reviews/coupon score only rank whatever nobody has manually placed.
-  const filtered = orderSuppliersForDisplay(matching, slugsWithReviews);
-  // The canonical /suppliers lists the whole directory in this same order, so
-  // the ItemList ignores any search or page number in the URL.
-  const directoryItems = orderSuppliersForDisplay(suppliers, slugsWithReviews).map((supplier) => ({
+  // Searching narrows this list in the browser without reordering it.
+  const orderedSuppliers = orderSuppliersForDisplay(suppliers, slugsWithReviews);
+  const directoryItems = orderedSuppliers.map((supplier) => ({
     name: supplier.name,
     url: `/suppliers/${supplier.slug}`,
   }));
 
-  const pageCount = Math.max(1, Math.ceil(filtered.length / SUPPLIERS_PER_PAGE));
-  const currentPage = Math.min(Math.max(1, Number(pageParam) || 1), pageCount);
-  const firstIndex = (currentPage - 1) * SUPPLIERS_PER_PAGE;
-  const pageSuppliers = filtered.slice(firstIndex, firstIndex + SUPPLIERS_PER_PAGE);
   const popularSuppliers = suppliers.slice(0, POPULAR_SUPPLIER_COUNT);
   const labVerifiedCount = suppliers.filter((s) => s.labVerified).length;
   const couponCount = suppliers.filter((s) => s.coupon !== null).length;
@@ -124,6 +109,7 @@ export default async function SuppliersPage({
     <>
       <SupplierOrderWatcher />
 
+      <SupplierDirectoryProvider initialQuery={query} initialPage={initialPage}>
       {/* Neither `overflow-hidden` nor `isolate`: the search box's suggestions panel
           hangs below this section and must paint over the cards that follow it. */}
       <section className="relative z-20">
@@ -167,13 +153,13 @@ export default async function SuppliersPage({
           </dl>
 
           <div className="animate-fade-up animate-delay-300 mx-auto mt-6 max-w-4xl rounded-panel border border-line bg-surface-raised p-4 text-left shadow-lift sm:p-6">
-            <form action="/suppliers" method="get" role="search">
+            <SupplierDirectorySearchForm>
               <label htmlFor="supplier-search" className="eyebrow">
                 Search the directory
               </label>
               <div className="mt-3 flex items-center gap-2 sm:gap-3">
                 <div className="min-w-0 flex-1">
-                  <SupplierSearchBox defaultValue={query} suppliers={searchSuggestions} />
+                  <SupplierSearchBox suppliers={searchSuggestions} />
                 </div>
                 <button
                   type="submit"
@@ -184,109 +170,32 @@ export default async function SuppliersPage({
                   <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
                 </button>
               </div>
-            </form>
+            </SupplierDirectorySearchForm>
 
             {popularSuppliers.length > 0 ? (
-              <div className="mt-5 border-t border-line pt-4">
-                <p className="eyebrow">Popular suppliers</p>
-                {/* overflow-x-auto also clips vertically, so the top/side padding gives the
-                    hover lift and the pills' borders room; the negative margin and reduced
-                    mt keep the row exactly where it sat. */}
-                <ul className="scrollbar-hide -mx-1 mt-2 flex flex-nowrap gap-2 overflow-x-auto px-1 pb-1 pt-1">
-                  {popularSuppliers.map((supplier) => {
-                    const isActive = query.toLowerCase() === supplier.name.toLowerCase();
-                    return (
-                      <li key={supplier.slug} className="shrink-0">
-                        <Link
-                          href={suppliersHref(supplier.name)}
-                          aria-current={isActive ? 'true' : undefined}
-                          className={cn(
-                            'inline-flex items-center gap-2 rounded-pill border py-1.5 pl-1.5 pr-3.5 text-sm font-semibold transition-all duration-200 hover:-translate-y-0.5',
-                            isActive
-                              ? 'border-brand bg-brand text-surface'
-                              : 'border-line bg-surface text-content hover:border-accent hover:bg-accent-tint hover:text-accent-strong',
-                          )}
-                        >
-                          {/* `border-0` overrides SupplierLogo's own default border: left as-is,
-                              it sits right at the pill's tight left padding and its fixed grey
-                              ring doesn't update on hover, reading as a broken/notched border
-                              where the two overlap. */}
-                          <SupplierLogo
-                            src={supplier.logoUrl ?? supplier.faviconUrl}
-                            name={supplier.name}
-                            size={24}
-                            className="h-6 w-6 rounded-full border-0"
-                            initialClassName="text-micro"
-                          />
-                          {supplier.name}
-                        </Link>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
+              <PopularSupplierChips
+                suppliers={popularSuppliers.map((supplier) => ({
+                  slug: supplier.slug,
+                  name: supplier.name,
+                  logoUrl: supplier.logoUrl ?? supplier.faviconUrl,
+                }))}
+              />
             ) : null}
           </div>
         </div>
       </section>
 
       <section className="mx-auto max-w-shell px-4 pb-8">
-        <div className="mb-6 flex flex-wrap items-end justify-between gap-x-4 gap-y-3 border-b border-line pb-5">
-          <div className="min-w-0">
-            <p className="eyebrow">{query ? 'Search results' : 'All suppliers'}</p>
-            <h2 className="mt-2 text-2xl font-black text-content sm:text-3xl">
-              {filtered.length} <span className="text-accent">{filtered.length === 1 ? 'supplier' : 'suppliers'}</span>
-              {query ? <span className="font-medium text-muted"> for &ldquo;{query}&rdquo;</span> : null}
-            </h2>
-            {pageCount > 1 ? (
-              <p className="mt-1 text-sm text-muted">
-                Showing {firstIndex + 1}–{firstIndex + pageSuppliers.length} of {filtered.length}
-              </p>
-            ) : null}
-          </div>
-          {query ? (
-            <Link
-              href="/suppliers"
-              className="inline-flex items-center gap-1.5 rounded-pill border border-line bg-surface-raised px-3.5 py-2 text-sm font-semibold text-content transition-colors hover:border-accent hover:text-accent-strong"
-            >
-              <CloseIcon className="h-3.5 w-3.5" />
-              Clear search
-            </Link>
-          ) : null}
-        </div>
-
-        {filtered.length === 0 ? (
-          <div className="animate-fade-up rounded-panel border border-dashed border-line bg-surface-raised px-6 py-14 text-center">
-            <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-pill bg-accent-tint text-accent-strong">
-              <SearchIcon className="h-5 w-5" />
-            </span>
-            <p className="mt-4 text-base font-bold text-content">
-              {query ? `No suppliers match "${query}".` : 'No suppliers listed yet.'}
-            </p>
-            {query ? <p className="mt-1 text-sm text-muted">Try a shorter name, or clear the search to see everyone.</p> : null}
-          </div>
-        ) : (
-          <>
-            <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
-              {pageSuppliers.map((supplier, index) => (
-                <li
-                  key={supplier.slug}
-                  className="animate-fade-up"
-                  style={{ animationDelay: `${Math.min(index, MAX_STAGGERED_CARDS) * 60}ms` }}
-                >
-                  <SupplierCard supplier={supplier} productCount={listingCountBySlug.get(supplier.slug) ?? 0} />
-                </li>
-              ))}
-            </ul>
-            <Pagination
-              label="Supplier directory pages"
-              currentPage={currentPage}
-              pageCount={pageCount}
-              hrefForPage={(page) => suppliersHref(query, page)}
-            />
-          </>
-        )}
+        <SupplierDirectoryResults
+          perPage={SUPPLIERS_PER_PAGE}
+          entries={orderedSuppliers.map((supplier) => ({
+            slug: supplier.slug,
+            name: supplier.name,
+            card: <SupplierCard supplier={supplier} productCount={listingCountBySlug.get(supplier.slug) ?? 0} />,
+          }))}
+        />
       </section>
+      </SupplierDirectoryProvider>
 
       <SupplierEvaluationGuide vendorCount={suppliers.length} />
 

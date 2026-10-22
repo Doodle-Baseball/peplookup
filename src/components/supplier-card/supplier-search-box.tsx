@@ -1,15 +1,13 @@
 'use client';
 
-import { useEffect, useRef, useState, useTransition } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
 import { SupplierLogo } from '@/components/ui/supplier-logo';
 import { StarRating } from '@/components/ui/star-rating';
 import { formatDate, formatRating } from '@/lib/format';
 import { BoxIcon, CalendarIcon, ChevronRightIcon, SearchIcon } from '@/components/icons/icons';
+import { useSupplierDirectory } from '@/components/suppliers/supplier-directory-state';
 
-/** Wait this long after the last keystroke before re-querying the results below, same as LiveSearchInput. */
-const DEBOUNCE_MS = 250;
 /**
  * Suggestions listed when the field is focused but empty or mid-search.
  * Six rows fit inside the panel's height cap, so the list shows whole rows
@@ -30,30 +28,13 @@ export interface SupplierSuggestion {
 
 /**
  * The directory's search field, plus a suggestions panel that opens on focus.
- * Still writes into the URL like `LiveSearchInput` (so the result grid below
- * updates and the view stays a shareable link), but keeps its own `value`
- * state too, since the dropdown needs to filter locally without waiting on a
- * server round trip.
+ * Typing updates the shared directory search (see SupplierDirectoryProvider),
+ * so the result grid below filters straight away without touching the URL.
  */
-export function SupplierSearchBox({
-  defaultValue,
-  suppliers,
-}: {
-  defaultValue: string;
-  suppliers: SupplierSuggestion[];
-}) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const [, startTransition] = useTransition();
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+export function SupplierSearchBox({ suppliers }: { suppliers: SupplierSuggestion[] }) {
   const boxRef = useRef<HTMLDivElement>(null);
-
-  const [value, setValue] = useState(defaultValue);
+  const { query: value, setQuery } = useSupplierDirectory();
   const [open, setOpen] = useState(false);
-
-  useEffect(() => () => {
-    if (timer.current) clearTimeout(timer.current);
-  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -73,22 +54,6 @@ export function SupplierSearchBox({
     };
   }, [open]);
 
-  function pushQuery(next: string) {
-    const params = new URLSearchParams(window.location.search);
-    const trimmed = next.trim();
-    if (trimmed) params.set('q', trimmed);
-    else params.delete('q');
-    params.delete('page');
-    const qs = params.toString();
-    startTransition(() => router.replace(`${pathname}${qs ? `?${qs}` : ''}`, { scroll: false }));
-  }
-
-  function onChange(next: string) {
-    setValue(next);
-    if (timer.current) clearTimeout(timer.current);
-    timer.current = setTimeout(() => pushQuery(next), DEBOUNCE_MS);
-  }
-
   const q = value.trim().toLowerCase();
   const suggestions = (q ? suppliers.filter((s) => s.name.toLowerCase().includes(q)) : suppliers).slice(
     0,
@@ -101,10 +66,9 @@ export function SupplierSearchBox({
         <SearchIcon className="h-5 w-5 shrink-0 text-accent" />
         <input
           id="supplier-search"
-          name="q"
           type="search"
           value={value}
-          onChange={(event) => onChange(event.target.value)}
+          onChange={(event) => setQuery(event.target.value)}
           onFocus={() => setOpen(true)}
           role="combobox"
           aria-expanded={open}
