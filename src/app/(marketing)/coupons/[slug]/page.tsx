@@ -290,7 +290,6 @@ export default async function CouponCodePage({
           offers={resolvedOffers}
           productsBySlug={productsBySlug}
           id="products"
-          basePath={path}
           query={catalogueQuery}
           pageParam={pageParam}
           formParam={formParam}

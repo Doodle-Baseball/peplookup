@@ -314,7 +314,6 @@ export default async function VendorReviewsPage({
           offers={resolvedOffers}
           productsBySlug={productsBySlug}
           id="products"
-          basePath={path}
           query={catalogueQuery}
           pageParam={pageParam}
           formParam={formParam}
