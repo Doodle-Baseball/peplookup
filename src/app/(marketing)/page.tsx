@@ -9,6 +9,7 @@ import { pageMetadata } from '@/lib/seo-defaults';
 import { getSeoOverride, withSeo } from '@/lib/seo';
 import { PageFaqSection } from '@/components/faq/page-faq-section';
 import { PricingComparisonExplainer } from '@/components/home/pricing-comparison-explainer';
+import { HospiraPromoSection } from '@/components/home/hospira-promo-section';
 import { catalogueStats } from '@/lib/catalogue-stats';
 import { AccentedHeading } from '@/components/ui/accented-heading';
 import { PageSeo } from '@/components/seo/page-seo';
@@ -131,6 +132,8 @@ export default async function HomePage() {
       ) : (
         <ProductBrowser products={cardData} facets={facets} />
       )}
+
+      <HospiraPromoSection />
 
       <div className="mx-auto max-w-shell px-4 pb-6 sm:pb-8">
         <PricingComparisonExplainer stats={catalogueStats(suppliers, allOffers)} products={products} />

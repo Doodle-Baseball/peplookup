@@ -59,14 +59,9 @@ export async function BuyPeptidesSection({ supplierSlug, className }: { supplier
       <div className="mx-auto flex max-w-shell flex-wrap items-end justify-between gap-4 px-4">
         <div className="min-w-0">
           <p className="eyebrow">Buy peptides</p>
-          <h2 id="buy-peptides-heading" className="mt-3 text-3xl font-black leading-tight text-content sm:text-4xl">
+          <h2 id="buy-peptides-heading" className="mt-3 text-2xl font-black leading-tight text-content sm:text-3xl lg:text-4xl">
             Buy Peptides from <span className="italic text-accent">{supplier.name}</span>
           </h2>
-          <p className="mt-2 max-w-2xl text-sm leading-7 text-muted sm:text-base">
-            Its most popular research peptides, with live prices
-            {supplier.coupon ? ` (the ${supplier.coupon.code} code already applied)` : ''} and the price per mg for
-            each size.
-          </p>
           <div className="mt-4 flex flex-wrap items-center gap-3">
             {supplier.reviewRating !== null ? (
               <span className="inline-flex items-center gap-2 rounded-pill border border-line bg-surface-raised px-3 py-1.5 text-sm font-bold text-content">
@@ -83,23 +78,23 @@ export async function BuyPeptidesSection({ supplierSlug, className }: { supplier
             ) : null}
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-4">
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:gap-3">
           <a
             href={supplier.affiliateUrl}
             target="_blank"
             rel="nofollow sponsored noopener"
-            className="btn-3d inline-flex items-center gap-1.5 rounded-chip bg-brand px-4 py-2.5 text-sm font-bold text-surface"
+            className="btn-3d inline-flex items-center justify-center gap-1.5 rounded-chip bg-brand px-4 py-2.5 text-sm font-bold text-surface"
           >
-            Visit {supplier.name}
-            <ExternalIcon className="h-3.5 w-3.5" />
+            Shop {supplier.name}
+            <ExternalIcon className="h-3.5 w-3.5 shrink-0" />
             <span className="sr-only">(affiliate link, opens in a new tab)</span>
           </a>
           <Link
             href={`/suppliers/${supplier.slug}`}
-            className="group/all inline-flex shrink-0 items-center gap-1.5 border-b border-content pb-1 text-sm font-bold text-content transition-colors hover:border-accent hover:text-accent-strong"
+            className="group/all inline-flex items-center justify-center gap-1.5 rounded-chip border border-line bg-surface-raised px-4 py-2.5 text-sm font-bold text-content transition-colors hover:border-accent hover:text-accent-strong"
           >
-            View all products
-            <ArrowRightIcon className="h-4 w-4 transition-transform group-hover/all:translate-x-0.5" />
+            View profile
+            <ArrowRightIcon className="h-4 w-4 shrink-0 transition-transform group-hover/all:translate-x-0.5" />
           </Link>
         </div>
       </div>
@@ -114,6 +109,7 @@ export async function BuyPeptidesSection({ supplierSlug, className }: { supplier
                   <BuyPeptideCard
                     product={product}
                     supplierName={supplier.name}
+                    couponCode={supplier.coupon?.code ?? null}
                     couponPercentOff={couponPercentOff}
                     copy={copy}
                   />

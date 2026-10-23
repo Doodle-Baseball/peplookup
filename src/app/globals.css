@@ -376,8 +376,9 @@
   @media (min-width: 640px) {
     .product-rail-item { width: calc(100cqw / 2); }
   }
+  /* Tablets: two cards and a peek; three leave the buttons too narrow. */
   @media (min-width: 768px) {
-    .product-rail-item { width: calc(100cqw / 3); }
+    .product-rail-item { width: calc(100cqw / 2.5); }
   }
   @media (min-width: 1024px) {
     .product-rail-item { width: calc(100cqw / 3); }
@@ -398,6 +399,11 @@
   }
   .vial-3d-shadow {
     background: radial-gradient(closest-side, rgb(0 0 0 / 0.22), transparent);
+  }
+  /* For a photo shot on a white background: a drop shadow would trace the
+     photo's square edges, so the floor shadow alone carries the depth. */
+  .vial-3d-matte {
+    filter: none;
   }
   @media (prefers-reduced-motion: no-preference) {
     .vial-3d { animation: vial-float 5s ease-in-out infinite; }

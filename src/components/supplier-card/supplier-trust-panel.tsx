@@ -13,6 +13,27 @@ const VISIBLE_REVIEWS = 3;
 /** COA rows visible before the list scrolls when it isn't sized by the reviews card beside it. */
 const STACKED_COA_ROWS = 2;
 
+/**
+ * Size chips a COA card shows before a "+N" chip, capped by count and by total
+ * label length so they always fit on one line. Every card in the grid takes
+ * the tallest card's height, so one report covering many sizes would otherwise
+ * leave blank space in all the others.
+ */
+const MAX_VISIBLE_COA_SIZES = 3;
+const COA_SIZE_LINE_CHARACTERS = 18;
+
+function visibleCoaSizeCount(sizes: readonly string[]): number {
+  let characters = 0;
+  let count = 0;
+  for (const size of sizes.slice(0, MAX_VISIBLE_COA_SIZES)) {
+    characters += size.length;
+    // The first chip always shows, however long.
+    if (count > 0 && characters > COA_SIZE_LINE_CHARACTERS) break;
+    count += 1;
+  }
+  return count;
+}
+
 /** One COA document this vendor publishes, with every size it covers. */
 export interface SupplierCoaReport {
   key: string;
@@ -277,7 +298,7 @@ export function SupplierTrustPanel({
                   </div>
                   {report.sizes.length > 0 ? (
                     <ul className="flex flex-wrap gap-1.5" aria-label={`${report.productName} sizes covered`}>
-                      {report.sizes.map((size) => (
+                      {report.sizes.slice(0, visibleCoaSizeCount(report.sizes)).map((size) => (
                         <li
                           key={size}
                           className="rounded-pill border border-line bg-surface-raised px-2 py-0.5 text-micro font-bold text-muted"
@@ -285,6 +306,15 @@ export function SupplierTrustPanel({
                           {size}
                         </li>
                       ))}
+                      {report.sizes.length > visibleCoaSizeCount(report.sizes) ? (
+                        <li
+                          title={report.sizes.slice(visibleCoaSizeCount(report.sizes)).join(', ')}
+                          className="rounded-pill border border-line bg-surface-raised px-2 py-0.5 text-micro font-bold text-muted"
+                        >
+                          <span aria-hidden="true">+{report.sizes.length - visibleCoaSizeCount(report.sizes)}</span>
+                          <span className="sr-only">{report.sizes.slice(visibleCoaSizeCount(report.sizes)).join(', ')}</span>
+                        </li>
+                      ) : null}
                     </ul>
                   ) : null}
                   <a
