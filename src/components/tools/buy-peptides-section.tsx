@@ -58,9 +58,9 @@ export async function BuyPeptidesSection({ supplierSlug, className }: { supplier
     <section aria-labelledby="buy-peptides-heading" className={`overflow-hidden py-5 sm:py-8 ${className ?? ''}`}>
       <div className="mx-auto flex max-w-shell flex-wrap items-end justify-between gap-4 px-4">
         <div className="min-w-0">
-          <p className="eyebrow">Buy peptides</p>
+          <p className="eyebrow">Shop peptides</p>
           <h2 id="buy-peptides-heading" className="mt-3 text-2xl font-black leading-tight text-content sm:text-3xl lg:text-4xl">
-            Buy Peptides from <span className="italic text-accent">{supplier.name}</span>
+            Shop Peptides from <span className="italic text-accent">{supplier.name}</span>
           </h2>
           <div className="mt-4 flex flex-wrap items-center gap-3">
             {supplier.reviewRating !== null ? (
