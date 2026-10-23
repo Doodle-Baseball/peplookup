@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { cn } from '@/lib/cn';
-import { ArrowRightIcon, BoxIcon } from '@/components/icons/icons';
+import { BoxIcon, ExternalIcon } from '@/components/icons/icons';
 import type { CatalogProduct, CatalogVariant } from '@/components/supplier-card/catalog-products';
 
 /** The size a card opens on: the first one in stock, so a sold-out size never leads. */
@@ -34,7 +34,7 @@ export function BuyPeptideCard({
 
   return (
     <article className="card-3d group flex h-full flex-col rounded-card border border-line bg-surface-raised p-3">
-      <div className="relative flex h-52 items-center justify-center overflow-hidden rounded-chip bg-surface-sunken">
+      <div className="relative flex h-40 items-center justify-center overflow-hidden rounded-chip bg-surface-sunken">
         <span className="absolute left-3 top-3 z-10 flex gap-1.5">
           {variant.couponApplied && couponPercentOff !== null ? (
             <span className="rounded-pill bg-brand px-2.5 py-1 font-mono text-micro font-bold uppercase tracking-wide text-surface">
@@ -53,9 +53,9 @@ export function BuyPeptideCard({
             <Image
               src={variant.imageUrl}
               alt={copy ? '' : `${product.name} from ${supplierName}`}
-              width={180}
-              height={180}
-              className="vial-3d relative z-0 h-36 w-36 object-contain"
+              width={140}
+              height={140}
+              className="vial-3d relative z-0 h-28 w-28 object-contain"
               unoptimized
               // Lazy loading misses images that slide into view on a moving track; there are only ten.
               loading="eager"
@@ -64,15 +64,15 @@ export function BuyPeptideCard({
           ) : (
             <BoxIcon className="vial-3d h-12 w-12 text-faint" />
           )}
-          <span aria-hidden="true" className="vial-3d-shadow absolute bottom-5 h-4 w-28 rounded-pill" />
+          <span aria-hidden="true" className="vial-3d-shadow absolute bottom-3 h-3 w-24 rounded-pill" />
         </div>
       </div>
 
-      <div className="flex flex-1 flex-col px-2 pb-1 pt-4">
+      <div className="flex flex-1 flex-col px-2 pb-1 pt-3">
         <h3 className="truncate text-lg font-black text-content">{product.name}</h3>
 
         {product.variants.length > 1 ? (
-          <div role="group" aria-label={`${product.name} sizes`} className="mt-3 flex flex-wrap gap-1.5">
+          <div role="group" aria-label={`${product.name} sizes`} className="mt-2 flex flex-wrap gap-1.5">
             {product.variants.map((candidate) => {
               const isSelected = candidate.key === variant.key;
               return (
@@ -97,19 +97,17 @@ export function BuyPeptideCard({
             })}
           </div>
         ) : (
-          <p className="mt-3 font-mono text-xs font-bold text-muted">{variant.optionLabel}</p>
+          <p className="mt-2 font-mono text-xs font-bold text-muted">{variant.optionLabel}</p>
         )}
 
         <div className="mt-auto flex items-center justify-between gap-3 border-t border-line pt-3">
           <div className="min-w-0">
-            <p className="flex items-baseline gap-2">
-              {variant.listPriceText ? (
-                <span className="text-xs text-faint line-through">{variant.listPriceText}</span>
-              ) : null}
-              <span className="text-xl font-black text-content">{variant.priceText}</span>
-            </p>
-            <p className={cn('text-xs font-semibold', variant.inStock ? 'text-ok' : 'text-danger')}>
-              {variant.inStock ? variant.perMgText : 'Out of stock'}
+            <p className="text-xl font-black leading-tight text-content">{variant.priceText}</p>
+            <p className="flex flex-wrap items-baseline gap-x-1.5 text-xs">
+              {variant.listPriceText ? <span className="text-faint line-through">{variant.listPriceText}</span> : null}
+              <span className={cn('font-semibold', variant.inStock ? 'text-ok' : 'text-danger')}>
+                {variant.inStock ? variant.perMgText : 'Out of stock'}
+              </span>
             </p>
           </div>
           <a
@@ -117,10 +115,11 @@ export function BuyPeptideCard({
             target="_blank"
             rel="nofollow sponsored noopener"
             tabIndex={tabIndex}
-            aria-label={`Buy ${product.name} ${variant.optionLabel} at ${supplierName}`}
-            className="btn-3d flex h-11 w-11 shrink-0 items-center justify-center rounded-pill bg-brand text-surface"
+            aria-label={`Buy now: ${product.name} ${variant.optionLabel} at ${supplierName}`}
+            className="btn-3d inline-flex shrink-0 items-center gap-1.5 rounded-chip bg-brand px-3.5 py-2.5 text-sm font-bold text-surface"
           >
-            <ArrowRightIcon className="h-4 w-4" />
+            Buy now
+            <ExternalIcon className="h-3.5 w-3.5" />
           </a>
         </div>
       </div>

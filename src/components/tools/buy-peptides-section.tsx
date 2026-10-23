@@ -10,9 +10,10 @@ const PRODUCT_COUNT = 10;
 
 /**
  * "Buy peptides": a supplier's ten most widely stocked compounds (the ones
- * the most suppliers on the site carry) as a scrolling row of product cards,
- * each linking to that listing on the supplier's own site. Renders nothing
- * when the supplier is missing, inactive or has nothing in stock.
+ * the most suppliers on the site carry), single vials only, as a full-width
+ * scrolling row of product cards, each linking to that listing on the
+ * supplier's own site. Renders nothing when the supplier is missing,
+ * inactive or has nothing in stock.
  */
 export async function BuyPeptidesSection({ supplierSlug, className }: { supplierSlug: string; className?: string }) {
   const [supplier, offers, products, marketOffers] = await Promise.all([
@@ -31,7 +32,9 @@ export async function BuyPeptidesSection({ supplierSlug, className }: { supplier
   }
 
   const productsBySlug = new Map(products.map((product) => [product.slug, product]));
-  const cards = groupCatalogProducts(offers, productsBySlug, supplier)
+  // Single vials only: no capsules, sprays or multi-vial kits.
+  const singleVials = offers.filter((offer) => offer.form === 'vial' && offer.vialCount === 1);
+  const cards = groupCatalogProducts(singleVials, productsBySlug, supplier)
     .filter((product) => product.variants.some((variant) => variant.inStock))
     .sort(
       (a, b) =>
@@ -44,11 +47,8 @@ export async function BuyPeptidesSection({ supplierSlug, className }: { supplier
   const couponPercentOff = supplier.coupon?.percentOff ?? null;
 
   return (
-    <section
-      aria-labelledby="buy-peptides-heading"
-      className={`overflow-hidden rounded-panel border border-line bg-surface-raised py-5 shadow-card sm:py-8 ${className ?? ''}`}
-    >
-      <div className="flex flex-wrap items-end justify-between gap-4 px-5 sm:px-8">
+    <section aria-labelledby="buy-peptides-heading" className={`overflow-hidden py-5 sm:py-8 ${className ?? ''}`}>
+      <div className="mx-auto flex max-w-shell flex-wrap items-end justify-between gap-4 px-4">
         <div className="min-w-0">
           <p className="eyebrow">Buy peptides</p>
           <h2 id="buy-peptides-heading" className="mt-3 text-3xl font-black leading-tight text-content sm:text-4xl">
@@ -86,7 +86,7 @@ export async function BuyPeptidesSection({ supplierSlug, className }: { supplier
         </ul>
       </div>
 
-      <p className="mt-2 px-5 text-xs leading-6 text-faint sm:px-8">
+      <p className="mx-auto mt-2 max-w-shell px-4 text-xs leading-6 text-faint">
         Buttons open the product on {supplier.name}&rsquo;s site through an affiliate link; we may earn a commission at
         no extra cost to you. {RESEARCH_USE_NOTICE}
       </p>

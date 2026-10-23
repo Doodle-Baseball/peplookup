@@ -43,7 +43,7 @@ export default async function PricePerMgToolPage() {
         <div className="absolute -left-24 top-16 h-64 w-64 rounded-full bg-accent/5 blur-3xl" />
       </div>
 
-      <div className="mx-auto max-w-shell px-4 py-14">
+      <div className="mx-auto max-w-shell px-4 pt-14">
         <PageSeo seo={PAGE} />
         <section className="mx-auto max-w-4xl text-center">
           <span className="animate-fade-up inline-flex items-center gap-2 rounded-pill border border-line bg-surface-raised px-4 py-2 font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-content shadow-card">
@@ -166,8 +166,12 @@ export default async function PricePerMgToolPage() {
           </section>
         </div>
 
-        <BuyPeptidesSection supplierSlug="disguised-alpha" className="mt-8" />
+      </div>
 
+      {/* Outside the page container so the product rail runs the full width of the screen. */}
+      <BuyPeptidesSection supplierSlug="disguised-alpha" className="mt-8" />
+
+      <div className="mx-auto max-w-shell px-4 pb-14">
         <PageFaqSection path="/tools/price-per-mg" className="mt-14" />
       </div>
     </div>
