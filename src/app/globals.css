@@ -358,6 +358,12 @@
     right: 0;
     mask-image: linear-gradient(to left, #000, transparent);
   }
+  /* The card still tips and lifts on hover, but drawn flat: in a 3D context
+     Chrome hit-tests the tilted card's buttons against the plane behind
+     them, and "Buy now" clicks landed on the button row instead. */
+  .product-rail .card-3d {
+    transform-style: flat;
+  }
   .product-rail-track {
     display: flex;
     width: max-content;
