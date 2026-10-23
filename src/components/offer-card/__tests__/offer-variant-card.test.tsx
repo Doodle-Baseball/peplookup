@@ -9,6 +9,7 @@ function variant(over: Partial<CatalogVariant>): CatalogVariant {
     key: 'v',
     form: 'vial',
     formLabel: 'Vial',
+    vialMcg: 5000,
     optionLabel: '5mg',
     sizeLabel: '5 mg',
     imageUrl: null,
@@ -21,6 +22,7 @@ function variant(over: Partial<CatalogVariant>): CatalogVariant {
     stale: false,
     coaHref: 'https://lab.example/5mg.pdf',
     buyHref: '/go?to=5mg',
+    productUrl: 'https://vendor.example/5mg',
     ...over,
   };
 }

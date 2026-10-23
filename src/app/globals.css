@@ -330,6 +330,92 @@
     animation-play-state: paused;
   }
 
+  /* Product rail: the marquee above, for interactive cards. It also pauses
+     while a card has keyboard focus, so its links can be reached, and sizes
+     each card off the rail's own width (a container query), four across from
+     `xl` up. Reduced-motion visitors get a plain scrollable row instead. */
+  .product-rail {
+    container-type: inline-size;
+    overflow: hidden;
+    mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
+  }
+  /* Frosted strips over the rail's two ends: the blur fades out toward the
+     middle, so cards soften as they slide in and out. */
+  .product-rail-edge {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    z-index: 10;
+    width: 4rem;
+    pointer-events: none;
+    backdrop-filter: blur(6px);
+  }
+  .product-rail-edge-left {
+    left: 0;
+    mask-image: linear-gradient(to right, #000, transparent);
+  }
+  .product-rail-edge-right {
+    right: 0;
+    mask-image: linear-gradient(to left, #000, transparent);
+  }
+  /* The card still tips and lifts on hover, but drawn flat: in a 3D context
+     Chrome hit-tests the tilted card's buttons against the plane behind
+     them, and "Buy now" clicks landed on the button row instead. */
+  .product-rail .card-3d {
+    transform-style: flat;
+  }
+  .product-rail-track {
+    display: flex;
+    width: max-content;
+    animation: marquee 50s linear infinite;
+  }
+  .product-rail:hover .product-rail-track,
+  .product-rail:focus-within .product-rail-track {
+    animation-play-state: paused;
+  }
+  .product-rail-item {
+    flex: 0 0 auto;
+    /* Phones: one card and a peek of the next, so the row reads as moving. */
+    width: calc(100cqw / 1.25);
+    padding: 1.25rem 0.5rem;
+  }
+  @media (min-width: 640px) {
+    .product-rail-item { width: calc(100cqw / 2); }
+  }
+  /* Tablets: two cards and a peek; three leave the buttons too narrow. */
+  @media (min-width: 768px) {
+    .product-rail-item { width: calc(100cqw / 2.5); }
+  }
+  @media (min-width: 1024px) {
+    .product-rail-item { width: calc(100cqw / 3); }
+  }
+  @media (min-width: 1280px) {
+    .product-rail-item { width: calc(100cqw / 4); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .product-rail { overflow-x: auto; mask-image: none; }
+    .product-rail-track { animation: none; }
+  }
+
+  /* A vial that floats over its own soft floor shadow, turning a few degrees
+     as it rises, so a flat product photo reads as an object in space. */
+  .vial-3d {
+    transform-style: preserve-3d;
+    filter: drop-shadow(0 18px 18px rgb(0 0 0 / 0.16));
+  }
+  .vial-3d-shadow {
+    background: radial-gradient(closest-side, rgb(0 0 0 / 0.22), transparent);
+  }
+  /* For a photo shot on a white background: a drop shadow would trace the
+     photo's square edges, so the floor shadow alone carries the depth. */
+  .vial-3d-matte {
+    filter: none;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .vial-3d { animation: vial-float 5s ease-in-out infinite; }
+    .vial-3d-shadow { animation: vial-shadow 5s ease-in-out infinite; }
+  }
+
   /* --- Depth ------------------------------------------------------------ */
 
   /* Opt-in 3D hover for cards. The perspective lives on the element itself
@@ -443,6 +529,16 @@
 @keyframes marquee {
   from { transform: translateX(0); }
   to { transform: translateX(-50%); }
+}
+
+@keyframes vial-float {
+  0%, 100% { transform: perspective(700px) translateY(0) rotateY(-8deg); }
+  50% { transform: perspective(700px) translateY(-10px) rotateY(8deg); }
+}
+
+@keyframes vial-shadow {
+  0%, 100% { transform: scaleX(1); opacity: 0.9; }
+  50% { transform: scaleX(0.82); opacity: 0.55; }
 }
 
 @keyframes drift {

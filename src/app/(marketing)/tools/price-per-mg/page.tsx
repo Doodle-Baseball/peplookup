@@ -8,6 +8,7 @@ import { getSeoOverride, withSeo } from '@/lib/seo';
 import { PageFaqSection } from '@/components/faq/page-faq-section';
 import { RESEARCH_USE_NOTICE } from '@/config/site';
 import { PageSeo } from '@/components/seo/page-seo';
+import { BuyPeptidesSection } from '@/components/tools/buy-peptides-section';
 
 const PAGE = staticSeoPage('/tools/price-per-mg');
 
@@ -28,6 +29,10 @@ export async function generateMetadata(): Promise<Metadata> {
   return withSeo(PAGE.path, pageMetadata(PAGE));
 }
 
+// The "Buy peptides" rail shows live prices, so the page is re-rendered on the
+// same window as the other price pages rather than frozen at build time.
+export const revalidate = 1800;
+
 export default async function PricePerMgToolPage() {
   const seo = await getSeoOverride(PAGE.path);
   return (
@@ -38,7 +43,7 @@ export default async function PricePerMgToolPage() {
         <div className="absolute -left-24 top-16 h-64 w-64 rounded-full bg-accent/5 blur-3xl" />
       </div>
 
-      <div className="mx-auto max-w-shell px-4 py-14">
+      <div className="mx-auto max-w-shell px-4 pt-14">
         <PageSeo seo={PAGE} />
         <section className="mx-auto max-w-4xl text-center">
           <span className="animate-fade-up inline-flex items-center gap-2 rounded-pill border border-line bg-surface-raised px-4 py-2 font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-content shadow-card">
@@ -161,6 +166,12 @@ export default async function PricePerMgToolPage() {
           </section>
         </div>
 
+      </div>
+
+      {/* Outside the page container so the product rail runs the full width of the screen. */}
+      <BuyPeptidesSection supplierSlug="disguised-alpha" className="mt-8" />
+
+      <div className="mx-auto max-w-shell px-4 pb-14">
         <PageFaqSection path="/tools/price-per-mg" className="mt-14" />
       </div>
     </div>

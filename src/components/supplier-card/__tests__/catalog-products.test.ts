@@ -33,30 +33,31 @@ function offer(over: Partial<Offer> = {}): Offer {
 const noCoupon = { slug: 'acme', coupon: null };
 
 describe('groupCatalogProducts', () => {
-  it('puts every size, pack and form of a product on one card', () => {
+  it('gives single vials one card with their sizes, and each form and pack size its own card', () => {
     const grouped = groupCatalogProducts(
       [
         offer({ vialSize: 10_000 }),
         offer({ productSlug: 'tb-500' }),
         offer({ vialSize: 5000 }),
         offer({ vialSize: 10_000, vialCount: 10, listPrice: 72_000 }),
+        offer({ vialSize: 5000, vialCount: 10, listPrice: 40_000 }),
         offer({ form: 'spray', vialSize: 5000 }),
       ],
       products,
       noCoupon,
       NOW,
     );
-    expect(grouped.map((product) => product.name)).toEqual(['BPC-157', 'TB-500']);
-    expect(grouped[0]!.variants.map((variant) => `${variant.formLabel} ${variant.optionLabel}`)).toEqual([
-      'Vial 5mg',
-      'Vial 10mg',
-      'Vial 10mg × 10',
-      'Spray 5mg',
+    expect(grouped.map((card) => [card.key, card.variants.map((variant) => variant.optionLabel)])).toEqual([
+      ['bpc-157-vial-1', ['5mg', '10mg']],
+      ['tb-500-vial-1', ['10mg']],
+      ['bpc-157-vial-10', ['5mg × 10', '10mg × 10']],
+      ['bpc-157-spray-1', ['5mg']],
     ]);
+    expect(grouped.find((card) => card.key === 'bpc-157-spray-1')!.variants[0]!.sizeLabel).toBe('5 mg · spray');
   });
 
   it('gives each option its own price, links and size line', () => {
-    const [product] = groupCatalogProducts(
+    const [singleCard, kitCard] = groupCatalogProducts(
       [
         offer({ vialSize: 5000, listPrice: 4000, coaUrl: 'https://lab.example/5mg.pdf', productUrl: 'https://vendor.example/5' }),
         offer({ vialSize: 10_000, vialCount: 10, listPrice: 72_000, productUrl: 'https://vendor.example/kit' }),
@@ -65,13 +66,16 @@ describe('groupCatalogProducts', () => {
       noCoupon,
       NOW,
     );
-    const [single, kit] = product!.variants;
+    const single = singleCard!.variants[0];
+    const kit = kitCard!.variants[0];
     expect(single).toMatchObject({
       priceText: '$40.00',
       perMgText: '$8.00/mg',
       sizeLabel: '5 mg',
       coaHref: 'https://lab.example/5mg.pdf',
       buyHref: `/go?to=${encodeURIComponent('https://vendor.example/5')}`,
+      productUrl: 'https://vendor.example/5',
+      vialMcg: 5000,
     });
     // $720 for 10 × 10mg is $7.20/mg, not $72/mg.
     expect(kit).toMatchObject({ priceText: '$720.00', perMgText: '$7.20/mg', sizeLabel: '10 mg · pack of 10 vials', coaHref: null });
@@ -131,10 +135,15 @@ describe('supplier catalogue overrides', () => {
     expect(cards[0]!.compareHref).toBe('/products/bacteriostatic-water');
   });
 
-  it('keeps one card per product for every other supplier', () => {
+  it('gives every other supplier one card per pack size, under the product name', () => {
     const cards = groupCatalogProducts(packs, water, noCoupon, NOW);
-    expect(cards).toHaveLength(1);
-    expect(cards[0]).toMatchObject({ key: 'bacteriostatic-water', name: 'Bacteriostatic Water' });
-    expect(cards[0]!.variants).toHaveLength(5);
+    expect(cards.map((card) => card.key)).toEqual([
+      'bacteriostatic-water-vial-1',
+      'bacteriostatic-water-vial-5',
+      'bacteriostatic-water-vial-10',
+      'bacteriostatic-water-vial-25',
+      'bacteriostatic-water-vial-100',
+    ]);
+    expect(cards.every((card) => card.name === 'Bacteriostatic Water')).toBe(true);
   });
 });

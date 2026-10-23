@@ -27,11 +27,14 @@ export function CatalogFilterSelect({
   paramName,
   options,
   value,
+  onChange,
 }: {
   label: string;
   paramName: string;
   options: readonly CatalogFilterOption[];
   value: string | undefined;
+  /** When given, a choice is handed here instead of being written into the URL. */
+  onChange?: (value: string | undefined) => void;
 }) {
   const allOptions = [ALL_OPTION, ...options];
   const router = useRouter();
@@ -74,8 +77,12 @@ export function CatalogFilterSelect({
     triggerRef.current?.focus();
     if (index === selectedIndex) return;
 
-    const params = new URLSearchParams(window.location.search);
     const nextValue = allOptions[index]?.value;
+    if (onChange) {
+      onChange(nextValue || undefined);
+      return;
+    }
+    const params = new URLSearchParams(window.location.search);
     if (nextValue) params.set(paramName, nextValue);
     else params.delete(paramName);
     // A narrower list starts from its first page.

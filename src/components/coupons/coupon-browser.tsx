@@ -5,7 +5,7 @@ import Link from 'next/link';
 import type { Supplier } from '@/lib/schema';
 import { couponPagePath } from '@/lib/coupon-pages';
 import { supplierGoPath } from '@/lib/go-links';
-import { ArrowRightIcon, CheckIcon, CopyIcon, ExternalIcon, SearchIcon } from '@/components/icons/icons';
+import { ArrowRightIcon, CheckIcon, ChevronDownIcon, CopyIcon, ExternalIcon, SearchIcon } from '@/components/icons/icons';
 import { compareCouponVendors, DEFAULT_COUPON_SORT, type CouponSortKey } from '@/components/coupons/coupon-sort';
 
 /** Every supplier shown here is guaranteed by the page to carry a coupon. */
@@ -14,6 +14,9 @@ export type CouponVendor = Supplier & {
   /** Live listings this vendor has in the offers table, used as a catalogue-size signal. */
   listingCount: number;
 };
+
+/** Coupon cards shown at first and added by each "Load more", 7 rows of the 3-column grid. */
+const PAGE_SIZE = 21;
 
 const SORTS: { key: CouponSortKey; label: string }[] = [
   { key: 'discount', label: 'Biggest discount' },
@@ -62,9 +65,17 @@ function CouponCodeBlock({ code }: { code: string }) {
   );
 }
 
-export function CouponBrowser({ vendors }: { vendors: CouponVendor[] }) {
+export function CouponBrowser({
+  vendors,
+  totalSupplierCount,
+}: {
+  vendors: CouponVendor[];
+  /** Every listed supplier, with or without a code, the same total as the directory's "listed" count. */
+  totalSupplierCount: number;
+}) {
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState<CouponSortKey>(DEFAULT_COUPON_SORT);
+  const [visible, setVisible] = useState(PAGE_SIZE);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -95,14 +106,20 @@ export function CouponBrowser({ vendors }: { vendors: CouponVendor[] }) {
             id="coupon-search"
             type="search"
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={(event) => {
+              setQuery(event.target.value);
+              setVisible(PAGE_SIZE);
+            }}
             placeholder="Search a supplier or code…"
             className="min-w-0 flex-1 bg-transparent text-base text-content outline-none placeholder:text-faint focus-visible:ring-0"
           />
           {query ? (
             <button
               type="button"
-              onClick={() => setQuery('')}
+              onClick={() => {
+                setQuery('');
+                setVisible(PAGE_SIZE);
+              }}
               className="shrink-0 rounded-pill px-2 py-1 text-xs font-bold uppercase text-muted transition-colors hover:text-content"
             >
               Clear
@@ -115,7 +132,10 @@ export function CouponBrowser({ vendors }: { vendors: CouponVendor[] }) {
             <button
               key={option.key}
               type="button"
-              onClick={() => setSort(option.key)}
+              onClick={() => {
+                setSort(option.key);
+                setVisible(PAGE_SIZE);
+              }}
               aria-pressed={sort === option.key}
               className={`rounded-pill px-3 py-2 text-xs font-bold transition-colors ${
                 sort === option.key ? 'bg-brand text-surface' : 'text-muted hover:text-content'
@@ -128,8 +148,8 @@ export function CouponBrowser({ vendors }: { vendors: CouponVendor[] }) {
       </div>
 
       <p className="mt-3 text-sm text-muted" aria-live="polite">
-        <span className="font-bold text-content">{filtered.length}</span>{' '}
-        {filtered.length === 1 ? 'supplier' : 'suppliers'} with an active code
+        <span className="font-bold text-content">{filtered.length}</span> of {totalSupplierCount}{' '}
+        {totalSupplierCount === 1 ? 'supplier has' : 'suppliers have'} an active code
         {query ? ` matching “${query}”` : ''}
       </p>
 
@@ -139,7 +159,7 @@ export function CouponBrowser({ vendors }: { vendors: CouponVendor[] }) {
         </p>
       ) : (
         <ul className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((vendor) => (
+          {filtered.slice(0, visible).map((vendor) => (
             <li
               key={vendor.slug}
               className="flex flex-col rounded-card border border-line bg-surface-raised p-6 shadow-card transition-all hover:-translate-y-0.5 hover:border-brand hover:shadow-lift"
@@ -185,6 +205,19 @@ export function CouponBrowser({ vendors }: { vendors: CouponVendor[] }) {
           ))}
         </ul>
       )}
+
+      {filtered.length > visible ? (
+        <div className="mt-8 flex justify-center">
+          <button
+            type="button"
+            onClick={() => setVisible((count) => count + PAGE_SIZE)}
+            className="inline-flex items-center gap-2 rounded-pill border border-line bg-surface-raised px-6 py-3 text-sm font-bold text-content shadow-card transition-colors hover:border-accent hover:text-accent-strong"
+          >
+            Load more
+            <ChevronDownIcon className="h-4 w-4" />
+          </button>
+        </div>
+      ) : null}
     </>
   );
 }

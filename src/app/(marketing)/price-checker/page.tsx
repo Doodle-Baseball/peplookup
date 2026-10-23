@@ -7,6 +7,7 @@ import { staticSeoPage } from '@/config/seo-pages';
 import { pageMetadata } from '@/lib/seo-defaults';
 import { getSeoOverride, withSeo } from '@/lib/seo';
 import { PageFaqSection } from '@/components/faq/page-faq-section';
+import { HospiraPromoSection } from '@/components/home/hospira-promo-section';
 import { site } from '@/config/site';
 import { AccentedHeading } from '@/components/ui/accented-heading';
 import { PageSeo } from '@/components/seo/page-seo';
@@ -90,6 +91,8 @@ export default async function PriceCheckerPage() {
       ) : (
         <ProductBrowser products={cardData} facets={facets} />
       )}
+
+      <HospiraPromoSection />
 
       <div className="mx-auto max-w-shell px-4">
         {/* Same panel, eyebrow and heading treatment as the homepage explainer and the FAQs below. */}

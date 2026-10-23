@@ -5,12 +5,11 @@ import { pageMetadata } from '@/lib/seo-defaults';
 import { getSeoOverride, withSeo } from '@/lib/seo';
 import { getAllOffers, getSuppliers } from '@/lib/repository';
 import { CouponBrowser, type CouponVendor } from '@/components/coupons/coupon-browser';
-import { TagIcon } from '@/components/icons/icons';
+import { ShieldCheckIcon, TagIcon } from '@/components/icons/icons';
 import { PageFaqSection } from '@/components/faq/page-faq-section';
 import { PageSeo } from '@/components/seo/page-seo';
 import { compareCouponVendors, DEFAULT_COUPON_SORT } from '@/components/coupons/coupon-sort';
 import { couponPagePath } from '@/lib/coupon-pages';
-import { ExtensionBanner } from '@/components/extension/extension-banner';
 
 const PAGE = staticSeoPage('/coupons');
 
@@ -67,46 +66,65 @@ export default async function CouponsPage() {
         <h1 className="mt-3 text-4xl font-black tracking-tight text-content sm:text-5xl">
           {seo?.h1 ? seo.h1 : <>Supplier <span className="italic text-brand">coupon codes.</span></>}
         </h1>
-        <p className="mt-5 max-w-2xl text-base leading-relaxed text-muted sm:text-lg">
-          Every active discount code we track, with the supplier it belongs to. Tap a code to copy it, then
-          apply it at checkout on the supplier&rsquo;s own site. {site.name} never handles the order.
+        <p className="mt-5 text-base leading-relaxed text-muted sm:text-lg">
+          Every active peptide coupon code we track, with the supplier it belongs to, its discount and its rating.
+          Tap a code
+          {/* Laptop widths and up break here, so the two sentences split evenly over two lines. */}
+          <br className="hidden xl:inline" /> to copy it, then apply it at checkout on the supplier&rsquo;s own site.{' '}
+          {site.name} never handles the order.
         </p>
-
-        <ExtensionBanner />
 
         {vendors.length === 0 ? (
           <p className="mt-10 rounded-card border border-dashed border-line p-10 text-center text-sm text-muted">
             No coupon codes are active right now. Check back soon.
           </p>
         ) : (
-          <CouponBrowser vendors={vendors} />
+          <CouponBrowser vendors={vendors} totalSupplierCount={suppliers.length} />
         )}
 
-        <div className="mt-10 rounded-panel border border-line bg-surface-raised p-5 shadow-card sm:p-8">
-          <p className="eyebrow">Research Peptide Coupon Codes</p>
-          <p className="mt-3 text-sm leading-relaxed text-muted sm:text-base">
-            Active discount codes from verified peptide suppliers, collected and tracked by {site.name}.
+        {/* Heading across the top, text full width below, so a short paragraph never sits
+            beside a tall heading with empty space under it. Callout as in the supplier guide. */}
+        <section className="mt-10 rounded-panel border border-line bg-surface-raised p-5 shadow-card sm:p-8">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-chip bg-coupon-tint text-coupon-ink">
+              <TagIcon className="h-5 w-5" />
+            </span>
+            <h2 className="text-2xl font-black leading-tight text-content sm:text-3xl">
+              Research Peptide Coupon Codes and <span className="italic text-accent">Discount Codes</span>
+            </h2>
+          </div>
+          <p className="mt-4 text-base leading-7 text-muted sm:text-lg sm:leading-8">
+            Active peptide discount codes from verified suppliers, collected and tracked by {site.name}.
             Every code is checked against the supplier&rsquo;s own checkout, and prices on the site already
-            reflect the discount where a sitewide code applies. Tap any code below to copy it, then
-            paste it at the supplier&rsquo;s checkout to apply.
+            reflect the discount where a sitewide code applies. Most codes work sitewide, so they apply to
+            popular compounds like BPC-157, TB-500, Retatrutide and Semaglutide. Tap any code to copy it,
+            then paste it at the supplier&rsquo;s checkout.
           </p>
-        </div>
+        </section>
 
         <section className="mt-10 rounded-panel border border-line bg-surface-raised p-5 shadow-card sm:p-8">
-          <h2 className="text-lg font-black text-content sm:text-xl">
-            How {site.name}&rsquo;s <span className="text-brand">Coupon Tracking</span> Works
-          </h2>
-          <div className="mt-4 space-y-3 text-sm leading-relaxed text-muted sm:text-base">
-            <p>
-              {site.name} monitors supplier sites for published discount codes and verifies each one
-              before listing it here. When a supplier runs a sitewide coupon, every listing from that
-              supplier on the site shows the discounted price alongside the original, so comparisons
-              reflect what you would actually pay.
-            </p>
-            <p>
+          <div className="flex items-center gap-3 sm:gap-4">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-chip bg-accent-tint text-accent-strong">
+              <ShieldCheckIcon className="h-5 w-5" />
+            </span>
+            <h2 className="text-2xl font-black leading-tight text-content sm:text-3xl">
+              How We Verify Peptide <span className="italic text-accent">Coupon Codes</span>
+            </h2>
+          </div>
+          <p className="mt-4 text-base leading-7 text-muted sm:text-lg sm:leading-8">
+            {site.name} monitors supplier sites for published discount codes and verifies each one at
+            checkout before listing it here. When a supplier runs a sitewide coupon, every listing from
+            that supplier shows the discounted price alongside the original, so price per mg comparisons
+            reflect what you would actually pay.
+          </p>
+          <div className="mt-4 flex items-start gap-3 rounded-card border border-accent/25 bg-accent-tint p-4 sm:p-5">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-chip bg-surface-raised text-accent-strong shadow-card">
+              <TagIcon className="h-5 w-5" />
+            </span>
+            <p className="min-w-0 text-sm leading-7 text-content sm:text-base">
               Codes are set by the suppliers, not by {site.name}. They can expire, carry conditions such
               as minimum orders or first-time-customer restrictions, or be withdrawn at any time. If a
-              code stops working, let us know and we will recheck it.
+              peptide coupon code stops working, let us know through the contact page and we will recheck it.
             </p>
           </div>
         </section>

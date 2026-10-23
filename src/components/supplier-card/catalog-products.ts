@@ -14,6 +14,8 @@ export interface CatalogVariant {
   key: string;
   form: ProductForm;
   formLabel: string;
+  /** One vial (or capsule, or bottle), for the catalogue's Size filter. */
+  vialMcg: number;
   /** Short chip label: "5mg", or "10mg × 10" for a pack. */
   optionLabel: string;
   /** The card's full size line, e.g. "10 mg · pack of 10 vials". */
@@ -29,16 +31,19 @@ export interface CatalogVariant {
   seenText: string;
   stale: boolean;
   coaHref: string | null;
+  /** Through the site's /go redirect, which counts the click. */
   buyHref: string;
+  /** The listing's own URL on the supplier's site, for places that link straight to it. */
+  productUrl: string;
 }
 
 export interface CatalogProduct {
-  /** Unique per card: the product slug, or the listing's key when a supplier shows listings on separate cards. */
+  /** Unique per card: product, form and pack size, or the listing's key when a supplier shows listings on separate cards. */
   key: string;
   slug: string;
   name: string;
   compareHref: string;
-  /** Sorted by form, then size, then pack count. */
+  /** One form and one pack size per card, sorted by size. */
   variants: CatalogVariant[];
 }
 
@@ -67,7 +72,8 @@ function mgLabel(vialSizeMcg: number): string {
  */
 function sizeLabel(offer: Offer): string {
   const size = mgLabel(offer.vialSize);
-  if (offer.vialCount <= 1) return size;
+  // A single vial needs no unit; a single spray, pen or serum names its form, since it has its own card.
+  if (offer.vialCount <= 1) return offer.form === 'vial' ? size : `${size} · ${FORM_LABELS[offer.form].toLowerCase()}`;
   if (offer.form === 'spray') return `${size} · pack of ${offer.vialCount} bottles`;
   if (offer.form === 'capsule') {
     const bottleCount = offer.vialCount / CAPSULES_PER_BOTTLE;
@@ -97,6 +103,7 @@ function toVariant(offer: Offer, supplier: Pick<Supplier, 'coupon'>, now: Date):
     key: offer.id ?? `${offer.productSlug}-${offer.form}-${offer.vialSize}-${offer.vialCount}`,
     form: offer.form,
     formLabel: FORM_LABELS[offer.form],
+    vialMcg: offer.vialSize,
     optionLabel: optionLabel(offer),
     sizeLabel: sizeLabel(offer),
     imageUrl: offer.imageUrl,
@@ -109,6 +116,7 @@ function toVariant(offer: Offer, supplier: Pick<Supplier, 'coupon'>, now: Date):
     stale: isStale(offer.scrapedAt, now),
     coaHref: offer.labReport?.reportUrl ?? offer.labReport?.labUrl ?? offer.coaUrl ?? null,
     buyHref: `/go?to=${encodeURIComponent(offer.productUrl)}`,
+    productUrl: offer.productUrl,
   };
 }
 
@@ -117,10 +125,12 @@ function byFormThenSize(a: Offer, b: Offer): number {
 }
 
 /**
- * One entry per product, each holding all of that product's listings as
- * options, in the order the listings first appear so the catalogue keeps its
- * existing running order. A supplier in SUPPLIER_CATALOG_OVERRIDES can show
- * each listing on its own card instead, and/or rename a product on its cards.
+ * One card per product, form and pack size: a product's single vials share a
+ * card with their sizes as options, and its sprays, capsules and each
+ * multi-vial pack size (e.g. 10-vial kits) get cards of their own. Cards keep
+ * the order their listings first appear in, so the catalogue keeps its
+ * running order. A supplier in SUPPLIER_CATALOG_OVERRIDES can show each
+ * listing on its own card instead, and/or rename a product on its cards.
  */
 export function groupCatalogProducts(
   offers: readonly Offer[],
@@ -129,24 +139,26 @@ export function groupCatalogProducts(
   now: Date = new Date(),
 ): CatalogProduct[] {
   const override = SUPPLIER_CATALOG_OVERRIDES[supplier.slug];
-  const bySlug = new Map<string, { product: Pick<Product, 'slug' | 'name'>; offers: Offer[] }>();
+  const byCard = new Map<string, { product: Pick<Product, 'slug' | 'name'>; offers: Offer[] }>();
   for (const offer of offers) {
     const product = productsBySlug.get(offer.productSlug);
     if (!product) continue;
-    const group = bySlug.get(product.slug) ?? { product, offers: [] };
+    // Separate-card suppliers split per listing below, after sorting the whole product by size.
+    const cardKey = override?.separateCards ? product.slug : `${product.slug}-${offer.form}-${offer.vialCount}`;
+    const group = byCard.get(cardKey) ?? { product, offers: [] };
     group.offers.push(offer);
-    bySlug.set(product.slug, group);
+    byCard.set(cardKey, group);
   }
-  return [...bySlug.values()].flatMap(({ product, offers: productOffers }) => {
+  return [...byCard.entries()].flatMap(([cardKey, { product, offers: cardOffers }]) => {
     const card = {
       slug: product.slug,
       name: override?.productNames?.[product.slug] ?? product.name,
       compareHref: `/products/${product.slug}`,
     };
-    const variants = [...productOffers].sort(byFormThenSize).map((offer) => toVariant(offer, supplier, now));
+    const variants = [...cardOffers].sort(byFormThenSize).map((offer) => toVariant(offer, supplier, now));
     if (override?.separateCards) {
       return variants.map((variant) => ({ ...card, key: variant.key, variants: [variant] }));
     }
-    return [{ ...card, key: product.slug, variants }];
+    return [{ ...card, key: cardKey, variants }];
   });
 }
