@@ -8,6 +8,7 @@ import { getSeoOverride, withSeo } from '@/lib/seo';
 import { PageFaqSection } from '@/components/faq/page-faq-section';
 import { RESEARCH_USE_NOTICE } from '@/config/site';
 import { PageSeo } from '@/components/seo/page-seo';
+import { BuyPeptidesSection } from '@/components/tools/buy-peptides-section';
 
 const PAGE = staticSeoPage('/tools/price-per-mg');
 
@@ -27,6 +28,10 @@ const COMPARE_LINKS: { href: string; label: string; title: string; icon: React.R
 export async function generateMetadata(): Promise<Metadata> {
   return withSeo(PAGE.path, pageMetadata(PAGE));
 }
+
+// The "Buy peptides" rail shows live prices, so the page is re-rendered on the
+// same window as the other price pages rather than frozen at build time.
+export const revalidate = 1800;
 
 export default async function PricePerMgToolPage() {
   const seo = await getSeoOverride(PAGE.path);
@@ -160,6 +165,8 @@ export default async function PricePerMgToolPage() {
             </p>
           </section>
         </div>
+
+        <BuyPeptidesSection supplierSlug="disguised-alpha" className="mt-8" />
 
         <PageFaqSection path="/tools/price-per-mg" className="mt-14" />
       </div>
