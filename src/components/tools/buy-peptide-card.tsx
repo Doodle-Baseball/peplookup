@@ -71,56 +71,81 @@ export function BuyPeptideCard({
       <div className="flex flex-1 flex-col px-2 pb-1 pt-3">
         <h3 className="truncate text-lg font-black text-content">{product.name}</h3>
 
-        {product.variants.length > 1 ? (
-          <div role="group" aria-label={`${product.name} sizes`} className="mt-2 flex flex-wrap gap-1.5">
-            {product.variants.map((candidate) => {
-              const isSelected = candidate.key === variant.key;
-              return (
+        {/* Every size on one line ("5mg · 10mg · 20mg"); each one switches the price and links below. */}
+        <div
+          role="group"
+          aria-label={`${product.name} sizes`}
+          className="scrollbar-hide mt-2 flex items-center gap-1.5 overflow-x-auto whitespace-nowrap font-mono text-xs font-bold"
+        >
+          {product.variants.map((candidate, index) => {
+            const isSelected = candidate.key === variant.key;
+            return (
+              <span key={candidate.key} className="flex shrink-0 items-center gap-1.5">
+                {index > 0 ? (
+                  <span aria-hidden="true" className="text-faint">
+                    ·
+                  </span>
+                ) : null}
                 <button
-                  key={candidate.key}
                   type="button"
                   tabIndex={tabIndex}
                   onClick={() => setSelectedKey(candidate.key)}
                   aria-pressed={isSelected}
                   className={cn(
-                    'rounded-pill border px-2.5 py-1 font-mono text-xs font-bold transition-colors',
-                    isSelected
-                      ? 'border-accent/40 bg-accent-tint text-accent-strong'
-                      : 'border-line bg-surface text-muted hover:border-accent hover:text-accent-strong',
+                    'rounded-pill px-1.5 py-0.5 transition-colors',
+                    isSelected ? 'bg-accent-tint text-accent-strong' : 'text-muted hover:text-accent-strong',
                     !candidate.inStock && !isSelected && 'text-faint line-through',
                   )}
                 >
                   {candidate.optionLabel}
                   {candidate.inStock ? null : <span className="sr-only"> (out of stock)</span>}
                 </button>
-              );
-            })}
-          </div>
-        ) : (
-          <p className="mt-2 font-mono text-xs font-bold text-muted">{variant.optionLabel}</p>
-        )}
-
-        <div className="mt-auto flex items-center justify-between gap-3 border-t border-line pt-3">
-          <div className="min-w-0">
-            <p className="text-xl font-black leading-tight text-content">{variant.priceText}</p>
-            <p className="flex flex-wrap items-baseline gap-x-1.5 text-xs">
-              {variant.listPriceText ? <span className="text-faint line-through">{variant.listPriceText}</span> : null}
-              <span className={cn('font-semibold', variant.inStock ? 'text-ok' : 'text-danger')}>
-                {variant.inStock ? variant.perMgText : 'Out of stock'}
               </span>
-            </p>
-          </div>
+            );
+          })}
+        </div>
+
+        <div className="mt-auto border-t border-line pt-3">
+          {variant.couponApplied ? (
+            <p className="text-micro font-bold uppercase tracking-wide text-faint">Price after coupon</p>
+          ) : null}
+          <p className="text-xl font-black leading-tight text-content">{variant.priceText}</p>
+          <p className="flex flex-wrap items-baseline gap-x-1.5 text-xs">
+            {variant.listPriceText ? <span className="text-faint line-through">{variant.listPriceText}</span> : null}
+            <span className={cn('font-semibold', variant.inStock ? 'text-ok' : 'text-danger')}>
+              {variant.inStock ? variant.perMgText : 'Out of stock'}
+            </span>
+          </p>
+        </div>
+
+        <div className={cn('mt-3 grid gap-2', variant.coaHref ? 'grid-cols-2' : 'grid-cols-1')}>
           <a
-            href={variant.buyHref}
+            href={variant.productUrl}
             target="_blank"
             rel="nofollow sponsored noopener"
             tabIndex={tabIndex}
-            aria-label={`Buy now: ${product.name} ${variant.optionLabel} at ${supplierName}`}
-            className="btn-3d inline-flex shrink-0 items-center gap-1.5 rounded-chip bg-brand px-3.5 py-2.5 text-sm font-bold text-surface"
+            className="btn-3d inline-flex items-center justify-center gap-1.5 rounded-chip bg-brand px-3 py-2.5 text-sm font-bold text-surface"
           >
             Buy now
             <ExternalIcon className="h-3.5 w-3.5" />
+            <span className="sr-only">
+              : {product.name} {variant.optionLabel} at {supplierName} (affiliate link, opens in a new tab)
+            </span>
           </a>
+          {variant.coaHref ? (
+            <a
+              href={variant.coaHref}
+              target="_blank"
+              rel="nofollow noopener"
+              tabIndex={tabIndex}
+              className="inline-flex items-center justify-center rounded-chip border border-line bg-surface px-3 py-2.5 text-sm font-bold text-content transition-colors hover:border-accent hover:text-accent-strong"
+            >
+              View COA
+              <span className="sr-only">
+                : {product.name} {variant.optionLabel} (opens in a new tab)
+              </span>
+            </a>
+          ) : null}
         </div>
       </div>
     </article>

@@ -1,17 +1,23 @@
 import Link from 'next/link';
 import { getAllOffers, getOffersForSupplier, getProducts, getSupplier } from '@/lib/repository';
 import { groupCatalogProducts } from '@/components/supplier-card/catalog-products';
-import { ArrowRightIcon } from '@/components/icons/icons';
-import { RESEARCH_USE_NOTICE } from '@/config/site';
+import { ArrowRightIcon, ExternalIcon } from '@/components/icons/icons';
+import { StarRating } from '@/components/ui/star-rating';
+import { CopyCode } from '@/components/ui/copy-code';
+import { formatRating } from '@/lib/format';
+import { ratingSourceLabel } from '@/lib/review-pages';
 import { BuyPeptideCard } from './buy-peptide-card';
 
 /** Products shown in the rail. */
 const PRODUCT_COUNT = 10;
 
+/** Compounds left out of the rail. */
+const EXCLUDED_PRODUCT_SLUGS: ReadonlySet<string> = new Set(['nad']);
+
 /**
  * "Buy peptides": a supplier's ten most widely stocked compounds (the ones
  * the most suppliers on the site carry), single vials only, as a full-width
- * scrolling row of product cards, each linking to that listing on the
+ * scrolling row of product cards that link straight to each listing on the
  * supplier's own site. Renders nothing when the supplier is missing,
  * inactive or has nothing in stock.
  */
@@ -33,7 +39,9 @@ export async function BuyPeptidesSection({ supplierSlug, className }: { supplier
 
   const productsBySlug = new Map(products.map((product) => [product.slug, product]));
   // Single vials only: no capsules, sprays or multi-vial kits.
-  const singleVials = offers.filter((offer) => offer.form === 'vial' && offer.vialCount === 1);
+  const singleVials = offers.filter(
+    (offer) => offer.form === 'vial' && offer.vialCount === 1 && !EXCLUDED_PRODUCT_SLUGS.has(offer.productSlug),
+  );
   const cards = groupCatalogProducts(singleVials, productsBySlug, supplier)
     .filter((product) => product.variants.some((variant) => variant.inStock))
     .sort(
@@ -59,37 +67,64 @@ export async function BuyPeptidesSection({ supplierSlug, className }: { supplier
             {supplier.coupon ? ` (the ${supplier.coupon.code} code already applied)` : ''} and the price per mg for
             each size.
           </p>
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            {supplier.reviewRating !== null ? (
+              <span className="inline-flex items-center gap-2 rounded-pill border border-line bg-surface-raised px-3 py-1.5 text-sm font-bold text-content">
+                <StarRating rating={supplier.reviewRating} starClassName="h-4 w-4" />
+                {formatRating(supplier.reviewRating)}
+                <span className="font-semibold text-muted">on {ratingSourceLabel(supplier.reviewsUrl)}</span>
+              </span>
+            ) : null}
+            {supplier.coupon ? (
+              <span className="inline-flex items-center gap-2 text-sm font-bold text-content">
+                {supplier.coupon.percentOff}% off with code
+                <CopyCode code={supplier.coupon.code} className="px-3 py-1.5" />
+              </span>
+            ) : null}
+          </div>
         </div>
-        <Link
-          href={`/suppliers/${supplier.slug}`}
-          className="group/all inline-flex shrink-0 items-center gap-1.5 border-b border-content pb-1 text-sm font-bold text-content transition-colors hover:border-accent hover:text-accent-strong"
-        >
-          View all products
-          <ArrowRightIcon className="h-4 w-4 transition-transform group-hover/all:translate-x-0.5" />
-        </Link>
+        <div className="flex flex-wrap items-center gap-4">
+          <a
+            href={supplier.affiliateUrl}
+            target="_blank"
+            rel="nofollow sponsored noopener"
+            className="btn-3d inline-flex items-center gap-1.5 rounded-chip bg-brand px-4 py-2.5 text-sm font-bold text-surface"
+          >
+            Visit {supplier.name}
+            <ExternalIcon className="h-3.5 w-3.5" />
+            <span className="sr-only">(affiliate link, opens in a new tab)</span>
+          </a>
+          <Link
+            href={`/suppliers/${supplier.slug}`}
+            className="group/all inline-flex shrink-0 items-center gap-1.5 border-b border-content pb-1 text-sm font-bold text-content transition-colors hover:border-accent hover:text-accent-strong"
+          >
+            View all products
+            <ArrowRightIcon className="h-4 w-4 transition-transform group-hover/all:translate-x-0.5" />
+          </Link>
+        </div>
       </div>
 
-      <div className="product-rail mt-4">
-        <ul className="product-rail-track">
-          {[false, true].flatMap((copy) =>
-            cards.map((product) => (
-              <li key={`${copy ? 'copy' : 'main'}-${product.key}`} className="product-rail-item" aria-hidden={copy || undefined}>
-                <BuyPeptideCard
-                  product={product}
-                  supplierName={supplier.name}
-                  couponPercentOff={couponPercentOff}
-                  copy={copy}
-                />
-              </li>
-            )),
-          )}
-        </ul>
+      {/* Side padding, with a blur that fades the cards out as they reach each edge. */}
+      <div className="relative mt-4 px-4 sm:px-8 lg:px-12">
+        <div className="product-rail">
+          <ul className="product-rail-track">
+            {[false, true].flatMap((copy) =>
+              cards.map((product) => (
+                <li key={`${copy ? 'copy' : 'main'}-${product.key}`} className="product-rail-item" aria-hidden={copy || undefined}>
+                  <BuyPeptideCard
+                    product={product}
+                    supplierName={supplier.name}
+                    couponPercentOff={couponPercentOff}
+                    copy={copy}
+                  />
+                </li>
+              )),
+            )}
+          </ul>
+        </div>
+        <span aria-hidden="true" className="product-rail-edge product-rail-edge-left" />
+        <span aria-hidden="true" className="product-rail-edge product-rail-edge-right" />
       </div>
-
-      <p className="mx-auto mt-2 max-w-shell px-4 text-xs leading-6 text-faint">
-        Buttons open the product on {supplier.name}&rsquo;s site through an affiliate link; we may earn a commission at
-        no extra cost to you. {RESEARCH_USE_NOTICE}
-      </p>
     </section>
   );
 }

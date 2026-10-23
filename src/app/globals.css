@@ -332,12 +332,31 @@
 
   /* Product rail: the marquee above, for interactive cards. It also pauses
      while a card has keyboard focus, so its links can be reached, and sizes
-     each card off the rail's own width (a container query), five across from
+     each card off the rail's own width (a container query), four across from
      `xl` up. Reduced-motion visitors get a plain scrollable row instead. */
   .product-rail {
     container-type: inline-size;
     overflow: hidden;
-    mask-image: linear-gradient(to right, transparent, #000 3%, #000 97%, transparent);
+    mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
+  }
+  /* Frosted strips over the rail's two ends: the blur fades out toward the
+     middle, so cards soften as they slide in and out. */
+  .product-rail-edge {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    z-index: 10;
+    width: 4rem;
+    pointer-events: none;
+    backdrop-filter: blur(6px);
+  }
+  .product-rail-edge-left {
+    left: 0;
+    mask-image: linear-gradient(to right, #000, transparent);
+  }
+  .product-rail-edge-right {
+    right: 0;
+    mask-image: linear-gradient(to left, #000, transparent);
   }
   .product-rail-track {
     display: flex;
@@ -361,10 +380,10 @@
     .product-rail-item { width: calc(100cqw / 3); }
   }
   @media (min-width: 1024px) {
-    .product-rail-item { width: calc(100cqw / 4); }
+    .product-rail-item { width: calc(100cqw / 3); }
   }
   @media (min-width: 1280px) {
-    .product-rail-item { width: calc(100cqw / 5); }
+    .product-rail-item { width: calc(100cqw / 4); }
   }
   @media (prefers-reduced-motion: reduce) {
     .product-rail { overflow-x: auto; mask-image: none; }
