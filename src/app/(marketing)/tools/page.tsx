@@ -16,9 +16,14 @@ import { staticSeoPage } from '@/config/seo-pages';
 import { pageMetadata } from '@/lib/seo-defaults';
 import { getSeoOverride, withSeo } from '@/lib/seo';
 import { PageFaqSection } from '@/components/faq/page-faq-section';
+import { BuyPeptidesSection } from '@/components/tools/buy-peptides-section';
 import { PageSeo } from '@/components/seo/page-seo';
 
 const PAGE = staticSeoPage('/tools');
+
+// The "Buy peptides" rail shows live prices, so the page is re-rendered on the
+// same window as the other price pages rather than frozen at build time.
+export const revalidate = 1800;
 
 export async function generateMetadata(): Promise<Metadata> {
   return withSeo(PAGE.path, pageMetadata(PAGE));
@@ -103,7 +108,7 @@ export default async function ToolsHubPage() {
         <div className="absolute -left-24 top-16 h-64 w-64 rounded-full bg-accent/5 blur-3xl" />
       </div>
 
-      <div className="mx-auto max-w-shell px-4 py-14">
+      <div className="mx-auto max-w-shell px-4 pt-14">
         <PageSeo seo={PAGE} itemList={TOOLS.map((tool) => ({ name: tool.title, url: tool.href }))} />
         <section className="mx-auto max-w-4xl text-center">
           <span className="animate-fade-up inline-flex items-center gap-2 rounded-pill border border-line bg-surface-raised px-4 py-2 font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-content shadow-card">
@@ -169,7 +174,12 @@ export default async function ToolsHubPage() {
             );
           })}
         </section>
+      </div>
 
+      {/* Outside the page container so the product rail runs the full width of the screen. */}
+      <BuyPeptidesSection supplierSlug="disguised-alpha" className="mt-8" />
+
+      <div className="mx-auto max-w-shell px-4 pb-14">
         <div className="mx-auto mt-12 max-w-3xl rounded-card border border-accent/25 bg-accent-tint p-6 text-center sm:p-8">
           <p className="text-sm text-muted sm:text-base">
             Every calculation runs entirely in your browser with no data stored. The same per-milligram
