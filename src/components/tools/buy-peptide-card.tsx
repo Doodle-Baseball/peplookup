@@ -34,7 +34,7 @@ export function BuyPeptideCard({
 
   return (
     <article className="card-3d group flex h-full flex-col rounded-card border border-line bg-surface-raised p-3">
-      <div className="relative flex h-40 items-center justify-center overflow-hidden rounded-chip bg-surface-sunken">
+      <div className="relative flex h-48 items-center justify-center overflow-hidden rounded-chip bg-surface-sunken">
         <span className="absolute left-3 top-3 z-10 flex gap-1.5">
           {variant.couponApplied && couponPercentOff !== null ? (
             <span className="rounded-pill bg-brand px-2.5 py-1 font-mono text-micro font-bold uppercase tracking-wide text-surface">
@@ -53,9 +53,9 @@ export function BuyPeptideCard({
             <Image
               src={variant.imageUrl}
               alt={copy ? '' : `${product.name} from ${supplierName}`}
-              width={140}
-              height={140}
-              className="vial-3d relative z-0 h-28 w-28 object-contain"
+              width={200}
+              height={200}
+              className="vial-3d relative z-0 h-40 w-40 object-contain"
               unoptimized
               // Lazy loading misses images that slide into view on a moving track; there are only ten.
               loading="eager"
@@ -64,7 +64,7 @@ export function BuyPeptideCard({
           ) : (
             <BoxIcon className="vial-3d h-12 w-12 text-faint" />
           )}
-          <span aria-hidden="true" className="vial-3d-shadow absolute bottom-3 h-3 w-24 rounded-pill" />
+          <span aria-hidden="true" className="vial-3d-shadow absolute bottom-2 h-3 w-28 rounded-pill" />
         </div>
       </div>
 
