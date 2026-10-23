@@ -3,11 +3,13 @@
 // Water sizes are in ml, stored on the same `mg` field, matching the convention used for other
 // vendors' water. Packs store the single 30ml vial with `count` vials and the pack price.
 // No COA link or stock status was supplied, so listings carry no COA and take the shared
-// default (in stock). The supplier's link carries no referral code, so URLs are as supplied.
+// default (in stock). Product links carry a UTM tag so the supplier can see PepLookup traffic.
 const { runSeed } = require('./lib/seed-vendor-offers');
 
 const image = (file) => `https://hospirabacteriostaticwater.com/wp-content/uploads/2026/07/${file}`;
-const product = (slug) => `https://hospirabacteriostaticwater.com/product/${slug}/`;
+// Tagged so the supplier can tell visitors who arrive from PepLookup.
+const TRACKING = '?utm_source=peplookup&utm_medium=referral';
+const product = (slug) => `https://hospirabacteriostaticwater.com/product/${slug}/${TRACKING}`;
 
 const listings = [
   { productSlug: 'bacteriostatic-water', mg: 30, priceCents: 2299, imageUrl: image('Hospira-Bacteriostatic-Water-30ml-Single-Vial.webp'), coaUrl: null, productUrl: product('hospira-bacteriostatic-water-30ml-1-vial') },
