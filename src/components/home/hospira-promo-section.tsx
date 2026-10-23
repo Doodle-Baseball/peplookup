@@ -50,7 +50,7 @@ export async function HospiraPromoSection() {
               Bac water for peptides
             </p>
             <h2 id="hospira-promo-heading" className="mt-4 text-3xl font-black leading-tight text-white sm:text-4xl">
-              Don&rsquo;t risk a <span className="text-accent-soft">$300 peptide</span> on generic bac water.
+              Your peptides deserve <span className="text-accent-soft">genuine Hospira</span> bac water.
             </h2>
             <p className="mt-4 max-w-2xl text-base leading-7 text-white/70">
               Hospira Bacteriostatic Water for Injection, USP: sterile, non-pyrogenic and preserved with 0.9% benzyl
