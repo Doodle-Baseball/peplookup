@@ -1,13 +1,13 @@
-// Adds ZC Labs's product listings, as supplied from zclabs.shop,
+// Adds ZC Labs's product listings, as supplied from zc-labs.com,
 // to the Supabase `offers` table. See scripts/lib/seed-vendor-offers.js.
 // "10-vials kit" packs are stored as `count: 10` at the same per-vial `mg`, matching the
 // convention used for other vendors' multi-vial packs.
 const { runSeed } = require('./lib/seed-vendor-offers');
 
-const COA_PAGE = 'https://zclabs.shop/coas/?ea_ref=products';
-const UPLOADS = 'https://zclabs.shop/wp-content/uploads/';
-const REF = '?ea_ref=products';
-const product = (slug) => `https://zclabs.shop/product/${slug}/${REF}`;
+const COA_PAGE = 'https://zc-labs.com/coas/?ea_ref=peplookup';
+const UPLOADS = 'https://zc-labs.com/wp-content/uploads/';
+const REF = '?ea_ref=peplookup';
+const product = (slug) => `https://zc-labs.com/product/${slug}/${REF}`;
 
 const listings = [
   { productSlug: 'bpc-157', mg: 10, priceCents: 2399, imageUrl: `${UPLOADS}2026/09/product-1862-20260905-023151.png`, coaUrl: COA_PAGE, productUrl: product('bpc-157') },
@@ -29,8 +29,8 @@ const listings = [
   { productSlug: 'tirzepatide', mg: 10, count: 10, priceCents: 14499, imageUrl: `${UPLOADS}2026/09/zc-tz-10mg-vial.jpg.webp`, coaUrl: COA_PAGE, productUrl: product('gl-tz') },
   { productSlug: 'tirzepatide', mg: 30, count: 10, priceCents: 30499, imageUrl: `${UPLOADS}2026/09/zc-tz-30mg-vial.jpg.webp`, coaUrl: COA_PAGE, productUrl: product('gl-tz') },
 
-  { productSlug: 'ipamorelin', mg: 10, priceCents: 2399, inStock: false, imageUrl: `${UPLOADS}2026/09/product-1848-20260905-023315.png.webp`, coaUrl: COA_PAGE, productUrl: `https://zclabs.shop/product/ipamorelin-10mg/${REF}#zc-rn-box` },
-  { productSlug: 'ipamorelin', mg: 10, count: 10, priceCents: 19999, inStock: false, imageUrl: `${UPLOADS}2026/09/product-1848-20260905-023315.png.webp`, coaUrl: COA_PAGE, productUrl: `https://zclabs.shop/product/ipamorelin-10mg/${REF}#zc-rn-box` },
+  { productSlug: 'ipamorelin', mg: 10, priceCents: 2399, inStock: false, imageUrl: `${UPLOADS}2026/09/product-1848-20260905-023315.png.webp`, coaUrl: COA_PAGE, productUrl: `https://zc-labs.com/product/ipamorelin-10mg/${REF}#zc-rn-box` },
+  { productSlug: 'ipamorelin', mg: 10, count: 10, priceCents: 19999, inStock: false, imageUrl: `${UPLOADS}2026/09/product-1848-20260905-023315.png.webp`, coaUrl: COA_PAGE, productUrl: `https://zc-labs.com/product/ipamorelin-10mg/${REF}#zc-rn-box` },
 
   { productSlug: 'tesamorelin', mg: 10, priceCents: 4299, imageUrl: `${UPLOADS}2026/05/ChatGPT-Image-Sep-4-2026-10_09_46-PM.png.webp`, coaUrl: COA_PAGE, productUrl: product('tesamorelin-10mg') },
   { productSlug: 'tesamorelin', mg: 10, count: 10, priceCents: 35499, imageUrl: `${UPLOADS}2026/05/ChatGPT-Image-Sep-4-2026-10_09_46-PM.png.webp`, coaUrl: COA_PAGE, productUrl: product('tesamorelin-10mg') },
@@ -45,8 +45,8 @@ const listings = [
   { productSlug: 'mots-c', mg: 10, count: 10, priceCents: 24999, imageUrl: `${UPLOADS}2026/09/product-1854-20260905-023408.png.webp`, coaUrl: COA_PAGE, productUrl: product('mots-c-10mg') },
   { productSlug: 'mots-c', mg: 40, count: 10, priceCents: 44999, imageUrl: `${UPLOADS}2026/09/product-1854-20260905-023408.png.webp`, coaUrl: COA_PAGE, productUrl: product('mots-c-10mg') },
 
-  { productSlug: 'epitalon', mg: 50, priceCents: 3999, inStock: false, imageUrl: `${UPLOADS}2026/09/zc-epithalon-50mg-vial.jpg.webp`, coaUrl: COA_PAGE, productUrl: `https://zclabs.shop/product/epithalon-10mg/${REF}#zc-rn-box` },
-  { productSlug: 'epitalon', mg: 50, count: 10, priceCents: 33999, inStock: false, imageUrl: `${UPLOADS}2026/09/zc-epithalon-50mg-vial.jpg.webp`, coaUrl: COA_PAGE, productUrl: `https://zclabs.shop/product/epithalon-10mg/${REF}#zc-rn-box` },
+  { productSlug: 'epitalon', mg: 50, priceCents: 3999, inStock: false, imageUrl: `${UPLOADS}2026/09/zc-epithalon-50mg-vial.jpg.webp`, coaUrl: COA_PAGE, productUrl: `https://zc-labs.com/product/epithalon-10mg/${REF}#zc-rn-box` },
+  { productSlug: 'epitalon', mg: 50, count: 10, priceCents: 33999, inStock: false, imageUrl: `${UPLOADS}2026/09/zc-epithalon-50mg-vial.jpg.webp`, coaUrl: COA_PAGE, productUrl: `https://zc-labs.com/product/epithalon-10mg/${REF}#zc-rn-box` },
 
   { productSlug: 'semax', mg: 10, priceCents: 2399, imageUrl: `${UPLOADS}2026/09/product-1851-20260905-023441.png.webp`, coaUrl: COA_PAGE, productUrl: product('semax-5mg') },
   { productSlug: 'semax', mg: 10, count: 10, priceCents: 19999, imageUrl: `${UPLOADS}2026/09/product-1851-20260905-023441.png.webp`, coaUrl: COA_PAGE, productUrl: product('semax-5mg') },
