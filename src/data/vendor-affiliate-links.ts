@@ -68,7 +68,7 @@ export const vendorAffiliateLinks: Record<string, string> = {
   'nupeps.com': 'https://nupeps.com/aff/23/',
   'puratekpeptides.com': 'https://puratekpeptides.com/ref/370/',
   'axonchems.com': 'https://axonchems.com/aff/Dlj7pbr',
-  'zclabs.shop': 'https://zclabs.shop/?ea_ref=products',
+  'zc-labs.com': 'https://zc-labs.com/?ea_ref=peplookup',
   'peptidegiants.com': 'https://peptidegiants.com/?ref=peplookup',
   'purgolabs.com': 'https://www.purgolabs.com?ref=PEPLOOKUP',
   'aminoscience.io': 'https://aminoscience.io?ref=PRODUCTS',
