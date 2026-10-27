@@ -15,7 +15,7 @@ export function FeaturedGuide({ guide }: { guide: Guide }) {
         imageUrl={guide.coverImageUrl}
         icon={guide.icon}
         accent={guide.accent}
-        alt={`${guide.title} cover image`}
+        alt={guide.coverImageAlt || `${guide.title} cover image`}
         className="aspect-[16/9] w-full lg:h-full lg:aspect-auto lg:min-h-64"
       />
 

@@ -4,11 +4,23 @@ import { useActionState, useState } from 'react';
 import Link from 'next/link';
 import type { GuideFormState } from '@/app/admin/(dashboard)/guides/actions';
 import type { Guide, GuideAccent, GuideIcon } from '@/data/guides';
-import { Field, TextArea } from '@/components/admin/form-fields';
-import { GuideCover } from '@/components/guides/guide-cover';
+import { Field } from '@/components/admin/form-fields';
+import { GuideCoverField } from '@/components/admin/guide-cover-field';
 import { ChevronDownIcon } from '@/components/icons/icons';
+import { cn } from '@/lib/cn';
 
 const INITIAL_STATE: GuideFormState = { error: null };
+
+/** Search results cut meta descriptions off past roughly this length. */
+const META_DESCRIPTION_LIMIT = 160;
+
+function slugify(value: string): string {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
 
 /** Body paragraphs are edited as one textarea, split on blank lines. */
 interface SectionDraft {
@@ -34,12 +46,15 @@ export function GuideForm({
   guide,
   submitLabel,
   initialFaqs,
+  faqsLoaded = true,
 }: {
   action: (prevState: GuideFormState, formData: FormData) => Promise<GuideFormState>;
   guide?: Guide;
   submitLabel: string;
   /** FAQs already saved for this guide's page; omitted on the new-guide form. */
   initialFaqs?: FaqDraft[];
+  /** False when the saved FAQs couldn't be read, so saving must leave them alone. */
+  faqsLoaded?: boolean;
 }) {
   const [rawState, formAction, pending] = useActionState(action, INITIAL_STATE);
   // An unresolvable Server Action (a tab open across a deploy, or a dev
@@ -51,8 +66,12 @@ export function GuideForm({
   // No picker for these anymore, so a fixed value rather than state: nothing changes them.
   const icon: GuideIcon = guide?.icon ?? 'document';
   const accent: GuideAccent = guide?.accent ?? 'cat-2';
-  const [coverImageUrl, setCoverImageUrl] = useState(guide?.coverImageUrl ?? '');
-  const trimmedCover = coverImageUrl.trim();
+  const [title, setTitle] = useState(guide?.title ?? '');
+  const [slug, setSlug] = useState(guide?.slug ?? '');
+  const [excerpt, setExcerpt] = useState(guide?.excerpt ?? '');
+  const excerptLength = [...excerpt.trim()].length;
+  const effectiveSlug = slug.trim() || slugify(title);
+  const slugChanged = Boolean(guide && slug.trim() && slug.trim() !== guide.slug);
 
   const updateSection = (index: number, patch: Partial<SectionDraft>) =>
     setSections((current) => current.map((s, i) => (i === index ? { ...s, ...patch } : s)));
@@ -104,22 +123,64 @@ export function GuideForm({
             <Field
               label="Heading (H1)"
               name="title"
-              defaultValue={guide?.title}
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
               required
               placeholder="What a COA Actually Certifies"
-              hint="The page's only H1, and the title shown on its card and in search results."
+              hint="The page's only H1, and its <title> in search results and on its card."
             />
           </div>
 
           <div className="md:col-span-2">
-            <TextArea
-              label="Description (intro paragraph)"
+            <Field
+              label="Slug"
+              name="slug"
+              value={slug}
+              onChange={(e) => setSlug(e.target.value.toLowerCase())}
+              placeholder={guide ? guide.slug : slugify(title) || 'hospira-bacteriostatic-water'}
+              hint={
+                guide
+                  ? `URL: /guides/${effectiveSlug || guide.slug}. Lowercase letters, numbers and hyphens.`
+                  : `URL: /guides/${effectiveSlug || '…'}. Leave empty to generate it from the heading.`
+              }
+            />
+            {slugChanged ? (
+              <p className="mt-1.5 rounded-chip border border-warn/30 bg-warn/10 px-3 py-2 text-xs font-semibold text-content">
+                Saving moves this guide to /guides/{slug.trim()} and adds a 301 redirect from /guides/{guide?.slug}.
+              </p>
+            ) : null}
+          </div>
+
+          <div className="md:col-span-2">
+            <label htmlFor="excerpt" className="block text-sm font-semibold text-content">
+              Description (intro paragraph)
+            </label>
+            <textarea
+              id="excerpt"
               name="excerpt"
               rows={3}
-              defaultValue={guide?.excerpt}
+              value={excerpt}
+              onChange={(e) => setExcerpt(e.target.value)}
               placeholder="One or two sentences introducing the guide."
-              hint="Shown directly under the H1, and reused as the guide card summary and the page's meta description."
+              aria-describedby="excerpt-hint excerpt-count"
+              className="mt-1.5 w-full rounded-chip border border-line bg-surface px-3.5 py-2.5 text-sm leading-relaxed text-content outline-none transition-colors"
             />
+            <div className="mt-1 flex flex-wrap items-start justify-between gap-2">
+              <p id="excerpt-hint" className="text-xs text-muted">
+                Shown directly under the H1, and reused as the guide card summary and the page&rsquo;s meta description.
+              </p>
+              <p
+                id="excerpt-count"
+                aria-live="polite"
+                className={cn(
+                  'shrink-0 text-xs font-bold',
+                  excerptLength > META_DESCRIPTION_LIMIT ? 'text-danger' : 'text-muted',
+                )}
+              >
+                {excerptLength} / {META_DESCRIPTION_LIMIT}
+                {excerptLength > META_DESCRIPTION_LIMIT ? ' · too long, search results will cut it off' : ''}
+              </p>
+            </div>
           </div>
 
           <Field label="Category" name="category" defaultValue={guide?.category} required placeholder="Verification" />
@@ -145,7 +206,7 @@ export function GuideForm({
               <input
                 type="checkbox"
                 name="isPublished"
-                defaultChecked={guide ? true : true}
+                defaultChecked={guide?.isPublished ?? true}
                 className="h-4 w-4 rounded border-line accent-brand"
               />
               Visible on /guides
@@ -158,53 +219,23 @@ export function GuideForm({
       <section className="rounded-card border border-line bg-surface-raised p-4 sm:p-6">
         <h2 className="text-sm font-black uppercase tracking-wide text-content">Cover image</h2>
         <p className="mt-1 text-sm text-muted">
-          Paste the URL of the image to use at the top of the guide and on its card. External links only, no
-          upload storage is wired up. Leave it empty to use a generated cover instead.
+          Shown at the top of the guide, on its card and as its social share image. Leave it empty to use a
+          generated cover instead.
         </p>
 
-        <div className="mt-5 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_20rem]">
-          <div className="space-y-5">
-            <div>
-              <label htmlFor="coverImageUrl" className="block text-sm font-semibold text-content">
-                Image URL
-              </label>
-              <input
-                id="coverImageUrl"
-                name="coverImageUrl"
-                type="url"
-                value={coverImageUrl}
-                onChange={(e) => setCoverImageUrl(e.target.value)}
-                placeholder="https://example.com/cover.jpg"
-                className="mt-1.5 w-full rounded-chip border border-line bg-surface px-3.5 py-2.5 text-sm text-content outline-none transition-colors"
-              />
-              <p className="mt-1 text-xs text-muted">
-                {trimmedCover
-                  ? 'The preview shows the live image. A URL that fails to load falls back to the generated cover.'
-                  : 'No image set, so the generated cover below is what visitors see.'}
-              </p>
-            </div>
+        {/* Icon/colour picker removed from the UI; still submitted as fixed
+            values so the generated cover (used whenever no image URL is
+            set) keeps rendering something rather than breaking the form. */}
+        <input type="hidden" name="icon" value={icon} />
+        <input type="hidden" name="accent" value={accent} />
 
-            {/* Icon/colour picker removed from the UI; still submitted as fixed
-                values so the generated cover (used whenever no image URL is
-                set) keeps rendering something rather than breaking the form. */}
-            <input type="hidden" name="icon" value={icon} />
-            <input type="hidden" name="accent" value={accent} />
-          </div>
-
-          <div>
-            <span className="block text-sm font-semibold text-content">Live preview</span>
-            <GuideCover
-              imageUrl={trimmedCover || null}
-              icon={icon}
-              accent={accent}
-              alt="Guide cover image preview"
-              className="mt-1.5 aspect-[16/9] w-full rounded-card border border-line"
-            />
-            <p className="mt-1.5 text-xs text-muted">
-              {trimmedCover ? 'Cover image' : 'Generated cover'} · shown at 16:9 on the guide and its card
-            </p>
-          </div>
-        </div>
+        <GuideCoverField
+          initialUrl={guide?.coverImageUrl ?? ''}
+          initialAlt={guide?.coverImageAlt ?? ''}
+          icon={icon}
+          accent={accent}
+          slugHint={effectiveSlug}
+        />
       </section>
 
       {/* ---------------------------------------------------------- Sections */}
@@ -296,6 +327,16 @@ export function GuideForm({
                     {section.body.split(/\n{2,}/).filter((p) => p.trim()).length} paragraph
                     {section.body.split(/\n{2,}/).filter((p) => p.trim()).length === 1 ? '' : 's'}
                   </p>
+                  <details className="mt-1.5 text-xs text-muted">
+                    <summary className="cursor-pointer font-bold text-content">Markdown supported</summary>
+                    <ul className="mt-1.5 space-y-1 font-mono">
+                      <li>**bold** · *italic*</li>
+                      <li>[reconstitution calculator](/tools/calculator) · opens in the same tab</li>
+                      <li>[Pfizer label](https://labeling.pfizer.com/…) · opens in a new tab</li>
+                      <li>- bullet item · 1. numbered item (one per line)</li>
+                      <li>| Pack | Price | then |---|---| then | 1 vial | $22.99 |</li>
+                    </ul>
+                  </details>
                 </div>
               </div>
             </li>
@@ -345,6 +386,7 @@ export function GuideForm({
         </div>
 
         <input type="hidden" name="faqs" value={serializedFaqs} />
+        <input type="hidden" name="faqsLoaded" value={faqsLoaded ? '1' : '0'} />
 
         {faqs.length === 0 ? (
           <p className="mt-4 rounded-card border border-dashed border-line bg-surface p-4 text-center text-sm text-muted">

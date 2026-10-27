@@ -81,7 +81,8 @@ export function buildSitemapEntries(input: SitemapInput): MetadataRoute.Sitemap 
   const offerDates = (match: (offer: SitemapInput['offers'][number]) => boolean) =>
     input.offers.filter(match).map((offer) => offer.scrapedAt);
 
-  const publishedGuides = input.guides.filter(guideHasContent);
+  // Drafts never reach here through getGuides(), but the check keeps a draft out even if a caller passes one.
+  const publishedGuides = input.guides.filter((guide) => guide.isPublished !== false && guideHasContent(guide));
   const staticPaths = input.staticPaths.filter(
     (path) => !UNLISTED_STATIC_PATHS.has(path) && (path !== '/guides' || publishedGuides.length > 0),
   );
@@ -109,7 +110,11 @@ export function buildSitemapEntries(input: SitemapInput): MetadataRoute.Sitemap 
       ];
     }),
     ...publishedGuides
-      .map((guide) => ({ path: `/guides/${guide.slug}`, lastModified: latest([guide.publishedAt]) }))
+      .map((guide) => ({
+        path: `/guides/${guide.slug}`,
+        // updated_at moves on every admin save; the publish date covers guides that ship in the repository.
+        lastModified: latest([guide.updatedAt ?? null, guide.publishedAt]),
+      }))
       .filter((entry) => listable(entry.path)),
   ];
 

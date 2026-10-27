@@ -96,7 +96,9 @@ export interface PageGraphInput {
   dateModified?: string | null;
   itemList?: readonly ItemListEntry[];
   supplier?: SupplierSubject;
-  article?: { datePublished?: string | null; dateModified?: string | null };
+  article?: { datePublished?: string | null; dateModified?: string | null; image?: string | null };
+  /** A crumb between the section and the page, such as a guide's category. */
+  subsection?: Required<BreadcrumbItem>;
   product?: ProductOfferSummary | null;
 }
 
@@ -198,6 +200,7 @@ function articleNode(canonical: string, input: PageGraphInput): JsonLdNode {
     '@id': `${canonical}#article`,
     headline: input.heading,
     description: input.description,
+    ...(input.article?.image ? { image: input.article.image } : {}),
     ...(datePublished ? { datePublished } : {}),
     ...(dateModified ? { dateModified } : {}),
     author: { '@id': ORGANIZATION_ID },
@@ -250,7 +253,7 @@ function pageSubject(kind: PageKind, canonical: string, input: PageGraphInput): 
 export function buildPageGraph(input: PageGraphInput): JsonLdGraph {
   const kind = pageKindForPath(input.path);
   const canonical = input.canonicalUrl ?? absoluteUrl(input.path);
-  const trail = breadcrumbTrail(input.path, input.heading);
+  const trail = breadcrumbTrail(input.path, input.heading, input.subsection);
   const breadcrumbId = `${canonical}#breadcrumb`;
 
   const webPage: JsonLdNode = {

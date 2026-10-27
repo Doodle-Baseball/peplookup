@@ -67,7 +67,8 @@ export function supplierSeoDefaults(supplier: { slug: string; name: string }): S
 export function guideSeoDefaults(guide: { slug: string; title: string; excerpt: string }): SeoDefaults {
   return {
     path: `/guides/${guide.slug}`,
-    title: `${guide.title} | ${site.name}`,
+    // The guide's H1 is written as its search title already, e.g. "… Sizes, Price & Facts (2026)".
+    title: guide.title,
     description: guide.excerpt,
     h1: guide.title,
   };

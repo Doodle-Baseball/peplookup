@@ -62,7 +62,7 @@ export const primaryNav: readonly NavItem[] = [
       { label: 'All Compounds', href: '/price-checker' },
     ],
   },
-  { label: 'Community', href: '/community' },
+  { label: 'Guides', href: '/guides' },
   {
     label: 'Contact',
     href: '/contact',
@@ -71,7 +71,7 @@ export const primaryNav: readonly NavItem[] = [
       { label: 'Supplier Listing', href: '/supplier-listing' },
       { label: 'Contact Us', href: '/contact' },
       { label: 'About', href: '/about' },
-      { label: 'FAQs', href: '/faqs' },
+      { label: 'Community', href: '/community' },
     ],
   },
 ];
@@ -85,7 +85,7 @@ export const footerNav: readonly { heading: string; links: readonly NavChild[] }
       { label: 'Reviews', href: '/reviews' },
       { label: 'Price Checker', href: '/price-checker' },
       { label: 'Supplier Listing', href: '/supplier-listing' },
-      { label: 'Community', href: '/community' },
+      { label: 'Guides', href: '/guides' },
       { label: 'Chrome Extension', href: '/extension' },
     ],
   },
@@ -112,7 +112,7 @@ export const footerNav: readonly { heading: string; links: readonly NavChild[] }
     links: [
       { label: 'About Us', href: '/about' },
       { label: 'Research Guides', href: '/guides' },
-      { label: 'FAQs', href: '/faqs' },
+      { label: 'Community', href: '/community' },
       { label: 'Contact Us', href: '/contact' },
     ],
   },

@@ -119,4 +119,11 @@ describe('buildSitemapEntries', () => {
       `${ORIGIN}/guides/written`,
     ]);
   });
+
+  it('dates a guide by its last save, and leaves drafts out', () => {
+    const saved = { ...guide('saved', ['Text.']), updatedAt: '2026-10-27T09:30:00.000Z' };
+    const draft = { ...guide('draft', ['Text.']), isPublished: false };
+    const entries = buildSitemapEntries(input({ staticPaths: [], guides: [saved, draft] }));
+    expect(entries).toEqual([{ url: `${ORIGIN}/guides/saved`, lastModified: new Date('2026-10-27T09:30:00.000Z') }]);
+  });
 });
