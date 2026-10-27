@@ -113,14 +113,22 @@ function crumbLabel(heading: string): string {
   return heading.trim().replace(/\.$/, '');
 }
 
-/** Home, then the section when the page is inside one, then the page. Empty on the homepage. */
-export function breadcrumbTrail(path: string, heading: string): BreadcrumbItem[] {
+/**
+ * Home, then the section when the page is inside one, then `subsection` when
+ * given (a guide's category), then the page. Empty on the homepage.
+ */
+export function breadcrumbTrail(
+  path: string,
+  heading: string,
+  subsection?: Required<BreadcrumbItem>,
+): BreadcrumbItem[] {
   const clean = cleanPath(path);
   if (clean === '/') return [];
   const section = SECTIONS.find((candidate) => clean.startsWith(candidate.prefix));
   return [
     { name: 'Home', path: '/' },
     ...(section ? [{ name: section.name, path: section.path }] : []),
+    ...(subsection ? [subsection] : []),
     { name: crumbLabel(heading) },
   ];
 }

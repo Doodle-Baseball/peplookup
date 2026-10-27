@@ -143,6 +143,29 @@ describe('buildPageGraph: route types', () => {
     }
   });
 
+  it('gives a guide its cover as the Article image and its category as a breadcrumb', () => {
+    const graph = buildPageGraph(
+      page('/guides/hospira-bacteriostatic-water', {
+        heading: 'Hospira Bacteriostatic Water',
+        article: { datePublished: '2026-10-27', dateModified: '2026-10-28T10:00:00.000Z', image: 'https://cdn.example/cover.webp' },
+        subsection: { name: 'Supplies', path: '/guides' },
+      }),
+    );
+    expect(node(graph, 'Article')).toMatchObject({
+      image: 'https://cdn.example/cover.webp',
+      datePublished: '2026-10-27',
+      dateModified: '2026-10-28T10:00:00.000Z',
+    });
+    expect(node(graph, 'BreadcrumbList')).toMatchObject({
+      itemListElement: [
+        { position: 1, name: 'Home', item: `${SITE}/` },
+        { position: 2, name: 'Guides', item: `${SITE}/guides` },
+        { position: 3, name: 'Supplies', item: `${SITE}/guides` },
+        { position: 4, name: 'Hospira Bacteriostatic Water' },
+      ],
+    });
+  });
+
   it('omits Article dates rather than inventing them', () => {
     const article = node(buildPageGraph(page('/tools/coa-reader')), 'Article');
     expect(article).not.toHaveProperty('datePublished');

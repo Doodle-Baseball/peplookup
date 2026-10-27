@@ -11,12 +11,15 @@ export interface GuideRow {
   icon: GuideIcon;
   accent: GuideAccent;
   cover_image_url: string | null;
+  /** Added by 0030; undefined on a database where that migration hasn't run yet. */
+  cover_image_alt?: string | null;
   read_minutes: number;
   published_at: string;
   sections: GuideSection[];
   related_tool_label: string | null;
   related_tool_href: string | null;
   is_published: boolean;
+  updated_at: string;
 }
 
 export function rowToGuide(row: GuideRow): Guide {
@@ -28,8 +31,11 @@ export function rowToGuide(row: GuideRow): Guide {
     icon: row.icon,
     accent: row.accent,
     coverImageUrl: row.cover_image_url,
+    coverImageAlt: row.cover_image_alt ?? null,
     readMinutes: row.read_minutes,
     publishedAt: row.published_at,
+    updatedAt: row.updated_at,
+    isPublished: row.is_published,
     sections: Array.isArray(row.sections) ? row.sections : [],
     ...(row.related_tool_label && row.related_tool_href
       ? { relatedTool: { label: row.related_tool_label, href: row.related_tool_href } }
@@ -44,6 +50,7 @@ export interface GuideInput {
   icon: GuideIcon;
   accent: GuideAccent;
   coverImageUrl: string | null;
+  coverImageAlt: string | null;
   readMinutes: number;
   publishedAt: string;
   sections: GuideSection[];
@@ -61,6 +68,7 @@ export function guideInputToRow(slug: string, input: GuideInput) {
     icon: input.icon,
     accent: input.accent,
     cover_image_url: input.coverImageUrl,
+    cover_image_alt: input.coverImageAlt,
     read_minutes: input.readMinutes,
     published_at: input.publishedAt,
     sections: input.sections,

@@ -1,10 +1,21 @@
 'use server';
 
 import { revalidatePath, revalidateTag } from 'next/cache';
+import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { createGuide, deleteGuide, updateGuide } from '@/lib/admin/guides';
+import { ADMIN_SESSION_COOKIE, verifyAdminSessionToken } from '@/lib/admin-auth';
+import {
+  createGuide,
+  deleteGuide,
+  duplicateGuide,
+  guidePath,
+  setGuidePublished,
+  updateGuide,
+} from '@/lib/admin/guides';
+import { uploadGuideCover } from '@/lib/admin/guide-images';
 import { savePageFaqs } from '@/lib/admin/page-faqs';
 import { FAQS_CACHE_TAG } from '@/lib/page-faqs';
+import { SEO_CACHE_TAG } from '@/lib/seo';
 import type { GuideInput } from '@/lib/supabase/guides';
 import type { GuideAccent, GuideIcon, GuideSection } from '@/data/guides';
 import type { FaqItem } from '@/data/default-page-faqs';
@@ -13,10 +24,26 @@ export interface GuideFormState {
   error: string | null;
 }
 
+export interface GuideCoverUploadState {
+  error: string | null;
+  url: string | null;
+  warnings: string[];
+}
+
 const ICONS: GuideIcon[] = ['document', 'flask', 'shield', 'bolt', 'badge', 'globe'];
 const ACCENTS: GuideAccent[] = ['cat-1', 'cat-2', 'cat-3', 'cat-4', 'cat-5'];
 
-function revalidateGuideSurfaces(slug?: string) {
+/**
+ * The middleware already guards /admin, but these actions write guides and
+ * upload files, so they check the session themselves too. A signed-out
+ * request goes to the login page rather than getting an error.
+ */
+async function assertAdmin(): Promise<void> {
+  const token = (await cookies()).get(ADMIN_SESSION_COOKIE)?.value;
+  if (!(await verifyAdminSessionToken(token))) redirect('/admin/login?next=/admin/guides');
+}
+
+function revalidateGuideSurfaces(...slugs: string[]) {
   // The tag is the part that actually matters: getGuides() is cached under it
   // for 5 minutes, independently of the route caches revalidatePath clears.
   // Without this an edited title, link or slug kept serving stale everywhere
@@ -25,7 +52,8 @@ function revalidateGuideSurfaces(slug?: string) {
   revalidateTag('guides');
   revalidatePath('/admin/guides');
   revalidatePath('/guides');
-  if (slug) revalidatePath(`/guides/${slug}`);
+  revalidatePath('/sitemap.xml');
+  for (const slug of slugs) revalidatePath(guidePath(slug));
 }
 
 /** Sections arrive as JSON from the editor; anything unusable is dropped rather than half-saved. */
@@ -75,6 +103,11 @@ function readFaqs(formData: FormData): FaqItem[] {
   }
 }
 
+/** The slug field, or null when left empty (a new guide then takes one from its title). */
+function readSlug(formData: FormData): string | null {
+  return String(formData.get('slug') ?? '').trim().toLowerCase() || null;
+}
+
 function readGuideInput(formData: FormData): GuideInput {
   const title = String(formData.get('title') ?? '').trim();
   const category = String(formData.get('category') ?? '').trim();
@@ -114,6 +147,10 @@ function readGuideInput(formData: FormData): GuideInput {
   if (coverImageUrlRaw && !/^https?:\/\/\S+$/i.test(coverImageUrlRaw)) {
     throw new Error('The cover image URL must start with http:// or https://, or be left empty.');
   }
+  const coverImageAlt = String(formData.get('coverImageAlt') ?? '').trim();
+  if (coverImageUrlRaw && !coverImageAlt) {
+    throw new Error('Add alt text for the cover image. It describes the image to screen readers and search engines.');
+  }
 
   return {
     title,
@@ -122,6 +159,7 @@ function readGuideInput(formData: FormData): GuideInput {
     icon,
     accent,
     coverImageUrl: coverImageUrlRaw || null,
+    coverImageAlt: coverImageUrlRaw ? coverImageAlt : null,
     readMinutes,
     publishedAt,
     sections,
@@ -136,16 +174,17 @@ export async function createGuideAction(
   _prevState: GuideFormState,
   formData: FormData,
 ): Promise<GuideFormState> {
+  await assertAdmin();
   let slug: string;
   try {
-    slug = await createGuide(readGuideInput(formData));
+    slug = await createGuide(readGuideInput(formData), readSlug(formData));
     // Only written when the admin actually drafted at least one FAQ: an
     // empty save here would explicitly override the auto-generated defaults
     // with "no FAQs" for a guide nobody has touched yet, which is worse than
     // just leaving the defaults to apply on their own.
     const faqs = readFaqs(formData);
     if (faqs.length > 0) {
-      await savePageFaqs(`/guides/${slug}`, faqs);
+      await savePageFaqs(guidePath(slug), faqs);
       revalidateTag(FAQS_CACHE_TAG);
     }
   } catch (error) {
@@ -160,31 +199,79 @@ export async function updateGuideAction(
   _prevState: GuideFormState,
   formData: FormData,
 ): Promise<GuideFormState> {
+  await assertAdmin();
+  let savedSlug = slug;
+  let renameError: string | null = null;
   try {
-    await updateGuide(slug, readGuideInput(formData));
-    // Same reasoning as creation: only overwrite the saved FAQ set when the
-    // form actually has content, so leaving this section untouched never
-    // silently wipes an existing custom set back to the built-in defaults.
-    // Clearing a guide's FAQs down to none entirely is still possible from
-    // /admin/seo, which supports saving an explicitly empty list.
-    const faqs = readFaqs(formData);
-    if (faqs.length > 0) {
-      await savePageFaqs(`/guides/${slug}`, faqs);
+    const result = await updateGuide(slug, readGuideInput(formData), readSlug(formData));
+    savedSlug = result.slug;
+    renameError = result.renameError;
+    // The FAQ list is the full set: removing every question clears the saved
+    // rows, which puts the auto-generated defaults back. Only skipped when
+    // the edit page couldn't read the saved FAQs, since the form then started
+    // empty and saving it would wipe questions the admin never saw.
+    if (formData.get('faqsLoaded') === '1') {
+      await savePageFaqs(guidePath(savedSlug), readFaqs(formData));
       revalidateTag(FAQS_CACHE_TAG);
     }
   } catch (error) {
     return { error: error instanceof Error ? error.message : 'Failed to save the guide.' };
   }
-  revalidateGuideSurfaces(slug);
+
+  if (savedSlug !== slug) {
+    // The redirect row, the SEO settings and nav links resolved through it are all cached under the SEO tag.
+    revalidateTag(SEO_CACHE_TAG);
+    revalidateTag(FAQS_CACHE_TAG);
+  }
+  revalidateGuideSurfaces(slug, savedSlug);
+  if (renameError) return { error: renameError };
   redirect('/admin/guides');
 }
 
 export async function deleteGuideAction(slug: string): Promise<{ error: string | null }> {
+  await assertAdmin();
   try {
     await deleteGuide(slug);
   } catch (error) {
     return { error: error instanceof Error ? error.message : 'Failed to delete the guide.' };
   }
+  revalidateTag(FAQS_CACHE_TAG);
   revalidateGuideSurfaces(slug);
   return { error: null };
+}
+
+export async function duplicateGuideAction(slug: string): Promise<{ error: string | null }> {
+  await assertAdmin();
+  let copySlug: string;
+  try {
+    copySlug = await duplicateGuide(slug);
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : 'Failed to duplicate the guide.' };
+  }
+  revalidateTag(FAQS_CACHE_TAG);
+  revalidateGuideSurfaces(copySlug);
+  return { error: null };
+}
+
+export async function setGuidePublishedAction(slug: string, isPublished: boolean): Promise<{ error: string | null }> {
+  await assertAdmin();
+  try {
+    await setGuidePublished(slug, isPublished);
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : 'Failed to change the guide status.' };
+  }
+  revalidateGuideSurfaces(slug);
+  return { error: null };
+}
+
+export async function uploadGuideCoverAction(formData: FormData): Promise<GuideCoverUploadState> {
+  await assertAdmin();
+  const file = formData.get('file');
+  if (!(file instanceof File)) return { error: 'Choose an image to upload.', url: null, warnings: [] };
+  try {
+    const upload = await uploadGuideCover(file, String(formData.get('slugHint') ?? ''));
+    return { error: null, url: upload.url, warnings: upload.warnings };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : 'The image could not be uploaded.', url: null, warnings: [] };
+  }
 }

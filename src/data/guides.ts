@@ -18,9 +18,15 @@ export interface Guide {
    * guide always has a cover without anyone sourcing an image for it.
    */
   coverImageUrl?: string | null;
+  /** The cover photo's alt text. Required by the admin whenever a cover image is set. */
+  coverImageAlt?: string | null;
   readMinutes: number;
   /** ISO date; kept as a plain string so this file has no server-only imports. */
   publishedAt: string;
+  /** ISO timestamp of the last admin save. Absent on guides that ship in the repository. */
+  updatedAt?: string | null;
+  /** Drafts are false. Absent on guides that ship in the repository, which are always live. */
+  isPublished?: boolean;
   sections: readonly GuideSection[];
   /** One of the site's own calculators/checkers this guide points to, where relevant. */
   relatedTool?: { label: string; href: string };
