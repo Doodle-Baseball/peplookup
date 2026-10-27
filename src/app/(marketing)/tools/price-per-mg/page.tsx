@@ -169,7 +169,7 @@ export default async function PricePerMgToolPage() {
       </div>
 
       {/* Outside the page container so the product rail runs the full width of the screen. */}
-      <BuyPeptidesSection supplierSlug="disguised-alpha" className="mt-8" />
+      <BuyPeptidesSection supplierSlug="nura-peptide" className="mt-8" />
 
       <div className="mx-auto max-w-shell px-4 pb-14">
         <PageFaqSection path="/tools/price-per-mg" className="mt-14" />

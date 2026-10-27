@@ -177,7 +177,7 @@ export default async function ToolsHubPage() {
       </div>
 
       {/* Outside the page container so the product rail runs the full width of the screen. */}
-      <BuyPeptidesSection supplierSlug="disguised-alpha" className="mt-8" />
+      <BuyPeptidesSection supplierSlug="nura-peptide" className="mt-8" />
 
       <div className="mx-auto max-w-shell px-4 pb-14">
         <div className="mx-auto mt-12 max-w-3xl rounded-card border border-accent/25 bg-accent-tint p-6 text-center sm:p-8">

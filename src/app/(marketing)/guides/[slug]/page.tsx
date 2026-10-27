@@ -25,7 +25,7 @@ import { PageFaqSection } from '@/components/faq/page-faq-section';
 const RELATED_GUIDE_COUNT = 3;
 
 /** The supplier whose products fill the "Shop peptides" rail, the same one the tool pages show. */
-const SHOP_SUPPLIER_SLUG = 'disguised-alpha';
+const SHOP_SUPPLIER_SLUG = 'nura-peptide';
 
 /**
  * Prerenders the guides that ship with the site. Admin-created guides are
