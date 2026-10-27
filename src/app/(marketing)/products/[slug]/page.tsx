@@ -22,6 +22,7 @@ import {
   type ListingSupplier,
 } from '@/components/product-card/product-listings-panel';
 import { site } from '@/config/site';
+import { RECOMMENDED_LISTINGS } from '@/config/recommended-listings';
 import { compoundImageSrc } from '@/config/compound-images';
 import { compoundSeoDefaults, pageMetadata } from '@/lib/seo-defaults';
 import { getSeoOverride, withSeo } from '@/lib/seo';
@@ -290,6 +291,7 @@ export default async function ProductPage({
         offers={resolvedOffers}
         suppliers={listingSuppliers}
         initialFilters={sp}
+        recommendedSupplierSlug={RECOMMENDED_LISTINGS[product.slug] ?? null}
         className={cn(PANEL_CLASS, 'mt-6 scroll-mt-24 overflow-hidden')}
       />
 

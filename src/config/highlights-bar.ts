@@ -5,7 +5,7 @@
  * simply stops showing. Set to null to run without a promotion.
  */
 export const PROMOTED_SUPPLIER: { slug: string; logoUrl: string | null } | null = {
-  slug: 'disguised-alpha',
+  slug: 'nura-peptide',
   // Null falls back to the record's logo (here its favicon), the same image the
   // rest of the site shows for this supplier.
   logoUrl: null,

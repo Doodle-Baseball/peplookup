@@ -20,7 +20,7 @@ import { DoseChipsExpandable } from '@/components/product-card/dose-chips-expand
 import { SupplierChipsExpandable } from '@/components/product-card/supplier-chips-expandable';
 import { ListingsLoadMore } from '@/components/product-card/listings-load-more';
 import type { Offer, Supplier, ProductForm } from '@/lib/schema';
-import { ExternalIcon, FlaskIcon, TagIcon } from '@/components/icons/icons';
+import { ExternalIcon, FlaskIcon, StarIcon, TagIcon } from '@/components/icons/icons';
 
 /** The supplier fields a listing row shows; the rest of the record stays on the server. */
 export type ListingSupplier = Pick<Supplier, 'slug' | 'name' | 'logoUrl' | 'faviconUrl' | 'coupon'>;
@@ -105,6 +105,7 @@ export function ProductListingsPanel({
   offers,
   suppliers,
   initialFilters,
+  recommendedSupplierSlug = null,
   className,
 }: {
   productName: string;
@@ -112,6 +113,8 @@ export function ProductListingsPanel({
   offers: readonly Offer[];
   suppliers: readonly ListingSupplier[];
   initialFilters: InitialListingFilters;
+  /** A partner pinned above the price ranking (see RECOMMENDED_LISTINGS), shown with a Featured badge. */
+  recommendedSupplierSlug?: string | null;
   className?: string;
 }) {
   const suppliersBySlug = new Map(suppliers.map((s) => [s.slug, s]));
@@ -200,10 +203,28 @@ export function ProductListingsPanel({
   // (a big vial costs more in total but less per mg), so on the default
   // low-to-high sort it leads the list instead of hiding behind "Load more".
   const bestRowIndex = bestRowKey ? priceRows.findIndex((o) => offerKey(o) === bestRowKey) : -1;
-  const displayedRows =
+  const rankedRows =
     sort === 'price-asc' && bestRowIndex > 0
       ? [priceRows[bestRowIndex]!, ...priceRows.slice(0, bestRowIndex), ...priceRows.slice(bestRowIndex + 1)]
       : priceRows;
+
+  // The recommended partner's best value per mg among its in-stock rows in
+  // the current filters leads the list. Out of stock is never pinned, and the
+  // price ranking below it is left exactly as it was.
+  const recommendedRanked = recommendedSupplierSlug
+    ? (rankByPricePerMg(
+        priceRows
+          .filter((o) => o.supplierSlug === recommendedSupplierSlug)
+          .map((o) => toListing(o))
+          .filter((listing) => listing.currency === primaryCurrency),
+      )[0] ?? null)
+    : null;
+  const recommendedRowKey =
+    recommendedRanked && selectedForm ? offerKey({ ...recommendedRanked.listing, form: selectedForm }) : null;
+  const recommendedRow = recommendedRowKey ? rankedRows.find((o) => offerKey(o) === recommendedRowKey) : undefined;
+  const displayedRows = recommendedRow
+    ? [recommendedRow, ...rankedRows.filter((o) => o !== recommendedRow)]
+    : rankedRows;
 
   const supplierOptions = [...new Set(offersForDose.map((o) => o.supplierSlug))]
     .map((s) => suppliersBySlug.get(s)!)
@@ -387,6 +408,7 @@ export function ProductListingsPanel({
                         supplier={suppliersBySlug.get(offer.supplierSlug)!}
                         view={view}
                         isLowestPerMg={offerKey(offer) === bestRowKey}
+                        isFeatured={offer === recommendedRow}
                       />
                     ))}
                   </ListingsLoadMore>
@@ -451,11 +473,14 @@ function PriceRow({
   supplier,
   view,
   isLowestPerMg,
+  isFeatured = false,
 }: {
   offer: Offer;
   supplier: ListingSupplier;
   view: 'total' | 'permg';
   isLowestPerMg: boolean;
+  /** The partner pinned above the price ranking; styled like a Featured supplier card. */
+  isFeatured?: boolean;
 }) {
   const listing = toListing(offer);
   const observedPrice = effectivePrice(listing);
@@ -477,15 +502,29 @@ function PriceRow({
     <li
       className={cn(
         'flex flex-wrap items-center gap-3 rounded-card border p-3 sm:flex-nowrap sm:gap-4 sm:p-4',
-        isLowestPerMg ? 'border-accent/40 bg-accent-tint' : 'border-line bg-surface',
+        isFeatured
+          ? // Same treatment as a Featured supplier card: accent border, soft accent glow and wash.
+            'relative overflow-hidden border-accent/50 bg-surface-raised shadow-[0_0_36px_-12px_rgb(var(--accent)/0.55)] transition-colors duration-150 hover:border-accent sm:py-5'
+          : isLowestPerMg
+            ? 'border-accent/40 bg-accent-tint'
+            : 'border-line bg-surface',
       )}
     >
-      <div className="flex min-w-0 flex-1 basis-full items-center gap-3 sm:basis-auto">
+      {isFeatured ? (
+        <>
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_left,_rgb(var(--accent)/0.12),_transparent_70%)]"
+          />
+          <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-accent to-accent-strong" />
+        </>
+      ) : null}
+      <div className="relative flex min-w-0 flex-1 basis-full items-center gap-3 sm:basis-auto">
         <SupplierLogo
           src={supplier.logoUrl ?? supplier.faviconUrl}
           name={supplier.name}
           size={44}
-          className="h-10 w-10 rounded-chip sm:h-11 sm:w-11"
+          className={cn('h-10 w-10 rounded-chip sm:h-11 sm:w-11', isFeatured && 'ring-2 ring-accent/30')}
         />
 
         <div className="min-w-0 flex-1">
@@ -496,6 +535,16 @@ function PriceRow({
             >
               {supplier.name}
             </Link>
+            {isFeatured ? (
+              <span
+                title="Featured partner placement, shown above the price ranking. We may earn a commission."
+                className="inline-flex items-center gap-1 rounded-pill border border-coupon bg-gradient-to-r from-accent to-accent-strong px-2.5 py-1 text-micro font-black uppercase tracking-wide text-surface-raised shadow-sm"
+              >
+                <StarIcon className="h-3 w-3 fill-current text-coupon" />
+                Featured
+                <span className="sr-only"> partner placement, shown above the price ranking</span>
+              </span>
+            ) : null}
             {isLowestPerMg ? (
               <span className="rounded-pill bg-accent px-2 py-0.5 text-micro font-bold uppercase text-surface">
                 Lowest $/mg
@@ -523,7 +572,7 @@ function PriceRow({
 
       {/* On phones the price drops to its own row, so the vendor name keeps
           the full width instead of truncating to a few letters. */}
-      <div className="flex w-full items-center justify-between gap-3 border-t border-line pt-3 sm:w-auto sm:justify-end sm:border-0 sm:pt-0">
+      <div className="relative flex w-full items-center justify-between gap-3 border-t border-line pt-3 sm:w-auto sm:justify-end sm:border-0 sm:pt-0">
         <div className="sm:text-right">
           <p className="text-lg font-black text-content">
             {view === 'permg' ? (perMgText ?? 'N/A') : totalText}
