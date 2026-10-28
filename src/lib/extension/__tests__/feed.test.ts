@@ -123,6 +123,31 @@ describe('buildExtensionFeed', () => {
     expect(bySlug.get('at-least')?.trustpilot).toEqual({ rating: 4.3, reviews: null });
   });
 
+  it('leaves out a rating taken from a platform other than Trustpilot', () => {
+    const feed = buildExtensionFeed(
+      [
+        supplier({
+          slug: 'prp',
+          reviewRating: 4.92,
+          reviewCount: { kind: 'exact', value: 214 },
+          reviewsUrl: 'https://pepreviewpro.com/store/abc',
+        }),
+        supplier({
+          slug: 'tp',
+          reviewRating: 4.3,
+          reviewCount: { kind: 'exact', value: 40 },
+          reviewsUrl: 'https://www.trustpilot.com/review/tp.example',
+        }),
+      ],
+      [settings('prp'), settings('tp')],
+      ORIGIN,
+    );
+
+    const bySlug = new Map(feed.suppliers.map((entry) => [entry.id, entry]));
+    expect(bySlug.get('prp')?.trustpilot).toBeNull();
+    expect(bySlug.get('tp')?.trustpilot).toEqual({ rating: 4.3, reviews: 40 });
+  });
+
   it('trims the code, falls back to the favicon and makes site-relative logos absolute', () => {
     const feed = buildExtensionFeed(
       [

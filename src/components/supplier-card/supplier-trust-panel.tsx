@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { SupplierReview } from '@/lib/schema';
 import { cn } from '@/lib/cn';
 import { formatRating, formatReviewDate } from '@/lib/format';
+import { ratingSourceLabel } from '@/lib/review-pages';
 import { StarTiles } from '@/components/ui/star-tiles';
 import { StarIcon, ExternalIcon, FlaskIcon, SearchIcon, DocumentIcon } from '@/components/icons/icons';
 
@@ -60,6 +61,10 @@ export function SupplierTrustPanel({
   labName: string | null;
   coaReports: readonly SupplierCoaReport[];
 }) {
+  // Named from the reviews link, so reviews from PepReviewPro (or any other
+  // platform) aren't labelled Trustpilot. Without a link it stays Trustpilot,
+  // where the shipped review set comes from.
+  const reviewSource = reviewsUrl ? ratingSourceLabel(reviewsUrl) : 'Trustpilot';
   const [coaQuery, setCoaQuery] = useState('');
   const normalizedCoaQuery = coaQuery.trim().toLowerCase();
   const matchingCoaReports = useMemo(
@@ -160,7 +165,7 @@ export function SupplierTrustPanel({
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-chip bg-accent-tint text-rating">
                 <StarIcon className="h-5 w-5 fill-current" />
               </span>
-              <h3 className="truncate text-xl font-black text-content sm:text-2xl">Trustpilot Reviews</h3>
+              <h3 className="truncate text-xl font-black text-content sm:text-2xl">{reviewSource} Reviews</h3>
             </div>
             {reviewRating !== null ? (
               <span className="inline-flex shrink-0 items-center gap-1.5 rounded-pill border border-accent/30 bg-accent-tint px-3 py-1.5 text-micro font-bold uppercase text-accent-strong">
@@ -213,7 +218,7 @@ export function SupplierTrustPanel({
               rel="nofollow noopener noreferrer"
               className="group/all mt-5 inline-flex items-center gap-2 rounded-pill border border-line bg-surface px-4 py-2.5 text-sm font-bold text-content transition-colors hover:border-accent hover:bg-accent-tint hover:text-accent-strong"
             >
-              View All Reviews on Trustpilot
+              View All Reviews on {reviewSource}
               <ExternalIcon className="h-4 w-4 transition-transform group-hover/all:-translate-y-0.5 group-hover/all:translate-x-0.5" />
             </a>
           ) : null}

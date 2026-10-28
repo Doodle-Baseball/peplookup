@@ -8,6 +8,7 @@ function reviewSourceName(url: string | null): string | null {
   try {
     const host = new URL(url).hostname.replace(/^www\./, '');
     if (host.endsWith('trustpilot.com')) return 'Trustpilot';
+    if (host.endsWith('pepreviewpro.com')) return 'PepReviewPro';
     return null;
   } catch {
     return null;

@@ -31,6 +31,10 @@ describe('ratingSourceLabel', () => {
     expect(ratingSourceLabel('https://www.trustpilot.com/review/aminoclub.com')).toBe('Trustpilot');
   });
 
+  it('names PepReviewPro for a PepReviewPro store link', () => {
+    expect(ratingSourceLabel('https://pepreviewpro.com/store/41636db9-ba9a-4fb9-ba01-49953bb01b21')).toBe('PepReviewPro');
+  });
+
   it('falls back to the host for any other site, and to a neutral phrase with no link', () => {
     expect(ratingSourceLabel('https://reviews.example.com/acme')).toBe('reviews.example.com');
     expect(ratingSourceLabel(null)).toBe('public review sources');

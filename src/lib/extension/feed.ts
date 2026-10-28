@@ -16,7 +16,7 @@ export interface SupplierExtensionSettings {
 export type ExtensionFeedSupplierSource = Pick<
   Supplier,
   'slug' | 'name' | 'logoUrl' | 'faviconUrl' | 'coupon' | 'reviewRating' | 'reviewCount' | 'isActive'
->;
+> & { reviewsUrl?: string | null };
 
 export interface ExtensionFeedEntry {
   id: string;
@@ -57,7 +57,20 @@ function absoluteUrl(origin: string, url: string | null): string | null {
   return url.startsWith('/') ? `${origin}${url}` : null;
 }
 
+/** A reviews link that points somewhere other than Trustpilot (PepReviewPro, say). */
+function reviewsFromAnotherPlatform(url: string | null | undefined): boolean {
+  if (!url) return false;
+  try {
+    return !/(^|\.)trustpilot\.com$/.test(new URL(url).hostname.replace(/^www\./, ''));
+  } catch {
+    return false;
+  }
+}
+
 function trustpilotFor(supplier: ExtensionFeedSupplierSource): ExtensionFeedEntry['trustpilot'] {
+  // The extension labels this score "Trustpilot", so a rating taken from
+  // another review platform is left out rather than mislabelled.
+  if (reviewsFromAnotherPlatform(supplier.reviewsUrl)) return null;
   const rating = supplier.reviewRating;
   if (rating === null || !Number.isFinite(rating) || rating < 0 || rating > 5) return null;
   // "50+" can't be written as a number without overstating it, so only an exact count is passed on.
