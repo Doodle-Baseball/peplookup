@@ -73,9 +73,11 @@ const SEGMENT_COLS_CLASS: Record<number, string> = {
   5: 'grid-cols-5',
 };
 /** The Tests tab header row and each report row share these columns from md up. */
-const REPORT_GRID_CLASS = 'md:grid md:grid-cols-[1.4fr_1fr_0.9fr_auto] md:items-center md:gap-3';
+const REPORT_GRID_CLASS = 'md:grid md:grid-cols-[0.9fr_0.6fr_2.6fr_auto] md:items-center md:gap-3';
 /** Vendor listings shown before the "Load more" button. */
 const LISTINGS_PER_PAGE = 20;
+/** Sizes a price or lab-test card shows before its "+N more" chip. */
+const CARD_VISIBLE_SIZES = 3;
 
 type DoseOption = { vialSize: number; vialCount: number; label: string };
 
@@ -86,6 +88,35 @@ type DoseOption = { vialSize: number; vialCount: number; label: string };
  */
 function offerKey(offer: { supplierSlug: string; form: ProductForm; vialSize: number; vialCount: number }) {
   return `${offer.supplierSlug}-${offer.form}-${offer.vialSize}-${offer.vialCount}`;
+}
+
+/**
+ * What a pack's count counts. Sprays come in bottles, so a multi-pack is so many
+ * bottles. A capsule listing's count is the capsules in it (a 3-bottle kit of
+ * 100 is stored as 300 capsules), so it reads as capsules rather than bottles,
+ * which would overstate the pack a hundredfold. Everything else is vials.
+ */
+function packUnit(form: ProductForm): string {
+  if (form === 'capsule') return 'capsules';
+  if (form === 'spray') return 'bottles';
+  return 'vials';
+}
+
+/** "10mg" for a single unit, "10 mg · 3 vials" (or bottles, or capsules) for a pack. */
+function sizeLabel(offer: { form: ProductForm; vialSize: number; vialCount: number }): string {
+  const mg = offer.vialSize / 1000;
+  return offer.vialCount > 1 ? `${mg} mg · ${offer.vialCount} ${packUnit(offer.form)}` : `${mg}mg`;
+}
+
+/** "10mg × 3" for a size chip where space is tight; pair it with sizeLabel() as the full name. */
+function shortSizeLabel(offer: { vialSize: number; vialCount: number }): string {
+  const mg = offer.vialSize / 1000;
+  return offer.vialCount > 1 ? `${mg}mg × ${offer.vialCount}` : `${mg}mg`;
+}
+
+/** Singles first, smallest to largest, then the multi-packs in the same order. */
+function bySize(a: { vialSize: number; vialCount: number }, b: { vialSize: number; vialCount: number }): number {
+  return Number(a.vialCount > 1) - Number(b.vialCount > 1) || a.vialSize - b.vialSize || a.vialCount - b.vialCount;
 }
 
 function segmentClass(isSelected: boolean) {
@@ -113,7 +144,7 @@ export function ProductListingsPanel({
   offers: readonly Offer[];
   suppliers: readonly ListingSupplier[];
   initialFilters: InitialListingFilters;
-  /** A partner pinned above the price ranking (see RECOMMENDED_LISTINGS), shown with a Featured badge. */
+  /** A partner pinned above the price ranking (see recommended-listings config), shown with a Featured badge. */
   recommendedSupplierSlug?: string | null;
   className?: string;
 }) {
@@ -147,9 +178,7 @@ export function ProductListingsPanel({
   for (const o of offersForForm) {
     const key = `${o.vialSize}-${o.vialCount}`;
     if (doseMap.has(key)) continue;
-    const mg = o.vialSize / 1000;
-    const label = o.vialCount > 1 ? `${mg} mg · ${o.vialCount} vials` : `${mg}mg`;
-    doseMap.set(key, { vialSize: o.vialSize, vialCount: o.vialCount, label });
+    doseMap.set(key, { vialSize: o.vialSize, vialCount: o.vialCount, label: sizeLabel(o) });
   }
 
   const fallbackDoseMap = new Map<string, DoseOption>();
@@ -225,6 +254,22 @@ export function ProductListingsPanel({
   const displayedRows = recommendedRow
     ? [recommendedRow, ...rankedRows.filter((o) => o !== recommendedRow)]
     : rankedRows;
+
+  // One card per supplier rather than one per size. Cards keep the order of
+  // each supplier's highest-ranked listing above (Featured, then Lowest $/mg,
+  // then price), and each opens on that listing; its other sizes go in the
+  // card's size picker.
+  const variantsBySupplier = new Map<string, Offer[]>();
+  for (const offer of displayedRows) {
+    const variants = variantsBySupplier.get(offer.supplierSlug) ?? [];
+    variants.push(offer);
+    variantsBySupplier.set(offer.supplierSlug, variants);
+  }
+  const priceGroups = [...variantsBySupplier.entries()].map(([supplierSlug, variants]) => ({
+    supplierSlug,
+    defaultKey: offerKey(variants[0]!),
+    variants: [...variants].sort(bySize),
+  }));
 
   const supplierOptions = [...new Set(offersForDose.map((o) => o.supplierSlug))]
     .map((s) => suppliersBySlug.get(s)!)
@@ -343,7 +388,7 @@ export function ProductListingsPanel({
             >
               Lab tests
               <span className="rounded-pill bg-surface-sunken px-1.5 text-micro font-black text-muted">
-                {offersWithReports.length}
+                {distinctReportCount(offersWithReports)}
               </span>
             </TabButton>
           </div>
@@ -401,14 +446,16 @@ export function ProductListingsPanel({
                   </p>
                 ) : (
                   <ListingsLoadMore initialCount={LISTINGS_PER_PAGE}>
-                    {displayedRows.map((offer) => (
+                    {priceGroups.map((group) => (
                       <PriceRow
-                        key={offerKey(offer)}
-                        offer={offer}
-                        supplier={suppliersBySlug.get(offer.supplierSlug)!}
+                        // Keyed on its sizes and starting size too, so a filter change resets the picker.
+                        key={`${group.supplierSlug}:${group.defaultKey}:${group.variants.map(offerKey).join('|')}`}
+                        variants={group.variants}
+                        defaultKey={group.defaultKey}
+                        supplier={suppliersBySlug.get(group.supplierSlug)!}
                         view={view}
-                        isLowestPerMg={offerKey(offer) === bestRowKey}
-                        isFeatured={offer === recommendedRow}
+                        bestRowKey={bestRowKey}
+                        isFeatured={recommendedRow !== undefined && group.supplierSlug === recommendedRow.supplierSlug}
                       />
                     ))}
                   </ListingsLoadMore>
@@ -468,20 +515,32 @@ function TabButton({
   );
 }
 
+/**
+ * One supplier's card in the Prices tab. Every size it sells within the
+ * current filters sits in the card's size picker rather than a card of its own;
+ * the card opens on `defaultKey`, its highest-ranked size in the list.
+ */
 function PriceRow({
-  offer,
+  variants,
+  defaultKey,
   supplier,
   view,
-  isLowestPerMg,
+  bestRowKey,
   isFeatured = false,
 }: {
-  offer: Offer;
+  /** This supplier's listings in the current filters, smallest size first. */
+  variants: readonly Offer[];
+  defaultKey: string;
   supplier: ListingSupplier;
   view: 'total' | 'permg';
-  isLowestPerMg: boolean;
+  /** The listing that is lowest per mg across all suppliers, if any. */
+  bestRowKey: string | null;
   /** The partner pinned above the price ranking; styled like a Featured supplier card. */
   isFeatured?: boolean;
 }) {
+  const [selectedKey, setSelectedKey] = useState(defaultKey);
+  const offer = variants.find((variant) => offerKey(variant) === selectedKey) ?? variants[0]!;
+  const isLowestPerMg = offerKey(offer) === bestRowKey;
   const listing = toListing(offer);
   const observedPrice = effectivePrice(listing);
   const observedDiscount = hasDiscount(listing);
@@ -495,8 +554,7 @@ function PriceRow({
   const discounted = observedDiscount || couponPercentOff !== null;
   const percentOff = discountPercent(listing) ?? couponPercentOff;
   const stale = isStale(offer.scrapedAt);
-  const mg = offer.vialSize / 1000;
-  const sizeText = offer.vialCount > 1 ? `${mg} mg · ${offer.vialCount} vials` : `${mg}mg`;
+  const sizeText = sizeLabel(offer);
 
   return (
     <li
@@ -567,6 +625,16 @@ function PriceRow({
               seen {seenAgo(offer.scrapedAt)}
             </span>
           </p>
+          {variants.length > 1 ? (
+            <DoseChipsExpandable
+              doses={variants.map((variant) => ({ key: offerKey(variant), label: sizeLabel(variant) }))}
+              selectedKey={offerKey(offer)}
+              onSelect={setSelectedKey}
+              visibleCount={CARD_VISIBLE_SIZES}
+              compact
+              label={`${supplier.name} sizes`}
+            />
+          ) : null}
         </div>
       </div>
 
@@ -606,10 +674,41 @@ function PriceRow({
   );
 }
 
+
+/** Where a listing's certificate lives: the graded report, the lab's page, or the supplier's own COA link. */
+function reportHref(offer: Offer): string | null {
+  return offer.labReport?.reportUrl ?? offer.labReport?.labUrl ?? offer.coaUrl ?? null;
+}
+
+/** Distinct certificates across these listings: one COA page shared by ten sizes counts once. */
+function distinctReportCount(offers: readonly Offer[]): number {
+  return new Set(offers.map((offer) => `${offer.supplierSlug} ${reportHref(offer)}`)).size;
+}
+
+interface ReportGroup {
+  key: string;
+  supplierSlug: string;
+  form: ProductForm;
+  /** Smallest size first. */
+  offers: Offer[];
+}
+
+/** One card per supplier and form; its sizes sit inside it. */
+function groupReports(offers: readonly Offer[]): ReportGroup[] {
+  const groups = new Map<string, ReportGroup>();
+  for (const offer of offers) {
+    const key = `${offer.supplierSlug}:${offer.form}`;
+    const group = groups.get(key) ?? { key, supplierSlug: offer.supplierSlug, form: offer.form, offers: [] };
+    group.offers.push(offer);
+    groups.set(key, group);
+  }
+  return [...groups.values()].map((group) => ({ ...group, offers: [...group.offers].sort(bySize) }));
+}
+
 /**
  * COA/verification listing for the product's Tests tab. Receives only offers
- * that carry a real report link, one row per brand's own COA for its own
- * listing, never a generic or borrowed link.
+ * that carry a real report link, and shows one card per supplier and form:
+ * a supplier selling ten sizes of the same vial gets one card, not ten.
  */
 function TestsPanel({
   productName,
@@ -628,6 +727,8 @@ function TestsPanel({
     );
   }
 
+  const reportCount = distinctReportCount(offers);
+
   return (
     <div>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -640,7 +741,7 @@ function TestsPanel({
           <span className="leading-tight">
             <span className="block text-micro font-bold uppercase tracking-wide text-ok">Tracked tests</span>
             <span className="block text-sm font-black text-content">
-              {offers.length} {offers.length === 1 ? 'Report' : 'Reports'}
+              {reportCount} {reportCount === 1 ? 'Report' : 'Reports'}
             </span>
           </span>
         </span>
@@ -656,85 +757,123 @@ function TestsPanel({
       >
         <span>Supplier</span>
         <span>Product</span>
-        <span>Dosage</span>
+        <span>Sizes</span>
         <span className="text-right">Report</span>
       </div>
 
       <ul className="mt-4 space-y-2.5 md:mt-2">
-        {offers.map((offer) => {
-          const report = offer.labReport;
-          const supplier = suppliersBySlug.get(offer.supplierSlug)!;
-          const mg = offer.vialSize / 1000;
-          const dosageLabel = offer.vialCount > 1 ? `${mg} mg · ${offer.vialCount} vials` : `${mg}mg`;
-
-          return (
-            <li key={offerKey(offer)} className="rounded-card border border-line bg-surface p-4 md:px-5 md:py-3">
-              <div className={cn('flex flex-col gap-3', REPORT_GRID_CLASS)}>
-                <div className="flex min-w-0 items-center gap-2.5">
-                  <SupplierLogo
-                    src={supplier.logoUrl ?? supplier.faviconUrl}
-                    name={supplier.name}
-                    size={32}
-                    className="h-8 w-8 rounded-chip"
-                    initialClassName="text-xs"
-                  />
-                  <Link
-                    href={`/suppliers/${supplier.slug}`}
-                    className="truncate font-bold text-content transition-colors hover:text-accent"
-                  >
-                    {supplier.name}
-                  </Link>
-                </div>
-                <p className="flex items-center justify-between gap-3 text-sm md:block">
-                  <span className="text-micro font-bold uppercase text-faint md:hidden">Product</span>
-                  <span className="truncate font-bold text-content">{productName}</span>
-                </p>
-                <p className="flex items-center justify-between gap-3 text-sm md:block">
-                  <span className="text-micro font-bold uppercase text-faint md:hidden">Dosage</span>
-                  <span className="text-content">{dosageLabel}</span>
-                </p>
-                <a
-                  href={(report?.reportUrl ?? report?.labUrl ?? offer.coaUrl)!}
-                  target="_blank"
-                  rel="nofollow noopener"
-                  className="inline-flex items-center justify-center gap-1.5 rounded-pill border border-ok/40 bg-ok/10 px-3.5 py-2 text-xs font-black uppercase tracking-wide text-ok transition-colors hover:bg-ok hover:text-surface md:justify-self-end md:py-1.5"
-                >
-                  View Report
-                  <ExternalIcon className="h-3 w-3" />
-                </a>
-              </div>
-
-              <div className="mt-3 flex flex-wrap items-center gap-1.5">
-                {report ? (
-                  <>
-                    <span className="text-micro text-faint">
-                      {report.labName} · Grade {report.grade.toUpperCase()} · {report.score.toFixed(1)}/10
-                    </span>
-                    {Object.entries(report.results).map(([test, result]) => (
-                      <span
-                        key={test}
-                        className={cn(
-                          'rounded-chip px-2 py-1 text-micro font-bold uppercase',
-                          result === 'pass' ? 'bg-ok/10 text-ok' : 'bg-danger/10 text-danger',
-                        )}
-                      >
-                        {test}: {result}
-                      </span>
-                    ))}
-                    {report.testedAt ? (
-                      <span suppressHydrationWarning className="text-micro text-faint">
-                        Tested {timeAgo(report.testedAt)}
-                      </span>
-                    ) : null}
-                  </>
-                ) : (
-                  <span className="text-micro text-faint">Certificate on file, not yet graded.</span>
-                )}
-              </div>
-            </li>
-          );
-        })}
+        {groupReports(offers).map((group) => (
+          <ReportCard
+            key={group.key}
+            group={group}
+            productName={productName}
+            supplier={suppliersBySlug.get(group.supplierSlug)!}
+          />
+        ))}
       </ul>
     </div>
+  );
+}
+
+/**
+ * One supplier's lab-test card. Its sizes are picked like the size row at the
+ * top of the page, and the single "View Report" button opens the certificate
+ * for whichever size is selected.
+ */
+function ReportCard({
+  group,
+  productName,
+  supplier,
+}: {
+  group: ReportGroup;
+  productName: string;
+  supplier: ListingSupplier;
+}) {
+  const [selectedKey, setSelectedKey] = useState(offerKey(group.offers[0]!));
+  const offer = group.offers.find((candidate) => offerKey(candidate) === selectedKey) ?? group.offers[0]!;
+  const report = offer.labReport;
+
+  return (
+    <li className="rounded-card border border-line bg-surface p-4 md:px-5 md:py-3">
+      <div className={cn('flex flex-col gap-3', REPORT_GRID_CLASS)}>
+        <div className="flex min-w-0 items-center gap-2.5">
+          <SupplierLogo
+            src={supplier.logoUrl ?? supplier.faviconUrl}
+            name={supplier.name}
+            size={32}
+            className="h-8 w-8 rounded-chip"
+            initialClassName="text-xs"
+          />
+          <Link
+            href={`/suppliers/${supplier.slug}`}
+            className="truncate font-bold text-content transition-colors hover:text-accent"
+          >
+            {supplier.name}
+          </Link>
+        </div>
+        <p className="flex items-center justify-between gap-3 text-sm md:block">
+          <span className="text-micro font-bold uppercase text-faint md:hidden">Product</span>
+          <span className="truncate font-bold text-content">
+            {productName}
+            {group.form !== 'vial' ? <span className="font-semibold text-muted"> · {FORM_LABELS[group.form]}</span> : null}
+          </span>
+        </p>
+        <div className="flex items-start justify-between gap-3 text-sm md:block">
+          <span className="mt-3 text-micro font-bold uppercase text-faint md:hidden">Sizes</span>
+          {group.offers.length > 1 ? (
+            // Every size at once, in short form ("10mg × 3") so even a dozen fit on two lines.
+            <DoseChipsExpandable
+              doses={group.offers.map((candidate) => ({
+                key: offerKey(candidate),
+                label: shortSizeLabel(candidate),
+                fullLabel: sizeLabel(candidate),
+              }))}
+              selectedKey={offerKey(offer)}
+              onSelect={setSelectedKey}
+              visibleCount={group.offers.length}
+              compact
+              label={`${supplier.name} sizes`}
+            />
+          ) : (
+            <span className="text-content">{sizeLabel(offer)}</span>
+          )}
+        </div>
+        <a
+          href={reportHref(offer)!}
+          target="_blank"
+          rel="nofollow noopener"
+          aria-label={`View report for ${supplier.name} ${productName} ${sizeLabel(offer)} (opens in a new tab)`}
+          className="inline-flex items-center justify-center gap-1.5 rounded-pill border border-ok/40 bg-ok/10 px-3.5 py-2 text-xs font-black uppercase tracking-wide text-ok transition-colors hover:bg-ok hover:text-surface md:justify-self-end md:py-1.5"
+        >
+          View Report
+          <ExternalIcon className="h-3 w-3" />
+        </a>
+      </div>
+
+      {/* Graded reports keep their lab results line; an ungraded certificate shows nothing extra. */}
+      {report ? (
+        <div className="mt-3 flex flex-wrap items-center gap-1.5">
+          <span className="text-micro text-faint">
+            {report.labName} · Grade {report.grade.toUpperCase()} · {report.score.toFixed(1)}/10
+          </span>
+          {Object.entries(report.results).map(([test, result]) => (
+            <span
+              key={test}
+              className={cn(
+                'rounded-chip px-2 py-1 text-micro font-bold uppercase',
+                result === 'pass' ? 'bg-ok/10 text-ok' : 'bg-danger/10 text-danger',
+              )}
+            >
+              {test}: {result}
+            </span>
+          ))}
+          {report.testedAt ? (
+            <span suppressHydrationWarning className="text-micro text-faint">
+              Tested {timeAgo(report.testedAt)}
+            </span>
+          ) : null}
+        </div>
+      ) : null}
+    </li>
   );
 }
