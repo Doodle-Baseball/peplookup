@@ -7,6 +7,10 @@ import { cn } from '@/lib/cn';
 import { BoxIcon, ExternalIcon } from '@/components/icons/icons';
 import { CopyCode } from '@/components/ui/copy-code';
 import type { CatalogProduct, CatalogVariant } from '@/components/supplier-card/catalog-products';
+import { DoseChipsExpandable } from '@/components/product-card/dose-chips-expandable';
+
+/** Sizes shown before the "+N more" chip. */
+const CARD_VISIBLE_SIZES = 3;
 
 /** The option a card opens on: the first one in stock, so a sold-out size never leads. */
 function initialVariant(variants: readonly CatalogVariant[]): CatalogVariant {
@@ -133,16 +137,23 @@ export function OfferVariantCard({
       ) : null}
 
       {formVariants.length > 1 ? (
-        <OptionChips
-          label="Size"
-          options={formVariants.map((candidate) => ({
-            key: candidate.key,
-            text: candidate.optionLabel,
-            inStock: candidate.inStock,
-          }))}
-          selectedKey={variant.key}
-          onSelect={setSelectedKey}
-        />
+        // Single vials and packs share the card, so the sizes use the compound
+        // page's size chips: the first few, then "+N more".
+        <div>
+          <p className="text-micro font-bold uppercase text-faint">Size</p>
+          <DoseChipsExpandable
+            doses={formVariants.map((candidate) => ({
+              key: candidate.key,
+              label: candidate.chipLabel,
+              fullLabel: candidate.inStock ? undefined : `${candidate.chipLabel} (out of stock)`,
+            }))}
+            selectedKey={variant.key}
+            onSelect={setSelectedKey}
+            visibleCount={CARD_VISIBLE_SIZES}
+            compact
+            label={`${product.name} sizes`}
+          />
+        </div>
       ) : null}
 
       <div className="flex items-center justify-between gap-3">

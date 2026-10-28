@@ -46,7 +46,9 @@ export function ratingSourceLabel(reviewsUrl: string | null): string {
   if (!reviewsUrl) return 'public review sources';
   try {
     const host = new URL(reviewsUrl).hostname.replace(/^www\./, '');
-    return /(^|\.)trustpilot\.com$/.test(host) ? 'Trustpilot' : host;
+    if (/(^|\.)trustpilot\.com$/.test(host)) return 'Trustpilot';
+    if (/(^|\.)pepreviewpro\.com$/.test(host)) return 'PepReviewPro';
+    return host;
   } catch {
     return 'public review sources';
   }

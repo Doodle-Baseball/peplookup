@@ -28,7 +28,7 @@ export const vendorAffiliateLinks: Record<string, string> = {
   'ech3lonlabs.com': 'https://ech3lonlabs.com/?ref=PRODUCTS',
   'hlxlabs.shop': 'https://hlxlabs.shop/?ref=peplookup',
   'peppyandme.com': 'https://peppyandme.com/?ref=peplookup',
-  'nurapeptide.com': 'https://nurapeptide.com/?ref=153',
+  'nurapeptide.com': 'https://nurapeptide.com/?ref=peplookup',
   'nextgenpeps.com': 'https://nextgenpeps.com?ref=PRODUCTS',
   'offlinepeptides.com': 'https://offlinepeptides.com/ref/adamdan6688/',
   'mainpeptides.com': 'https://mainpeptides.com/ref/AdamDan6688/',

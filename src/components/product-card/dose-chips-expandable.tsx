@@ -15,27 +15,41 @@ export function DoseChipsExpandable({
   doses,
   selectedKey,
   onSelect,
+  visibleCount = VISIBLE_DOSES,
+  compact = false,
+  label,
 }: {
-  doses: { key: string; label: string }[];
+  /** `fullLabel` is the spelled-out size when `label` is a short form; it becomes the hover text and accessible name. */
+  doses: { key: string; label: string; fullLabel?: string }[];
   selectedKey: string | null;
   onSelect: (key: string) => void;
+  /** Sizes shown before the "+N more" chip. */
+  visibleCount?: number;
+  /** Smaller chips, for a size row inside a listing card. */
+  compact?: boolean;
+  /** Names the row for screen readers, e.g. "Nura Peptide sizes". */
+  label?: string;
 }) {
   // A selected size past the cut-off would be hidden, so the row opens expanded.
   const selectedIndex = doses.findIndex((dose) => dose.key === selectedKey);
-  const [isExpanded, setIsExpanded] = useState(selectedIndex >= VISIBLE_DOSES);
-  const visibleDoses = isExpanded ? doses : doses.slice(0, VISIBLE_DOSES);
+  const [isExpanded, setIsExpanded] = useState(selectedIndex >= visibleCount);
+  const visibleDoses = isExpanded ? doses : doses.slice(0, visibleCount);
   const hiddenCount = doses.length - visibleDoses.length;
+  const chipSizeClass = compact ? 'px-2 py-1 text-xs' : 'px-3.5 py-2 text-sm';
 
   return (
-    <div className="mt-2 flex flex-wrap gap-2">
+    <div role={label ? 'group' : undefined} aria-label={label} className={cn('mt-2 flex flex-wrap', compact ? 'gap-1.5' : 'gap-2')}>
       {visibleDoses.map((dose) => (
         <button
           key={dose.key}
           type="button"
           aria-pressed={selectedKey === dose.key}
+          aria-label={dose.fullLabel}
+          title={dose.fullLabel}
           onClick={() => onSelect(dose.key)}
           className={cn(
-            'h-fit rounded-full border px-3.5 py-2 text-sm font-bold transition-all',
+            'h-fit rounded-full border font-bold transition-all',
+            chipSizeClass,
             selectedKey === dose.key
               ? 'border-content bg-content text-surface shadow-sm'
               : 'border-line bg-surface text-content hover:border-brand hover:bg-brand hover:text-surface',
@@ -49,7 +63,10 @@ export function DoseChipsExpandable({
           type="button"
           onClick={() => setIsExpanded(true)}
           aria-label={`Show ${hiddenCount} more sizes`}
-          className="h-fit rounded-full border border-dashed border-brand bg-surface px-3.5 py-2 text-sm font-bold text-brand transition-all hover:border-solid hover:bg-brand hover:text-surface"
+          className={cn(
+            'h-fit rounded-full border border-dashed border-brand bg-surface font-bold text-brand transition-all hover:border-solid hover:bg-brand hover:text-surface',
+            chipSizeClass,
+          )}
         >
           +{hiddenCount} more
         </button>

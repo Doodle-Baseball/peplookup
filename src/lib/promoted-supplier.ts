@@ -19,6 +19,8 @@ export interface PromotedSupplier {
   websiteHost: string;
   coupon: { code: string; percentOff: number } | null;
   inStockCompoundCount: number;
+  /** Listings (every size and pack) currently in stock. */
+  inStockListingCount: number;
   listingCount: number;
   coaListingCount: number;
   country: string | null;
@@ -83,6 +85,7 @@ export function buildPromotedSupplier(
     websiteHost: hostOf(supplier.homepageUrl),
     coupon: supplier.coupon ? { code: supplier.coupon.code, percentOff: supplier.coupon.percentOff } : null,
     inStockCompoundCount: inStockCompounds.size,
+    inStockListingCount: listings.filter((offer) => offer.inStock).length,
     listingCount: listings.length,
     coaListingCount: coaListings.length,
     country: supplier.country,

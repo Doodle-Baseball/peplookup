@@ -49,6 +49,7 @@ describe('promotedFacts', () => {
     websiteHost: 'americanpeptides.us',
     coupon: { code: 'peplookup', percentOff: 10 },
     inStockCompoundCount: 30,
+    inStockListingCount: 50,
     listingCount: 53,
     coaListingCount: 47,
     country: 'United States',
