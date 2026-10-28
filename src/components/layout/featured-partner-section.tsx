@@ -19,9 +19,16 @@ function currentMonthName(now: Date): string {
 
 /** The intro, written from the live counts so it can never drift from the tiles beside it. */
 function introText(promo: PromotedSupplier): string {
-  const parts = [`${promo.inStockCompoundCount.toLocaleString('en-US')} compounds in stock`];
+  // Leads with the same figure as the first tile, "Products in stock".
+  const products = `${promo.inStockListingCount.toLocaleString('en-US')} ${promo.inStockListingCount === 1 ? 'product' : 'products'} in stock`;
+  const compounds = `${promo.inStockCompoundCount.toLocaleString('en-US')} ${promo.inStockCompoundCount === 1 ? 'compound' : 'compounds'}`;
+  const parts = [`${products} across ${compounds}`];
   if (promo.coaListingCount > 0) {
-    parts.push(`${promo.coaListingCount} of their ${promo.listingCount} listings backed by a published COA`);
+    parts.push(
+      promo.coaListingCount === promo.listingCount
+        ? `all ${promo.listingCount} of their listings backed by a published COA`
+        : `${promo.coaListingCount} of their ${promo.listingCount} listings backed by a published COA`,
+    );
   }
   if (promo.coupon) parts.push(`${promo.coupon.percentOff}% off with code ${promo.coupon.code.toUpperCase()}`);
   const list = parts.length > 1 ? `${parts.slice(0, -1).join(', ')}${parts.length > 2 ? ',' : ''} and ${parts.at(-1)}` : parts[0];
@@ -138,7 +145,7 @@ export function FeaturedPartnerSection({ promo, now = new Date() }: { promo: Pro
             <p className="mt-6 max-w-2xl text-sm leading-7 text-muted sm:text-base">{introText(promo)}</p>
 
             <div className="mt-6 grid grid-cols-3 gap-2 sm:gap-4">
-              <StatTile value={promo.inStockCompoundCount} label="Compounds in stock" />
+              <StatTile value={promo.inStockListingCount} label="Products in stock" />
               <StatTile value={promo.listingCount} label="Listings tracked" />
               <StatTile value={promo.coaListingCount} label="Listings with COAs" />
             </div>

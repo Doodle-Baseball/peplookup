@@ -41,6 +41,7 @@ describe('buildPromotedSupplier', () => {
       websiteHost: 'americanpeptides.us',
       coupon: { code: 'peplookup', percentOff: 10 },
       inStockCompoundCount: 1,
+      inStockListingCount: 2,
       listingCount: 3,
       coaListingCount: 2,
       processingTime: '24–48 business hours processing',
