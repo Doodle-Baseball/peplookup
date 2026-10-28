@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { CopyCode } from '@/components/ui/copy-code';
 import { StarRating } from '@/components/ui/star-rating';
 import { SupplierLogo } from '@/components/ui/supplier-logo';
@@ -69,6 +70,11 @@ export function SupplierSpotlight({ supplier }: { supplier: SpotlightSupplier })
   };
 
   const { rating, coupon } = supplier;
+  const profileHref = `/suppliers/${supplier.slug}`;
+  const ratingText = rating
+    ? `${rating.value.toFixed(1)}${rating.reviewCountText ? ` · ${rating.reviewCountText} reviews` : ''}`
+    : '';
+  const ratingTitle = rating?.sourceName ? `Rating on ${rating.sourceName}` : undefined;
 
   return (
     <aside
@@ -84,8 +90,9 @@ export function SupplierSpotlight({ supplier }: { supplier: SpotlightSupplier })
         />
 
         <div className="flex items-start justify-between gap-2">
-          <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-pill bg-accent-strong px-2.5 py-1 text-micro font-black uppercase tracking-wide text-surface-raised shadow-sm">
-            <StarIcon className="h-3 w-3 fill-current text-rating" />
+          {/* Same badge as "Featured" on supplier cards: gold-edged green pill with a gold star. */}
+          <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-pill border border-coupon bg-gradient-to-r from-accent to-accent-strong px-2.5 py-1 text-micro font-black uppercase tracking-wide text-surface-raised shadow-sm">
+            <StarIcon className="h-3 w-3 fill-current text-coupon" />
             Recommended Supplier
           </span>
           <button
@@ -99,34 +106,52 @@ export function SupplierSpotlight({ supplier }: { supplier: SpotlightSupplier })
         </div>
 
         <div className="mt-3 flex items-center gap-3">
-          <SupplierLogo
-            src={supplier.logoUrl}
-            name={supplier.name}
-            size={48}
-            className="h-12 w-12 shrink-0 rounded-chip border border-line bg-surface-raised object-contain p-1 shadow-card"
-            initialClassName="text-lg"
-          />
+          {/* The name below is the link screen readers and keyboards use; the logo is the same link for the mouse. */}
+          <Link href={profileHref} tabIndex={-1} aria-hidden="true" className="shrink-0 transition-opacity hover:opacity-80">
+            <SupplierLogo
+              src={supplier.logoUrl}
+              name={supplier.name}
+              size={48}
+              className="h-12 w-12 shrink-0 rounded-chip border border-line bg-surface-raised object-contain p-1 shadow-card"
+              initialClassName="text-lg"
+            />
+          </Link>
           <div className="min-w-0">
-            <p className="truncate text-base font-black leading-tight text-content">{supplier.name}</p>
+            <Link
+              href={profileHref}
+              className="block truncate text-base font-black leading-tight text-content transition-colors hover:text-accent-strong"
+            >
+              {supplier.name}
+            </Link>
             {rating ? (
               <p className="mt-1 flex flex-wrap items-center gap-x-1.5 text-micro text-muted">
                 <StarRating rating={rating.value} starClassName="h-3.5 w-3.5" />
+                {/* The platform isn't written out, but stays on hover and for screen readers, and the score links to it. */}
                 {rating.url ? (
                   <a
                     href={rating.url}
                     target="_blank"
                     rel="nofollow noopener noreferrer"
+                    title={ratingTitle}
                     className="font-semibold text-content underline-offset-2 hover:text-accent-strong hover:underline"
                   >
-                    {rating.sourceName ? `${rating.sourceName} ` : ''}
-                    {rating.value.toFixed(1)}
-                    {rating.reviewCountText ? ` · ${rating.reviewCountText} reviews` : ''}
+                    {ratingText}
+                    {rating.sourceName ? (
+                      <>
+                        {' '}
+                        <span className="sr-only">on {rating.sourceName}</span>
+                      </>
+                    ) : null}
                   </a>
                 ) : (
-                  <span className="font-semibold text-content">
-                    {rating.sourceName ? `${rating.sourceName} ` : ''}
-                    {rating.value.toFixed(1)}
-                    {rating.reviewCountText ? ` · ${rating.reviewCountText} reviews` : ''}
+                  <span title={ratingTitle} className="font-semibold text-content">
+                    {ratingText}
+                    {rating.sourceName ? (
+                      <>
+                        {' '}
+                        <span className="sr-only">on {rating.sourceName}</span>
+                      </>
+                    ) : null}
                   </span>
                 )}
               </p>
@@ -153,7 +178,7 @@ export function SupplierSpotlight({ supplier }: { supplier: SpotlightSupplier })
           rel="nofollow noopener noreferrer sponsored"
           className="btn-3d mt-3 flex w-full items-center justify-center gap-1.5 rounded-pill bg-brand px-4 py-2.5 font-mono text-xs font-bold uppercase tracking-wide text-surface-raised"
         >
-          Shop peptides now
+          Shop {supplier.name}
           <ExternalIcon className="h-3.5 w-3.5" />
         </a>
       </div>

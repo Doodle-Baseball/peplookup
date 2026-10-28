@@ -28,8 +28,12 @@ describe('SupplierSpotlight', () => {
     act(() => vi.advanceTimersByTime(3000));
     expect(screen.getByText('Recommended Supplier')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Copy code peplookup' })).toBeTruthy();
-    expect(screen.getByText(/Trustpilot 4\.1/)).toBeTruthy();
-    const shop = screen.getByRole('link', { name: /Shop peptides now/ });
+    // The score names no platform on screen; it stays on hover, for screen readers and in the link.
+    const score = screen.getByRole('link', { name: '4.1 · 54 reviews on Trustpilot' });
+    expect(score.getAttribute('title')).toBe('Rating on Trustpilot');
+    expect(score.getAttribute('href')).toBe(supplier.rating?.url);
+    expect(screen.getByRole('link', { name: 'American Peptides' }).getAttribute('href')).toBe('/suppliers/american-peptides');
+    const shop = screen.getByRole('link', { name: /Shop American Peptides/ });
     expect(shop.getAttribute('href')).toBe(supplier.shopUrl);
     expect(shop.getAttribute('rel')).toContain('sponsored');
   });
