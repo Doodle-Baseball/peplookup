@@ -11,6 +11,7 @@ function variant(over: Partial<CatalogVariant>): CatalogVariant {
     formLabel: 'Vial',
     vialMcg: 5000,
     optionLabel: '5mg',
+    chipLabel: '5mg',
     sizeLabel: '5 mg',
     imageUrl: null,
     inStock: true,
@@ -37,6 +38,7 @@ const PRODUCT: CatalogProduct = {
     variant({
       key: 'b',
       optionLabel: '10mg × 10',
+      chipLabel: '10 mg · 10 vials',
       sizeLabel: '10 mg · pack of 10 vials',
       priceText: '$620.00',
       listPriceText: '$720.00',
@@ -44,7 +46,7 @@ const PRODUCT: CatalogProduct = {
       coaHref: 'https://lab.example/10mg.pdf',
       buyHref: '/go?to=kit',
     }),
-    variant({ key: 'c', optionLabel: '15mg', inStock: false, priceText: '$90.00', coaHref: null, buyHref: '/go?to=15mg' }),
+    variant({ key: 'c', optionLabel: '15mg', chipLabel: '15mg', inStock: false, priceText: '$90.00', coaHref: null, buyHref: '/go?to=15mg' }),
     variant({ key: 'd', form: 'spray', formLabel: 'Spray', optionLabel: '5mg', sizeLabel: '5 mg', priceText: '$70.00', buyHref: '/go?to=spray' }),
   ],
 };
@@ -69,7 +71,7 @@ describe('OfferVariantCard', () => {
 
   it('switches price, size, COA and buy link to the chosen option', () => {
     renderCard();
-    fireEvent.click(screen.getByRole('button', { name: '10mg × 10' }));
+    fireEvent.click(screen.getByRole('button', { name: '10 mg · 10 vials' }));
     expect(screen.getByText('$620.00')).toBeInTheDocument();
     expect(screen.getByText('$720.00')).toBeInTheDocument();
     expect(screen.getByText('10 mg · pack of 10 vials')).toBeInTheDocument();
@@ -91,7 +93,15 @@ describe('OfferVariantCard', () => {
     expect(screen.getByText('$70.00')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /buy now/i })).toHaveAttribute('href', '/go?to=spray');
     // A single spray size needs no size chips.
-    expect(screen.queryByRole('group', { name: 'Size' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('group', { name: 'BPC-157 sizes' })).not.toBeInTheDocument();
+  });
+
+  it('shows the first three sizes, then a "+N more" chip that reveals the rest', () => {
+    const sizes = ['10mg', '10 mg · 3 vials', '10 mg · 5 vials', '10 mg · 10 vials'];
+    renderCard({ ...PRODUCT, variants: sizes.map((label, index) => variant({ key: `s${index}`, chipLabel: label })) });
+    expect(screen.queryByRole('button', { name: '10 mg · 10 vials' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Show 1 more sizes' }));
+    expect(screen.getByRole('button', { name: '10 mg · 10 vials' })).toBeInTheDocument();
   });
 
   it('shows no option chips for a product with a single listing', () => {

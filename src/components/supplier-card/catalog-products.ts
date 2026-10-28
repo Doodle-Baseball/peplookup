@@ -18,6 +18,8 @@ export interface CatalogVariant {
   vialMcg: number;
   /** Short chip label: "5mg", or "10mg × 10" for a pack. */
   optionLabel: string;
+  /** Size-chip label naming the unit: "10mg", or "10 mg · 3 vials" (bottles, capsules) for a pack. */
+  chipLabel: string;
   /** The card's full size line, e.g. "10 mg · pack of 10 vials". */
   sizeLabel: string;
   imageUrl: string | null;
@@ -90,6 +92,14 @@ function optionLabel(offer: Offer): string {
   return offer.vialCount > 1 ? `${size} × ${offer.vialCount}` : size;
 }
 
+/** The pack's count unit, as on the compound pages: spray bottles, capsules, otherwise vials. */
+const PACK_UNITS: Partial<Record<ProductForm, string>> = { spray: 'bottles', capsule: 'capsules' };
+
+function chipLabel(offer: Offer): string {
+  if (offer.vialCount <= 1) return `${(offer.vialSize / 1000).toLocaleString()}mg`;
+  return `${mgLabel(offer.vialSize)} · ${offer.vialCount} ${PACK_UNITS[offer.form] ?? 'vials'}`;
+}
+
 function toVariant(offer: Offer, supplier: Pick<Supplier, 'coupon'>, now: Date): CatalogVariant {
   const listing = toListing(offer);
   const observedPrice = effectivePrice(listing);
@@ -105,6 +115,7 @@ function toVariant(offer: Offer, supplier: Pick<Supplier, 'coupon'>, now: Date):
     formLabel: FORM_LABELS[offer.form],
     vialMcg: offer.vialSize,
     optionLabel: optionLabel(offer),
+    chipLabel: chipLabel(offer),
     sizeLabel: sizeLabel(offer),
     imageUrl: offer.imageUrl,
     inStock: offer.inStock,
@@ -120,14 +131,20 @@ function toVariant(offer: Offer, supplier: Pick<Supplier, 'coupon'>, now: Date):
   };
 }
 
+/** Form, then single units before packs, then size, then pack count. */
 function byFormThenSize(a: Offer, b: Offer): number {
-  return FORM_ORDER.indexOf(a.form) - FORM_ORDER.indexOf(b.form) || a.vialSize - b.vialSize || a.vialCount - b.vialCount;
+  return (
+    FORM_ORDER.indexOf(a.form) - FORM_ORDER.indexOf(b.form) ||
+    Number(a.vialCount > 1) - Number(b.vialCount > 1) ||
+    a.vialSize - b.vialSize ||
+    a.vialCount - b.vialCount
+  );
 }
 
 /**
- * One card per product, form and pack size: a product's single vials share a
- * card with their sizes as options, and its sprays, capsules and each
- * multi-vial pack size (e.g. 10-vial kits) get cards of their own. Cards keep
+ * One card per product and form: a product's single vials and its multi-vial
+ * packs (e.g. 3-, 5- and 10-vial kits) share a card with every size as an
+ * option, while its sprays and capsules get cards of their own. Cards keep
  * the order their listings first appear in, so the catalogue keeps its
  * running order. A supplier in SUPPLIER_CATALOG_OVERRIDES can show each
  * listing on its own card instead, and/or rename a product on its cards.
@@ -144,7 +161,7 @@ export function groupCatalogProducts(
     const product = productsBySlug.get(offer.productSlug);
     if (!product) continue;
     // Separate-card suppliers split per listing below, after sorting the whole product by size.
-    const cardKey = override?.separateCards ? product.slug : `${product.slug}-${offer.form}-${offer.vialCount}`;
+    const cardKey = override?.separateCards ? product.slug : `${product.slug}-${offer.form}`;
     const group = byCard.get(cardKey) ?? { product, offers: [] };
     group.offers.push(offer);
     byCard.set(cardKey, group);
