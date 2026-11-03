@@ -3,7 +3,6 @@
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import type { ReviewPageSummary } from '@/lib/admin/review-pages';
-import { reviewsPageIndexable } from '@/lib/review-pages';
 import { SeoEditDialog } from '@/components/admin/seo/seo-edit-dialog';
 import { SupplierLogo } from '@/components/ui/supplier-logo';
 import { StarRating } from '@/components/ui/star-rating';
@@ -75,7 +74,7 @@ export function ReviewPagesManager({
         const override = page.entry.override;
         return {
           page,
-          indexable: reviewsPageIndexable(override),
+          indexable: page.entry.indexing.indexable,
           seoReady: Boolean(override?.metaTitle?.trim() && override?.metaDescription?.trim()),
         };
       }),

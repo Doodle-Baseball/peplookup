@@ -27,6 +27,8 @@ export interface Guide {
   updatedAt?: string | null;
   /** Drafts are false. Absent on guides that ship in the repository, which are always live. */
   isPublished?: boolean;
+  /** The "Reviewed by me" tick in /admin/guides (0031). Absent on guides that ship in the repository. */
+  reviewedByMe?: boolean;
   sections: readonly GuideSection[];
   /** One of the site's own calculators/checkers this guide points to, where relevant. */
   relatedTool?: { label: string; href: string };

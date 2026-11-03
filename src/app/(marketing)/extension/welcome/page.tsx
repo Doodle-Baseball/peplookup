@@ -5,6 +5,7 @@ import { chromeExtension } from '@/config/extension';
 import type { SeoDefaults } from '@/lib/seo-defaults';
 import { PageSeo } from '@/components/seo/page-seo';
 import { ArrowRightIcon, CheckIcon, ExternalIcon, TagIcon } from '@/components/icons/icons';
+import { privatePageRobots } from '@/lib/seo/indexing';
 
 /** Opened by the extension right after install, so never in search results or the sitemap. */
 const PAGE: SeoDefaults = {
@@ -17,7 +18,7 @@ const PAGE: SeoDefaults = {
 export const metadata: Metadata = {
   title: { absolute: PAGE.title },
   description: PAGE.description,
-  robots: { index: false, follow: false },
+  robots: privatePageRobots('/extension/welcome'),
 };
 
 const STEPS = [
@@ -43,7 +44,7 @@ export default function ExtensionWelcomePage() {
       </div>
 
       <div className="mx-auto max-w-2xl px-4 py-12 sm:px-6 sm:py-20">
-        <PageSeo seo={PAGE} indexable={false} />
+        <PageSeo seo={PAGE} />
         <header className="text-center">
           <span className="mx-auto flex h-20 w-20 items-center justify-center rounded-pill bg-ok text-white shadow-lift">
             <CheckIcon className="h-9 w-9" />

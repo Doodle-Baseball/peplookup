@@ -19,6 +19,8 @@ export interface GuideRow {
   related_tool_label: string | null;
   related_tool_href: string | null;
   is_published: boolean;
+  /** Added by 0031; undefined on a database where that migration hasn't run yet. */
+  reviewed_by_me?: boolean;
   updated_at: string;
 }
 
@@ -36,6 +38,7 @@ export function rowToGuide(row: GuideRow): Guide {
     publishedAt: row.published_at,
     updatedAt: row.updated_at,
     isPublished: row.is_published,
+    reviewedByMe: row.reviewed_by_me ?? false,
     sections: Array.isArray(row.sections) ? row.sections : [],
     ...(row.related_tool_label && row.related_tool_href
       ? { relatedTool: { label: row.related_tool_label, href: row.related_tool_href } }
@@ -57,6 +60,8 @@ export interface GuideInput {
   relatedToolLabel: string | null;
   relatedToolHref: string | null;
   isPublished: boolean;
+  /** The "Reviewed by me" tick (0031). Left out (and so unchanged) when undefined. */
+  reviewedByMe?: boolean;
 }
 
 export function guideInputToRow(slug: string, input: GuideInput) {
@@ -75,6 +80,7 @@ export function guideInputToRow(slug: string, input: GuideInput) {
     related_tool_label: input.relatedToolLabel,
     related_tool_href: input.relatedToolHref,
     is_published: input.isPublished,
+    ...(input.reviewedByMe === undefined ? {} : { reviewed_by_me: input.reviewedByMe }),
   };
 }
 

@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { AdminPageHeader } from '@/components/admin/page-header';
 import { ReviewPageForm } from '@/components/admin/review-page-form';
+import { ReviewSummaryForm } from '@/components/admin/review-summary-form';
 import { ReviewsAdminTabs } from '@/components/admin/reviews-admin-tabs';
 import { SupplierLogo } from '@/components/ui/supplier-logo';
 import { StarRating } from '@/components/ui/star-rating';
@@ -100,13 +101,16 @@ export default async function EditReviewPage({ params }: { params: Promise<{ slu
         ) : null}
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_18rem]">
-          <ReviewPageForm
-            slug={slug}
-            current={data.current}
-            defaults={data.defaults}
-            customized={data.customized}
-            disabled={data.contentSetupError !== null}
-          />
+          <div className="space-y-6">
+            <ReviewSummaryForm slug={slug} supplierName={supplier.name} initialSummary={supplier.reviewSummary ?? null} />
+            <ReviewPageForm
+              slug={slug}
+              current={data.current}
+              defaults={data.defaults}
+              customized={data.customized}
+              disabled={data.contentSetupError !== null}
+            />
+          </div>
 
           {/* ------------------------------------------------------ Side panel */}
           <aside className="animate-fade-up animate-delay-200 space-y-4 self-start lg:sticky lg:top-6">

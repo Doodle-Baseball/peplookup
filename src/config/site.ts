@@ -130,3 +130,6 @@ export const footerNav: readonly { heading: string; links: readonly NavChild[] }
 /** Shown site-wide above the fold. Research-use-only posture is non-negotiable. */
 export const RESEARCH_USE_NOTICE =
   'Research Use Only. Products listed are not for human or animal consumption. Statements have not been evaluated by the FDA.';
+
+/** Who checks the supplier pages, shown as "Last checked <date> by …" under each supplier's name. */
+export const SUPPLIER_PAGE_AUTHOR = { name: 'Adam Dan', href: '/about' } as const;

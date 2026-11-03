@@ -8,7 +8,7 @@ import { suppliers } from '@/data/suppliers';
 import { withDemoData } from '@/data/demo-overlay';
 import { withDemoProductContent } from '@/data/demo-products';
 import { withPublishedCoaLink } from '@/data/vendor-coa-links';
-import { getSupplierSlugAliases } from '@/lib/seo';
+import { getSupplierSlugAliases } from '@/lib/seo-redirects';
 import { getSupabaseServerClient } from './supabase/server';
 import { fetchSuppliersFromDb, fetchSupplierFromDb } from './supabase/suppliers';
 import { fetchSupplierReviewsFromDb } from './supabase/supplier-reviews';

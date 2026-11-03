@@ -22,7 +22,7 @@ export default async function AdminSeoPage() {
       <AdminPageHeader title="SEO" />
       <div className="px-4 py-6 sm:px-8 sm:py-8">
         {data ? (
-          <SeoDashboard entries={data.entries} redirects={data.redirects} setupError={data.setupError} />
+          <SeoDashboard entries={data.entries} redirects={data.redirects} quality={data.quality} setupError={data.setupError} />
         ) : (
           <p role="alert" className="rounded-card border border-danger/30 bg-danger/5 px-5 py-4 text-sm font-semibold text-danger">
             {loadError}

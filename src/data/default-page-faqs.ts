@@ -403,10 +403,8 @@ export function defaultCouponFaqs(supplier: {
       question: `Are the ${name} prices on ${site.name} already discounted?`,
       answer: `Where a listing has no sale price of its own, the prices ${site.name} shows for ${name} already reflect the ${coupon.percentOff}% code, with the original price alongside. You still have to enter ${coupon.code} at ${name}'s checkout for the discount to apply.`,
     },
-    {
-      question: `Does ${site.name} get paid when I use the ${name} code?`,
-      answer: `Possibly. Some links to ${name} are affiliate links, meaning ${site.name} may earn a commission if you buy through them, at no extra cost to you. It does not change your price or which codes we list.`,
-    },
+    // Four coupon-only questions; the affiliate disclosure is stated on the
+    // coupon page itself, next to the code, rather than tucked into an FAQ.
   ];
 }
 

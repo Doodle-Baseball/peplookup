@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { ADMIN_SESSION_COOKIE, verifyAdminSessionToken } from '@/lib/admin-auth';
-import { getRedirectTarget } from '@/lib/seo';
+import { getRedirectTarget } from '@/lib/seo-redirects';
 
 async function handleAdminRoute(request: NextRequest): Promise<NextResponse> {
   const { pathname } = request.nextUrl;

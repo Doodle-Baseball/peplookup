@@ -21,7 +21,7 @@ import {
 import { TagListInput } from '@/components/admin/tag-list-input';
 import { characterCount, DESCRIPTION_LENGTH, TITLE_LENGTH, taskStatusLabel } from '@/lib/seo-status';
 import { site } from '@/config/site';
-import { indexableWhenSeoAdded } from '@/lib/seo-indexing';
+import { indexStatusLabel } from '@/lib/seo/indexing';
 import { cn } from '@/lib/cn';
 import { ChevronDownIcon, CloseIcon, WarningIcon } from '@/components/icons/icons';
 import { FaqEditor } from '@/components/admin/seo/faq-editor';
@@ -178,9 +178,10 @@ export function SeoEditDialog({ entry, onClose }: { entry: SeoEntry; onClose: ()
   const slugChanged = renamableKind !== null && slug.trim() !== '' && slug.trim() !== entry.slug;
   const previewPath = renamableKind ? `${SLUG_PREFIX[renamableKind]}${slug.trim() || entry.slug}` : entry.path;
 
+  // A save with a warning (duplicate About text) stays open so the warning is read.
   useEffect(() => {
-    if (state.savedAt) onClose();
-  }, [state.savedAt, onClose]);
+    if (state.savedAt && !state.warning) onClose();
+  }, [state.savedAt, state.warning, onClose]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -379,26 +380,21 @@ export function SeoEditDialog({ entry, onClose }: { entry: SeoEntry; onClose: ()
             </Section>
 
             <Section title="Indexing & sharing">
-              {entry.kind === 'coupon' || entry.kind === 'review' ? (
-                <p className="rounded-chip border border-line bg-surface px-3.5 py-2.5 text-xs text-muted">
-                  {entry.kind === 'review' ? 'Review pages' : 'Coupon pages'} are hidden from search engines by default. Save a meta title and meta description, then
-                  tick &ldquo;Allow search engines to index this page&rdquo; to turn indexing on. Untick it any time to turn
-                  it off again.
-                </p>
-              ) : null}
+              <IndexingStatus entry={entry} />
               <div className="flex flex-wrap gap-3">
                 <label className="flex cursor-pointer items-center gap-2 rounded-chip border border-line bg-surface px-3 py-2 text-sm text-content has-[:checked]:border-brand has-[:checked]:bg-brand-soft">
-                  <input
-                    type="checkbox"
-                    name="robotsIndex"
-                    defaultChecked={
-                      entry.kind === 'coupon' || entry.kind === 'review'
-                        ? indexableWhenSeoAdded(override)
-                        : (override?.robotsIndex ?? true)
-                    }
-                  />
+                  <input type="checkbox" name="robotsIndex" defaultChecked={override?.robotsIndex ?? true} />
                   Allow search engines to index this page
                 </label>
+                {entry.kind !== 'static' && entry.kind !== 'compound' ? (
+                  <label className="flex cursor-pointer items-center gap-2 rounded-chip border border-line bg-surface px-3 py-2 text-sm text-content has-[:checked]:border-brand has-[:checked]:bg-brand-soft">
+                    <input type="checkbox" name="readyToIndex" defaultChecked={override?.readyToIndex ?? false} />
+                    Ready to index
+                  </label>
+                ) : (
+                  // Static and compound pages don't wait for the tick, so it is kept as it is.
+                  <input type="hidden" name="readyToIndex" value={override?.readyToIndex ? 'on' : ''} />
+                )}
                 <label className="flex cursor-pointer items-center gap-2 rounded-chip border border-line bg-surface px-3 py-2 text-sm text-content has-[:checked]:border-brand has-[:checked]:bg-brand-soft">
                   <input type="checkbox" name="robotsFollow" defaultChecked={override?.robotsFollow ?? true} />
                   Follow links on this page
@@ -500,6 +496,10 @@ export function SeoEditDialog({ entry, onClose }: { entry: SeoEntry; onClose: ()
               <p role="alert" className="mb-3 text-sm font-semibold text-danger">
                 {state.error ?? resetError}
               </p>
+            ) : state.warning ? (
+              <p role="status" className="mb-3 text-sm font-semibold text-warn">
+                {state.warning}
+              </p>
             ) : null}
             <div className="flex flex-wrap items-center justify-between gap-3">
               {override ? (
@@ -536,5 +536,30 @@ export function SeoEditDialog({ entry, onClose }: { entry: SeoEntry; onClose: ()
       </div>
     </div>,
     document.body,
+  );
+}
+
+/**
+ * The page's indexing decision as it stands: "Indexed ✓" or "Not indexed –
+ * reason: …", and any quality rule it fails. While a page type's rules are
+ * reported but not enforced, a failing page is still indexed and says so.
+ */
+function IndexingStatus({ entry }: { entry: SeoEntry }) {
+  const { indexing } = entry;
+  const failing = indexing.qualityFailures;
+  return (
+    <div
+      className={cn(
+        'rounded-chip border px-3.5 py-2.5 text-xs',
+        !indexing.indexable ? 'border-warn/30 bg-warn/5' : failing.length > 0 ? 'border-info/30 bg-info/5' : 'border-ok/30 bg-ok/5',
+      )}
+    >
+      <p className={cn('font-bold', indexing.indexable ? 'text-ok' : 'text-warn')}>{indexStatusLabel(indexing)}</p>
+      {failing.length > 0 ? (
+        <p className="mt-1 text-muted">
+          Quality check {indexing.enforced ? 'failing' : 'failing (reported only, not enforced)'}: {failing.join('; ')}.
+        </p>
+      ) : null}
+    </div>
   );
 }

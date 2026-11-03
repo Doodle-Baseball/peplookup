@@ -13,6 +13,7 @@ import { HospiraPromoSection } from '@/components/home/hospira-promo-section';
 import { catalogueStats } from '@/lib/catalogue-stats';
 import { AccentedHeading } from '@/components/ui/accented-heading';
 import { PageSeo } from '@/components/seo/page-seo';
+import { SitewideBlocks } from '@/components/layout/sitewide-blocks';
 
 const PAGE = staticSeoPage('/');
 
@@ -142,6 +143,8 @@ export default async function HomePage() {
       <section className="mx-auto max-w-shell px-4 pb-12">
         <PageFaqSection path="/" />
       </section>
+
+      <SitewideBlocks featuredPartner={true} />
     </>
   );
 }

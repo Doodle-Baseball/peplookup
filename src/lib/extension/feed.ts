@@ -68,9 +68,10 @@ function reviewsFromAnotherPlatform(url: string | null | undefined): boolean {
 }
 
 function trustpilotFor(supplier: ExtensionFeedSupplierSource): ExtensionFeedEntry['trustpilot'] {
-  // The extension labels this score "Trustpilot", so a rating taken from
-  // another review platform is left out rather than mislabelled.
-  if (reviewsFromAnotherPlatform(supplier.reviewsUrl)) return null;
+  // The extension labels this score "Trustpilot", so only a rating backed by
+  // a Trustpilot link goes out: one from another platform, or with no source
+  // link at all, is left out rather than mislabelled.
+  if (!supplier.reviewsUrl || reviewsFromAnotherPlatform(supplier.reviewsUrl)) return null;
   const rating = supplier.reviewRating;
   if (rating === null || !Number.isFinite(rating) || rating < 0 || rating > 5) return null;
   // "50+" can't be written as a number without overstating it, so only an exact count is passed on.

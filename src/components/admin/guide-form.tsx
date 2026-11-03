@@ -212,6 +212,19 @@ export function GuideForm({
               Visible on /guides
             </label>
           </div>
+
+          <div className="flex items-end">
+            {/* The guide's quality rule: it passes only once its owner has read it through. */}
+            <label className="flex items-center gap-2.5 text-sm font-semibold text-content">
+              <input
+                type="checkbox"
+                name="reviewedByMe"
+                defaultChecked={guide?.reviewedByMe ?? false}
+                className="h-4 w-4 rounded border-line accent-brand"
+              />
+              Reviewed by me
+            </label>
+          </div>
         </div>
       </section>
 

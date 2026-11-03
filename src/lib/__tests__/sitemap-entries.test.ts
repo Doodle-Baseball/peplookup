@@ -4,7 +4,7 @@ import { buildSitemapEntries, type SitemapInput, type SitemapSeoFields } from '.
 
 const ORIGIN = 'https://www.peplookup.com';
 
-const INDEXED: SitemapSeoFields = { robotsIndex: true, canonicalUrl: null, metaTitle: 'Title', metaDescription: 'Description' };
+const INDEXED: SitemapSeoFields = { canonicalUrl: null };
 
 function guide(slug: string, body: string[]): Guide {
   return {
@@ -28,6 +28,7 @@ function input(overrides: Partial<SitemapInput> = {}): SitemapInput {
     guides: [],
     offers: [],
     seoByPath: new Map(),
+    isIndexable: () => true,
     ...overrides,
   };
 }
@@ -45,9 +46,8 @@ describe('buildSitemapEntries', () => {
     expect(urls(input({ staticPaths: ['/', '/watchlist'] }))).toEqual([`${ORIGIN}/`]);
   });
 
-  it('leaves out a page switched to noindex in /admin/seo', () => {
-    const seoByPath = new Map([['/faqs', { ...INDEXED, robotsIndex: false }]]);
-    expect(urls(input({ seoByPath }))).toEqual([`${ORIGIN}/`]);
+  it('leaves out every page its indexing decision says is noindex', () => {
+    expect(urls(input({ isIndexable: (path) => path !== '/faqs' }))).toEqual([`${ORIGIN}/`]);
   });
 
   it('leaves out a page whose canonical names another URL', () => {
@@ -85,15 +85,14 @@ describe('buildSitemapEntries', () => {
     ]);
   });
 
-  it('lists coupon and reviews pages only once their SEO is saved and indexing is on', () => {
+  it('lists coupon and reviews pages by the same indexing decision as every other page', () => {
     const supplier = { slug: 'supplier-a', hasCoupon: true, hasReviews: true, inventoryRefreshedAt: null };
-    expect(urls(input({ staticPaths: [], suppliers: [supplier] }))).toEqual([`${ORIGIN}/suppliers/supplier-a`]);
-
-    const seoByPath = new Map([
-      ['/coupons/supplier-a-coupon-code', INDEXED],
-      ['/reviews/supplier-a-reviews', INDEXED],
+    const onlyProfile = (path: string) => path.startsWith('/suppliers/');
+    expect(urls(input({ staticPaths: [], suppliers: [supplier], isIndexable: onlyProfile }))).toEqual([
+      `${ORIGIN}/suppliers/supplier-a`,
     ]);
-    expect(urls(input({ staticPaths: [], suppliers: [supplier], seoByPath }))).toEqual([
+
+    expect(urls(input({ staticPaths: [], suppliers: [supplier] }))).toEqual([
       `${ORIGIN}/suppliers/supplier-a`,
       `${ORIGIN}/coupons/supplier-a-coupon-code`,
       `${ORIGIN}/reviews/supplier-a-reviews`,
@@ -102,11 +101,7 @@ describe('buildSitemapEntries', () => {
 
   it('never lists a coupon or reviews page for a supplier that has no coupon or reviews', () => {
     const supplier = { slug: 'supplier-a', hasCoupon: false, hasReviews: false, inventoryRefreshedAt: null };
-    const seoByPath = new Map([
-      ['/coupons/supplier-a-coupon-code', INDEXED],
-      ['/reviews/supplier-a-reviews', INDEXED],
-    ]);
-    expect(urls(input({ staticPaths: [], suppliers: [supplier], seoByPath }))).toEqual([`${ORIGIN}/suppliers/supplier-a`]);
+    expect(urls(input({ staticPaths: [], suppliers: [supplier] }))).toEqual([`${ORIGIN}/suppliers/supplier-a`]);
   });
 
   it('leaves out placeholder guides, and the guides index while there are none with content', () => {

@@ -3,14 +3,10 @@ import { site } from '@/config/site';
 import { guideHasContent, type Guide } from '@/data/guides';
 import { couponPagePath } from '@/lib/coupon-pages';
 import { reviewsPagePath } from '@/lib/review-pages';
-import { indexableWhenSeoAdded } from '@/lib/seo-indexing';
 
-/** The parts of an /admin/seo override that decide whether a page belongs in the sitemap. */
+/** The part of an /admin/seo override the sitemap still reads itself: the canonical. */
 export interface SitemapSeoFields {
-  robotsIndex: boolean;
   canonicalUrl: string | null;
-  metaTitle: string | null;
-  metaDescription: string | null;
 }
 
 export interface SitemapSupplier {
@@ -29,6 +25,8 @@ export interface SitemapInput {
   offers: readonly { productSlug: string; supplierSlug: string; scrapedAt: string }[];
   /** Override by path, for every path that has one. */
   seoByPath: ReadonlyMap<string, SitemapSeoFields>;
+  /** The page's indexing decision (src/lib/seo/indexing.ts), the same one its robots tag uses. */
+  isIndexable: (path: string) => boolean;
 }
 
 /**
@@ -63,20 +61,13 @@ function latest(dates: readonly (string | null)[]): Date | undefined {
 
 /**
  * Every URL the sitemap lists. A URL is in only when the page answers 200, is
- * indexable (no noindex from its own rule or from /admin/seo) and is its own
- * canonical, the same rules each page applies to its own metadata, so the
- * sitemap can never list a page that tells search engines to skip it.
+ * indexable by the one indexing decision its robots tag also uses, and is its
+ * own canonical, so the sitemap can never list a page that tells search
+ * engines to skip it.
  */
 export function buildSitemapEntries(input: SitemapInput): MetadataRoute.Sitemap {
   const { seoByPath } = input;
-  // Most pages are indexable unless an override switches that off; coupon and
-  // reviews pages start noindex and need their SEO saved first.
-  const indexableByDefault = (seo: SitemapSeoFields | undefined) => seo?.robotsIndex ?? true;
-  const generatedPageIndexable = (seo: SitemapSeoFields | undefined) => indexableWhenSeoAdded(seo ?? null);
-  const listable = (path: string, indexable = indexableByDefault) => {
-    const seo = seoByPath.get(path);
-    return indexable(seo) && isOwnCanonical(path, seo);
-  };
+  const listable = (path: string) => input.isIndexable(path) && isOwnCanonical(path, seoByPath.get(path));
 
   const offerDates = (match: (offer: SitemapInput['offers'][number]) => boolean) =>
     input.offers.filter(match).map((offer) => offer.scrapedAt);
@@ -105,8 +96,8 @@ export function buildSitemapEntries(input: SitemapInput): MetadataRoute.Sitemap 
       const reviews = reviewsPagePath(supplier.slug);
       return [
         ...(listable(profile) ? [{ path: profile, lastModified }] : []),
-        ...(supplier.hasCoupon && listable(coupon, generatedPageIndexable) ? [{ path: coupon, lastModified }] : []),
-        ...(supplier.hasReviews && listable(reviews, generatedPageIndexable) ? [{ path: reviews, lastModified }] : []),
+        ...(supplier.hasCoupon && listable(coupon) ? [{ path: coupon, lastModified }] : []),
+        ...(supplier.hasReviews && listable(reviews) ? [{ path: reviews, lastModified }] : []),
       ];
     }),
     ...publishedGuides

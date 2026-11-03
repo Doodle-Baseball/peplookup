@@ -91,12 +91,9 @@ export async function generateMetadata({
       ...((override?.images ?? coverImages) ? { images: override?.images ?? coverImages } : {}),
     },
   };
-  // A placeholder guide stays out of search until its text is written, and a
-  // draft stays out of it entirely (drafts aren't served publicly at all;
-  // this only matters if one ever is).
-  return guideHasContent(guide) && guide.isPublished !== false
-    ? withSocial
-    : { ...withSocial, robots: { index: false, follow: true } };
+  // A placeholder guide (no text yet) or a draft is kept out of search by
+  // withSeo(), through the one indexing rule in src/lib/seo/indexing.ts.
+  return withSocial;
 }
 
 /**

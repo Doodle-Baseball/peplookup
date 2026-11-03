@@ -1,5 +1,5 @@
 import { getFaqsForPath } from '@/lib/page-faqs';
-import { getSeoOverride } from '@/lib/seo';
+import { getIndexDecision } from '@/lib/seo';
 import type { FaqItem } from '@/data/default-page-faqs';
 import { ChevronDownIcon } from '@/components/icons/icons';
 import { cn } from '@/lib/cn';
@@ -19,9 +19,8 @@ export async function PageFaqSection({
   path,
   className,
   /**
-   * Set false on a page that already emits its own FAQPage schema, or that is
-   * noindex by its own rule (coupon and review pages), so no FAQPage goes out
-   * where it shouldn't. The visible section still renders.
+   * Set false on a page that already emits its own FAQPage schema, so no
+   * FAQPage goes out twice. The visible section still renders.
    */
   includeSchema = true,
 }: {
@@ -29,10 +28,10 @@ export async function PageFaqSection({
   className?: string;
   includeSchema?: boolean;
 }) {
-  const [faqs, seo] = await Promise.all([getFaqsForPath(path), getSeoOverride(path)]);
+  const [faqs, decision] = await Promise.all([getFaqsForPath(path), getIndexDecision(path)]);
   if (faqs.length === 0) return null;
-  // A page switched to noindex in /admin/seo carries no structured data at all.
-  const emitsSchema = includeSchema && (seo?.robotsIndex ?? true);
+  // A noindex page carries no structured data at all.
+  const emitsSchema = includeSchema && decision.indexable;
 
   return (
     <section

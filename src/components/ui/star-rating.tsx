@@ -1,13 +1,12 @@
 import { StarIcon } from '@/components/icons/icons';
 import { cn } from '@/lib/cn';
-
-const STARS = [0, 1, 2, 3, 4];
+import { starFills } from '@/components/ui/star-fill';
 
 /**
- * Five stars filled to `rating`, including partial fills, a 4.5 shows as four
- * and a half rather than rounding to a number the vendor never claimed. The
- * fill is a clipped overlay of the same row, so half a star is a real half
- * rather than a separate glyph.
+ * Five stars filled to `rating`, including partial fills, a 4.3 shows four
+ * full stars and the fifth 30% filled, never five. Each star is filled on its
+ * own: clipping the whole row by percentage counted the gaps between stars,
+ * so the last star came out emptier (or fuller) than the score.
  */
 export function StarRating({
   rating,
@@ -18,31 +17,23 @@ export function StarRating({
   className?: string;
   starClassName?: string;
 }) {
-  const clamped = Math.min(5, Math.max(0, rating));
+  const fills = starFills(rating);
+  const clamped = fills.reduce((total, fill) => total + fill, 0);
 
   return (
     <span
       role="img"
-      aria-label={`${clamped} out of 5 stars`}
-      className={cn('relative inline-flex shrink-0 items-center', className)}
+      aria-label={`${Math.round(clamped * 10) / 10} out of 5 stars`}
+      className={cn('inline-flex shrink-0 items-center gap-0.5', className)}
     >
-      <span aria-hidden="true" className="flex items-center gap-0.5 text-line">
-        {STARS.map((index) => (
-          <StarIcon key={index} className={cn(starClassName, 'fill-current')} />
-        ))}
-      </span>
-
-      <span
-        aria-hidden="true"
-        className="absolute inset-y-0 left-0 overflow-hidden"
-        style={{ width: `${(clamped / 5) * 100}%` }}
-      >
-        <span className="flex w-max items-center gap-0.5 text-rating">
-          {STARS.map((index) => (
-            <StarIcon key={index} className={cn(starClassName, 'fill-current')} />
-          ))}
+      {fills.map((fill, index) => (
+        <span key={index} aria-hidden="true" className="relative inline-flex">
+          <StarIcon className={cn(starClassName, 'fill-current text-line')} />
+          <span className="absolute inset-y-0 left-0 overflow-hidden" style={{ width: `${fill * 100}%` }}>
+            <StarIcon className={cn(starClassName, 'fill-current text-rating')} />
+          </span>
         </span>
-      </span>
+      ))}
     </span>
   );
 }

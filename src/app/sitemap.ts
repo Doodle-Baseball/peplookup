@@ -8,7 +8,8 @@ import {
   getSuppliers,
   supplierHasReviews,
 } from '@/lib/repository';
-import { getSeoOverridesByPath } from '@/lib/seo';
+import { getIndexDecisions, getSeoOverridesByPath } from '@/lib/seo';
+import { listSitePages } from '@/lib/seo/site-pages';
 import { buildSitemapEntries } from '@/lib/sitemap-entries';
 
 /** Regenerated hourly, the same window as the catalogue caches it reads. */
@@ -31,6 +32,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const productSlugs = new Set(products.map((product) => product.slug));
   const supplierSlugs = new Set(suppliers.map((supplier) => supplier.slug));
+  const decisions = await getIndexDecisions((await listSitePages()).map((page) => page.path));
 
   return buildSitemapEntries({
     staticPaths: STATIC_SEO_PAGES.map((page) => page.path),
@@ -44,5 +46,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     guides,
     offers: offers.filter((offer) => productSlugs.has(offer.productSlug) && supplierSlugs.has(offer.supplierSlug)),
     seoByPath,
+    isIndexable: (path) => decisions.get(path)?.indexable ?? false,
   });
 }

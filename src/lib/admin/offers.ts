@@ -9,7 +9,7 @@ import {
 import type { Offer } from '@/lib/schema';
 import { AdminDbError } from '@/lib/admin/vendors';
 import { withPublishedCoaLink } from '@/data/vendor-coa-links';
-import { getSupplierSlugAliases } from '@/lib/seo';
+import { getSupplierSlugAliases } from '@/lib/seo-redirects';
 
 function requireClient() {
   const client = getSupabaseServerClient();

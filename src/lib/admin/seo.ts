@@ -20,6 +20,7 @@ import {
   type SeoDefaults,
 } from '@/lib/seo-defaults';
 import {
+  indexDecisionFor,
   rowToSeoOverride,
   rowToSeoRedirect,
   type SeoOverride,
@@ -27,6 +28,10 @@ import {
   type SeoRedirect,
   type SeoTaskStatus,
 } from '@/lib/seo';
+import { getPageQualityIndex } from '@/lib/seo/page-quality';
+import { daysSince, type IndexDecision } from '@/lib/seo/indexing';
+import { QUALITY_THRESHOLDS } from '@/config/seo-quality';
+import type { Offer } from '@/lib/schema';
 import { AdminDbError } from '@/lib/admin/vendors';
 import { fetchPageFaqsFromDb } from '@/lib/supabase/page-faqs';
 import {
@@ -80,11 +85,26 @@ export interface SeoEntry {
   defaultFaqs: FaqItem[];
   /** Supplier pages only: the About / Why / vs-other-suppliers boxes. Null for every other kind. */
   supplierContent: { saved: SupplierContentOverride | null; defaults: SupplierContent } | null;
+  /** Whether the page is indexed, and which quality rules it fails, from src/lib/seo/indexing.ts. */
+  indexing: IndexDecision;
+}
+
+/** B4 and B6: how fast pages are being made indexable, and whose prices have gone stale. */
+export interface SeoQualitySummary {
+  indexableCount: number;
+  failingQualityCount: number;
+  /** Pages whose "Ready to index" was ticked in the last 7 days. */
+  madeIndexableLast7Days: number;
+  /** True when that count is above the weekly limit, so pages are going live in bulk. */
+  tooManyNewlyIndexable: boolean;
+  /** Suppliers whose newest price is older than the stale threshold, oldest first. */
+  stalePriceSuppliers: { slug: string; name: string; daysOld: number }[];
 }
 
 export interface SeoDashboardData {
   entries: SeoEntry[];
   redirects: SeoRedirect[];
+  quality: SeoQualitySummary;
   /** Set when the SEO tables are missing; every page is still listed with its defaults. */
   setupError: string | null;
 }
@@ -100,6 +120,8 @@ export interface SeoPageInput {
   robotsFollow: boolean;
   headHtml: string | null;
   bodyHtml: string | null;
+  /** The "Ready to index" tick (0031). */
+  readyToIndex: boolean;
 }
 
 function requireClient() {
@@ -206,6 +228,7 @@ export async function getSeoDashboardData(): Promise<SeoDashboardData> {
       defaults: defaultSupplierContent(supplier, supplierMarketStats(supplier.slug, offers)),
     };
   };
+  const quality = await getPageQualityIndex();
   const toEntry = (kind: SeoPageKind, group: string, name: string, slug: string | null, defaults: SeoDefaults) => ({
     path: defaults.path,
     kind,
@@ -217,6 +240,7 @@ export async function getSeoDashboardData(): Promise<SeoDashboardData> {
     faqs: faqsByPath.get(defaults.path) ?? null,
     defaultFaqs: defaultFaqsFor(defaults.path),
     supplierContent: supplierContentFor(kind, slug),
+    indexing: indexDecisionFor(defaults.path, quality.facts[defaults.path], overrides.get(defaults.path) ?? null),
   });
   const byName = <T extends { name: string }>(a: T, b: T) => a.name.localeCompare(b.name);
 
@@ -228,7 +252,9 @@ export async function getSeoDashboardData(): Promise<SeoDashboardData> {
       .map((compound) => toEntry('compound', 'Compounds', compound.name, compound.slug, compoundSeoDefaults(compound))),
     ...[...suppliers]
       .sort(byName)
-      .map((supplier) => toEntry('supplier', 'Suppliers', supplier.name, supplier.slug, supplierSeoDefaults(supplier))),
+      .map((supplier) =>
+        toEntry('supplier', 'Suppliers', supplier.name, supplier.slug, supplierSeoDefaults(supplier, supplierFacts(supplier.slug, offers))),
+      ),
     // One page per vendor that has a code. Listed from the public supplier
     // records, the same ones the live pages are served from.
     ...[...publicSuppliers]
@@ -252,11 +278,92 @@ export async function getSeoDashboardData(): Promise<SeoDashboardData> {
 
   return {
     entries,
+    quality: qualitySummary(entries, [...overrides.values()], publicSuppliers, offers),
     redirects: redirects.error
       ? []
       : ((redirects.data ?? []) as Parameters<typeof rowToSeoRedirect>[0][]).map(rowToSeoRedirect),
     setupError,
   };
+}
+
+/** The figures the supplier template may quote: distinct priced products and linked COA documents. */
+function supplierFacts(slug: string, offers: readonly Offer[]): { productCount: number; coaCount: number } {
+  const own = offers.filter((offer) => offer.supplierSlug === slug);
+  const coas = new Set(
+    own.flatMap((offer) => {
+      const url = offer.labReport?.reportUrl ?? offer.labReport?.labUrl ?? offer.coaUrl ?? null;
+      return url ? [`${offer.productSlug}|${url}`] : [];
+    }),
+  );
+  return { productCount: new Set(own.map((offer) => offer.productSlug)).size, coaCount: coas.size };
+}
+
+function qualitySummary(
+  entries: readonly SeoEntry[],
+  overrides: readonly SeoOverride[],
+  suppliers: readonly { slug: string; name: string }[],
+  offers: readonly Offer[],
+): SeoQualitySummary {
+  const now = new Date();
+  const weekAgo = now.getTime() - 7 * 24 * 60 * 60 * 1000;
+  const madeIndexableLast7Days = overrides.filter(
+    (override) => override.readyToIndex && override.readyToIndexAt && Date.parse(override.readyToIndexAt) >= weekAgo,
+  ).length;
+
+  const newestPrice = new Map<string, string>();
+  for (const offer of offers) {
+    const current = newestPrice.get(offer.supplierSlug);
+    if (!current || Date.parse(offer.scrapedAt) > Date.parse(current)) newestPrice.set(offer.supplierSlug, offer.scrapedAt);
+  }
+  const stalePriceSuppliers = suppliers
+    .flatMap((supplier) => {
+      const newest = newestPrice.get(supplier.slug);
+      const daysOld = newest ? daysSince(newest, now) : null;
+      return daysOld !== null && daysOld > QUALITY_THRESHOLDS.stalePriceDays
+        ? [{ slug: supplier.slug, name: supplier.name, daysOld }]
+        : [];
+    })
+    .sort((a, b) => b.daysOld - a.daysOld);
+
+  return {
+    indexableCount: entries.filter((entry) => entry.indexing.indexable).length,
+    failingQualityCount: entries.filter((entry) => entry.indexing.qualityFailures.length > 0).length,
+    madeIndexableLast7Days,
+    tooManyNewlyIndexable: madeIndexableLast7Days > QUALITY_THRESHOLDS.maxNewlyIndexablePerWeek,
+    stalePriceSuppliers,
+  };
+}
+
+/** Postgres/PostgREST "no such column/function": a 0031 feature used before that migration ran. */
+function isMissing0031(error: { code?: string; message?: string }): boolean {
+  return (
+    ['PGRST202', 'PGRST204', '42703', '42883'].includes(error.code ?? '') ||
+    /ready_to_index|seo_most_similar|schema cache/i.test(error.message ?? '')
+  );
+}
+
+/**
+ * B3: the most similar other supplier text, scored by pg_trgm in the
+ * database. Null when nothing is similar enough to compare, or when 0031
+ * (which adds the function) has not been run yet.
+ */
+export async function findMostSimilarSupplierText(
+  kind: 'about' | 'review_summary',
+  slug: string,
+  text: string,
+): Promise<{ name: string; score: number } | null> {
+  if (!text.trim()) return null;
+  const { data, error } = await requireClient().rpc('seo_most_similar', { p_kind: kind, p_slug: slug, p_text: text });
+  if (error) {
+    if (isMissing0031(error)) {
+      console.warn('[seo] seo_most_similar is missing; run supabase/migrations/0031_seo_quality.sql.');
+      return null;
+    }
+    throw toSeoError(error);
+  }
+  const row = (Array.isArray(data) ? data[0] : null) as { name?: unknown; score?: unknown } | null;
+  if (!row || typeof row.name !== 'string' || typeof row.score !== 'number') return null;
+  return { name: row.name, score: row.score };
 }
 
 /** Rejects SEO rows for pages that don't exist, so the table never collects orphans. */
@@ -326,24 +433,48 @@ export async function setPageTaskStatus(path: string, taskStatus: SeoTaskStatus 
 }
 
 export async function saveSeoPage(path: string, input: SeoPageInput): Promise<void> {
-  const { error } = await requireClient()
+  const client = requireClient();
+  const row = {
+    path,
+    meta_title: input.metaTitle,
+    meta_description: input.metaDescription,
+    h1: input.h1,
+    keywords: input.keywords,
+    canonical_url: input.canonicalUrl,
+    og_image_url: input.ogImageUrl,
+    robots_index: input.robotsIndex,
+    robots_follow: input.robotsFollow,
+    head_html: input.headHtml,
+    body_html: input.bodyHtml,
+  };
+
+  // The tick's date only moves when it goes from unticked to ticked, so the
+  // "made indexable in the last 7 days" counter counts real changes.
+  const { data: existing, error: readError } = await client
     .from('seo_pages')
-    .upsert(
-      {
-        path,
-        meta_title: input.metaTitle,
-        meta_description: input.metaDescription,
-        h1: input.h1,
-        keywords: input.keywords,
-        canonical_url: input.canonicalUrl,
-        og_image_url: input.ogImageUrl,
-        robots_index: input.robotsIndex,
-        robots_follow: input.robotsFollow,
-        head_html: input.headHtml,
-        body_html: input.bodyHtml,
-      },
-      { onConflict: 'path' },
-    );
+    .select('ready_to_index, ready_to_index_at')
+    .eq('path', path)
+    .maybeSingle();
+  const missing0031 = readError !== null && isMissing0031(readError);
+  if (readError && !missing0031) throw toSeoError(readError);
+
+  if (missing0031) {
+    // Before 0031 there is no tick to store; the rest of the page still saves.
+    const { error } = await client.from('seo_pages').upsert(row, { onConflict: 'path' });
+    if (error) throw toSeoError(error);
+    return;
+  }
+
+  const previous = existing as { ready_to_index: boolean; ready_to_index_at: string | null } | null;
+  const newlyReady = input.readyToIndex && !previous?.ready_to_index;
+  const { error } = await client.from('seo_pages').upsert(
+    {
+      ...row,
+      ready_to_index: input.readyToIndex,
+      ready_to_index_at: newlyReady ? new Date().toISOString() : (previous?.ready_to_index_at ?? null),
+    },
+    { onConflict: 'path' },
+  );
   if (error) throw toSeoError(error);
 }
 

@@ -116,3 +116,15 @@ export async function saveReviewPageContent(slug: string, content: ReviewPageCon
   }
   throw new AdminDbError(error);
 }
+
+const QUALITY_MIGRATION = 'supabase/migrations/0031_seo_quality.sql';
+
+/** The site owner's own summary of a supplier's reviews (suppliers.review_summary). Blank clears it. */
+export async function saveReviewSummary(slug: string, summary: string | null): Promise<void> {
+  const { error } = await requireClient().from('suppliers').update({ review_summary: summary }).eq('slug', slug);
+  if (!error) return;
+  if (/review_summary|schema cache/i.test(error.message) || error.code === 'PGRST204' || error.code === '42703') {
+    throw new AdminDbError(`The review summary needs ${QUALITY_MIGRATION}. Run it in the Supabase SQL editor, then try again.`);
+  }
+  throw new AdminDbError(error.message);
+}

@@ -8,7 +8,13 @@ import {
   getOffersForSupplier,
   getProducts,
   getSupplierReviews,
+  getSupplierSlugsWithReviews,
+  supplierHasReviews,
 } from '@/lib/repository';
+import { couponPagePath } from '@/lib/coupon-pages';
+import { reviewsPagePath } from '@/lib/review-pages';
+import { formatDate } from '@/lib/format';
+import type { Offer, Product } from '@/lib/schema';
 import { cn } from '@/lib/cn';
 import { supplierGoPath } from '@/lib/go-links';
 import { site } from '@/config/site';
@@ -35,9 +41,27 @@ import {
 import { PageFaqSection } from '@/components/faq/page-faq-section';
 import { SupplierContentSections } from '@/components/supplier-content/supplier-content-sections';
 import { getSupplierContent } from '@/lib/supplier-content-store';
+import { SUPPLIER_PAGE_AUTHOR } from '@/config/site';
 
 /** How many other vendors show in "Explore more vendors". */
 const EXPLORE_VENDOR_COUNT = 6;
+
+/** The COA link a listing carries, with the same precedence /lab-reports uses. */
+function coaUrlOf(offer: Offer): string | null {
+  return offer.labReport?.reportUrl ?? offer.labReport?.labUrl ?? offer.coaUrl ?? null;
+}
+
+/** What the supplier's title and description may state: how many products it prices and how many COAs we link. */
+function supplierSeoFacts(offers: readonly Offer[], productsBySlug: ReadonlyMap<string, Product>) {
+  const resolved = offers.filter((offer) => productsBySlug.has(offer.productSlug));
+  const coaKeys = new Set(
+    resolved.flatMap((offer) => {
+      const url = coaUrlOf(offer);
+      return url ? [`${offer.productSlug}|${url}`] : [];
+    }),
+  );
+  return { productCount: new Set(resolved.map((offer) => offer.productSlug)).size, coaCount: coaKeys.size };
+}
 
 export async function generateStaticParams() {
   const suppliers = await getSuppliers();
@@ -52,7 +76,9 @@ export async function generateMetadata({
   const { slug } = await params;
   const supplier = await getSupplier(slug);
   if (!supplier) return { title: 'Supplier not found' };
-  return withSeo(`/suppliers/${supplier.slug}`, pageMetadata(supplierSeoDefaults(supplier)));
+  const [offers, products] = await Promise.all([getOffersForSupplier(supplier.slug), getProducts()]);
+  const facts = supplierSeoFacts(offers, new Map(products.map((product) => [product.slug, product])));
+  return withSeo(`/suppliers/${supplier.slug}`, pageMetadata(supplierSeoDefaults(supplier, facts)));
 }
 
 export default async function SupplierPage({
@@ -73,12 +99,13 @@ export default async function SupplierPage({
 
   // One query for every compound up front instead of one round trip per
   // distinct product among this vendor's offers.
-  const [offers, allProducts, reviews, allSuppliers, marketOffers] = await Promise.all([
+  const [offers, allProducts, reviews, allSuppliers, marketOffers, slugsWithReviews] = await Promise.all([
     getOffersForSupplier(supplier.slug),
     getProducts(),
     getSupplierReviews(supplier),
     getSuppliers(),
     getAllOffers(),
+    getSupplierSlugsWithReviews(),
   ]);
   const supplierContent = await getSupplierContent(supplier, marketOffers);
   const productsBySlug = new Map(allProducts.map((p) => [p.slug, p]));
@@ -98,7 +125,7 @@ export default async function SupplierPage({
     { productName: string; url: string; sizes: Map<string, { vialSize: number; vialCount: number }> }
   >();
   for (const offer of resolvedOffers) {
-    const url = offer.labReport?.reportUrl ?? offer.labReport?.labUrl ?? offer.coaUrl ?? null;
+    const url = coaUrlOf(offer);
     if (!url) continue;
     const productName = productsBySlug.get(offer.productSlug)!.name;
     const key = `${offer.productSlug}|${url}`;
@@ -120,6 +147,8 @@ export default async function SupplierPage({
     .sort((a, b) => a.productName.localeCompare(b.productName));
 
   const logo = supplier.logoUrl ?? supplier.faviconUrl;
+  const seoDefaults = supplierSeoDefaults(supplier, supplierSeoFacts(offers, productsBySlug));
+  const reviewsPage = supplierHasReviews(supplier, slugsWithReviews) ? reviewsPagePath(supplier.slug) : null;
 
   // Only facts we actually hold for this vendor, no placeholder scores.
   const glance: { label: string; value: string; hint?: string }[] = [
@@ -135,7 +164,7 @@ export default async function SupplierPage({
 
       <div className="mx-auto max-w-shell px-4 py-8 sm:py-10">
         <PageSeo
-          seo={supplierSeoDefaults(supplier)}
+          seo={seoDefaults}
           supplier={supplier}
           dataDates={[supplier.inventoryRefreshedAt, ...resolvedOffers.map((offer) => offer.scrapedAt)]}
         />
@@ -191,6 +220,15 @@ export default async function SupplierPage({
                 </div>
 
                 <h1 className="mt-2 text-3xl font-black text-content sm:text-5xl">{seo?.h1 || supplier.name}</h1>
+
+                {supplier.updatedAt ? (
+                  <p className="mt-2 text-sm text-muted">
+                    Last checked <time dateTime={supplier.updatedAt}>{formatDate(supplier.updatedAt)}</time> by{' '}
+                    <Link href={SUPPLIER_PAGE_AUTHOR.href} className="font-bold text-accent-strong hover:underline">
+                      {SUPPLIER_PAGE_AUTHOR.name}
+                    </Link>
+                  </p>
+                ) : null}
 
                 {supplier.description ? (
                   <p className="mt-3 max-w-2xl text-base leading-7 text-muted">{supplier.description}</p>
@@ -261,7 +299,15 @@ export default async function SupplierPage({
                   the banner's main call to action rather than a chip tucked
                   onto a card. Scoped here: the compact copies on product and
                   offer cards keep their own tighter padding. */}
-              <CopyCode code={supplier.coupon.code} className="px-4 py-2.5" />
+              <div className="flex flex-col items-start gap-2 sm:items-end">
+                <CopyCode code={supplier.coupon.code} className="px-4 py-2.5" />
+                <Link
+                  href={couponPagePath(supplier.slug)}
+                  className="text-sm font-bold text-coupon-ink underline-offset-2 hover:underline"
+                >
+                  How to use the {supplier.name} coupon code
+                </Link>
+              </div>
             </div>
           ) : null}
         </section>
@@ -288,6 +334,8 @@ export default async function SupplierPage({
           reviews={reviews}
           reviewsUrl={supplier.reviewsUrl}
           reviewRating={supplier.reviewRating}
+          reviewCount={supplier.reviewCount}
+          reviewsPagePath={reviewsPage}
           labName={supplier.coaLabName}
           coaReports={coaReports}
         />

@@ -4,8 +4,11 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { SupplierReview } from '@/lib/schema';
 import { cn } from '@/lib/cn';
 import { formatRating, formatReviewDate } from '@/lib/format';
-import { ratingSourceLabel } from '@/lib/review-pages';
+import { ratingAttribution, ratingSourceLabel } from '@/lib/review-pages';
+import type { ReviewCount } from '@/lib/schema';
+import Link from 'next/link';
 import { StarTiles } from '@/components/ui/star-tiles';
+import { StarRating } from '@/components/ui/star-rating';
 import { StarIcon, ExternalIcon, FlaskIcon, SearchIcon, DocumentIcon } from '@/components/icons/icons';
 
 /** Reviews visible before the list scrolls. */
@@ -50,6 +53,8 @@ export function SupplierTrustPanel({
   reviews,
   reviewsUrl,
   reviewRating,
+  reviewCount,
+  reviewsPagePath,
   labName,
   coaReports,
 }: {
@@ -58,6 +63,9 @@ export function SupplierTrustPanel({
   reviews: readonly SupplierReview[];
   reviewsUrl: string | null;
   reviewRating: number | null;
+  reviewCount: ReviewCount | null;
+  /** This supplier's /reviews page, when it has one. */
+  reviewsPagePath: string | null;
   labName: string | null;
   coaReports: readonly SupplierCoaReport[];
 }) {
@@ -65,6 +73,7 @@ export function SupplierTrustPanel({
   // platform) aren't labelled Trustpilot. Without a link it stays Trustpilot,
   // where the shipped review set comes from.
   const reviewSource = reviewsUrl ? ratingSourceLabel(reviewsUrl) : 'Trustpilot';
+  const ratingLabel = ratingAttribution({ reviewRating, reviewCount, reviewsUrl });
   const [coaQuery, setCoaQuery] = useState('');
   const normalizedCoaQuery = coaQuery.trim().toLowerCase();
   const matchingCoaReports = useMemo(
@@ -167,11 +176,8 @@ export function SupplierTrustPanel({
               </span>
               <h3 className="truncate text-xl font-black text-content sm:text-2xl">{reviewSource} Reviews</h3>
             </div>
-            {reviewRating !== null ? (
-              <span className="inline-flex shrink-0 items-center gap-1.5 rounded-pill border border-accent/30 bg-accent-tint px-3 py-1.5 text-micro font-bold uppercase text-accent-strong">
-                <StarIcon className="h-3 w-3 fill-current text-rating" />
-                Trust factor {formatRating(reviewRating)}
-              </span>
+            {ratingLabel && reviewRating !== null ? (
+              <RatingBadge label={ratingLabel} rating={reviewRating} href={reviewsUrl} />
             ) : null}
           </div>
 
@@ -211,17 +217,27 @@ export function SupplierTrustPanel({
             </p>
           )}
 
-          {reviewsUrl ? (
-            <a
-              href={reviewsUrl}
-              target="_blank"
-              rel="nofollow noopener noreferrer"
-              className="group/all mt-5 inline-flex items-center gap-2 rounded-pill border border-line bg-surface px-4 py-2.5 text-sm font-bold text-content transition-colors hover:border-accent hover:bg-accent-tint hover:text-accent-strong"
-            >
-              View All Reviews on {reviewSource}
-              <ExternalIcon className="h-4 w-4 transition-transform group-hover/all:-translate-y-0.5 group-hover/all:translate-x-0.5" />
-            </a>
-          ) : null}
+          <div className="mt-5 flex flex-wrap items-center gap-2">
+            {reviewsUrl ? (
+              <a
+                href={reviewsUrl}
+                target="_blank"
+                rel="nofollow noopener noreferrer"
+                className="group/all inline-flex items-center gap-2 rounded-pill border border-line bg-surface px-4 py-2.5 text-sm font-bold text-content transition-colors hover:border-accent hover:bg-accent-tint hover:text-accent-strong"
+              >
+                View All Reviews on {reviewSource}
+                <ExternalIcon className="h-4 w-4 transition-transform group-hover/all:-translate-y-0.5 group-hover/all:translate-x-0.5" />
+              </a>
+            ) : null}
+            {reviewsPagePath ? (
+              <Link
+                href={reviewsPagePath}
+                className="inline-flex items-center rounded-pill px-2 py-2.5 text-sm font-bold text-accent-strong hover:underline"
+              >
+                Read our summary of {supplierName} reviews
+              </Link>
+            ) : null}
+          </div>
         </div>
         ) : null}
 
@@ -345,5 +361,23 @@ export function SupplierTrustPanel({
         ) : null}
       </div>
     </section>
+  );
+}
+
+/** "Trustpilot 4.3/5 from 120 reviews" with stars that match the score, linked to the rating's source. */
+function RatingBadge({ label, rating, href }: { label: string; rating: number; href: string | null }) {
+  const className =
+    'inline-flex shrink-0 items-center gap-1.5 rounded-pill border border-accent/30 bg-accent-tint px-3 py-1.5 text-xs font-bold text-accent-strong';
+  const content = (
+    <>
+      <StarRating rating={rating} starClassName="h-3 w-3" />
+      {label}
+    </>
+  );
+  if (!href) return <span className={className}>{content}</span>;
+  return (
+    <a href={href} target="_blank" rel="nofollow noopener noreferrer" className={cn(className, 'hover:border-accent hover:underline')}>
+      {content}
+    </a>
   );
 }

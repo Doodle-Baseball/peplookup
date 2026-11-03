@@ -3,7 +3,6 @@
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import type { CouponPageSummary } from '@/lib/admin/coupon-pages';
-import { couponPageIndexable } from '@/lib/coupon-pages';
 import { SeoEditDialog } from '@/components/admin/seo/seo-edit-dialog';
 import { cn } from '@/lib/cn';
 import { SupplierLogo } from '@/components/ui/supplier-logo';
@@ -74,7 +73,7 @@ export function CouponPagesManager({
         const override = page.entry.override;
         return {
           page,
-          indexable: couponPageIndexable(override),
+          indexable: page.entry.indexing.indexable,
           seoReady: Boolean(override?.metaTitle?.trim() && override?.metaDescription?.trim()),
         };
       }),

@@ -12,8 +12,6 @@ import { latestDate, resolvePageSeo } from '@/lib/structured-data/page-seo';
 export interface PageSeoProps {
   /** The same defaults the page passes to pageMetadata(), so both resolve identically. */
   seo: SeoDefaults;
-  /** For pages with their own indexing rule; otherwise the /admin/seo setting applies. */
-  indexable?: boolean;
   /** Dates the page's own data last changed (offer scrapes, publish dates). */
   dataDates?: readonly (string | null | undefined)[];
   itemList?: readonly ItemListEntry[];
@@ -32,7 +30,6 @@ export interface PageSeoProps {
  */
 export async function PageSeo({
   seo,
-  indexable,
   dataDates = [],
   itemList,
   supplier,
@@ -40,7 +37,7 @@ export async function PageSeo({
   subsection,
   product,
 }: PageSeoProps) {
-  const page = await resolvePageSeo(seo, { indexable });
+  const page = await resolvePageSeo(seo);
   if (!page.indexable || isSchemaExcluded(page.path)) return null;
 
   const dateModified = latestDate([page.updatedAt, ...dataDates]);

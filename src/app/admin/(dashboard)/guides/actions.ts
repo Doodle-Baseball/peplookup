@@ -167,6 +167,7 @@ function readGuideInput(formData: FormData): GuideInput {
     relatedToolLabel: relatedToolLabel && relatedToolHref ? relatedToolLabel : null,
     relatedToolHref: relatedToolLabel && relatedToolHref ? relatedToolHref : null,
     isPublished: formData.get('isPublished') === 'on',
+    reviewedByMe: formData.get('reviewedByMe') === 'on',
   };
 }
 

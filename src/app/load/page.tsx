@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import { LoadingPreview } from './loading-preview';
+import { privatePageRobots } from '@/lib/seo/indexing';
 
-export const metadata: Metadata = { title: 'Loading preview', robots: { index: false, follow: false } };
+export const metadata: Metadata = { title: 'Loading preview', robots: privatePageRobots('/load') };
 
 export default function LoadPage() {
   return (
