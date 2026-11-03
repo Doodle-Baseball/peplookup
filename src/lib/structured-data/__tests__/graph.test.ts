@@ -28,8 +28,9 @@ describe('buildPageGraph: base graph', () => {
       url: `${SITE}/`,
       logo: { '@type': 'ImageObject', url: `${SITE}/logo.png` },
       email: 'info@peplookup.com',
-      sameAs: ['https://www.skool.com/peptide-5115/about'],
     });
+    // The community link is shown on the pages, never in the structured data.
+    expect(org).not.toHaveProperty('sameAs');
     expect(node(graph, 'WebSite')).toMatchObject({ '@id': `${SITE}/#website`, publisher: { '@id': `${SITE}/#organization` } });
     expect(node(graph, 'WebPage')).toMatchObject({
       '@id': `${SITE}/privacy#webpage`,

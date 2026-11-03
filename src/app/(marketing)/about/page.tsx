@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { site } from '@/config/site';
+import { site, SUPPLIER_PAGE_AUTHOR } from '@/config/site';
+import { getAllOffers, getSuppliers } from '@/lib/repository';
+import { catalogueStats } from '@/lib/catalogue-stats';
 import { staticSeoPage } from '@/config/seo-pages';
 import { pageMetadata } from '@/lib/seo-defaults';
 import { getSeoOverride, withSeo } from '@/lib/seo';
@@ -32,8 +34,35 @@ const PRINCIPLES: { title: string; body: string; icon: React.ReactNode }[] = [
   },
 ];
 
+/** How PepLookup turns supplier listings into one comparison, in the order it happens. */
+const HOW_IT_WORKS: { title: string; body: string }[] = [
+  {
+    title: 'We read each supplier\'s own prices',
+    body: `${site.name} records the prices suppliers publish on their own product pages, along with stock status and the time each price was seen. Nothing is estimated or filled in.`,
+  },
+  {
+    title: 'Every listing becomes a cost per mg',
+    body: `A 5 mg vial, a 10 mg vial and a 10-vial kit can't be compared by sticker price. ${site.name} divides each price by the total milligrams in the pack, so every supplier is ranked on the same number.`,
+  },
+  {
+    title: 'COAs and coupon codes sit beside the price',
+    body: `Where a supplier publishes a certificate of analysis, ${site.name} links it from the listing, and where a supplier has a discount code, the code is shown next to its prices.`,
+  },
+];
+
 export default async function AboutPage() {
-  const seo = await getSeoOverride(PAGE.path);
+  const [seo, suppliers, offers] = await Promise.all([getSeoOverride(PAGE.path), getSuppliers(), getAllOffers()]);
+  // Live counts, the same ones the homepage and the supplier directory quote.
+  const stats = catalogueStats(suppliers, offers);
+  const coaListingCount = offers.filter(
+    (offer) => suppliers.some((supplier) => supplier.slug === offer.supplierSlug) && (offer.labReport !== null || Boolean(offer.coaUrl)),
+  ).length;
+  const facts = [
+    { label: 'Suppliers compared', value: stats.supplierCount },
+    { label: 'Peptides tracked', value: stats.compoundCount },
+    { label: 'Priced listings', value: stats.listingCount },
+    { label: 'Listings with a COA', value: coaListingCount },
+  ];
   return (
     <div className="relative overflow-hidden">
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
@@ -67,6 +96,62 @@ export default async function AboutPage() {
             {site.tagline} We built {site.name} because comparing peptide pricing across suppliers meant
             opening a dozen tabs and doing the cost-per-mg math by hand, normalising every listing down
             to one number lets you see the real comparison in one place.
+          </p>
+        </section>
+
+        <section aria-labelledby="what-is-heading" className="mx-auto mt-14 max-w-4xl">
+          <h2 id="what-is-heading" className="text-center text-2xl font-black text-content sm:text-3xl">
+            What is <span className="text-accent">{site.name}</span>?
+          </h2>
+          <p className="mx-auto mt-4 max-w-3xl text-center text-sm leading-7 text-muted sm:text-base">
+            {site.name} is an independent peptide price comparison website. It lists research peptide suppliers side by
+            side and shows what each one charges per milligram, so researchers can see which supplier is cheapest for a
+            given compound without doing the maths by hand. {site.name} also collects the certificates of analysis
+            suppliers publish and the coupon codes they offer, and links every listing straight to the supplier&rsquo;s
+            own product page. {site.name} is not a shop: it sells nothing and ships nothing.
+          </p>
+          <dl className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {facts.map((fact) => (
+              <div key={fact.label} className="rounded-card border border-line bg-surface-raised p-4 text-center shadow-card">
+                <dt className="eyebrow">{fact.label}</dt>
+                <dd className="mt-1 text-2xl font-black text-accent-strong">{fact.value.toLocaleString('en-US')}</dd>
+              </div>
+            ))}
+          </dl>
+          <p className="mt-3 text-center text-xs text-faint">Counted live from the {site.name} catalogue.</p>
+        </section>
+
+        <section aria-labelledby="how-heading" className="mx-auto mt-14 max-w-4xl">
+          <h2 id="how-heading" className="text-center text-2xl font-black text-content sm:text-3xl">
+            How {site.name} <span className="text-accent">works</span>
+          </h2>
+          <ol className="mt-6 space-y-3">
+            {HOW_IT_WORKS.map((step, index) => (
+              <li key={step.title} className="flex items-start gap-4 rounded-card border border-line bg-surface-raised p-5 shadow-card">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-pill bg-brand text-sm font-black text-white">
+                  {index + 1}
+                </span>
+                <div className="min-w-0">
+                  <h3 className="font-black text-content">{step.title}</h3>
+                  <p className="mt-1 text-sm leading-7 text-muted">{step.body}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+          <p className="mx-auto mt-6 max-w-3xl text-center text-sm leading-7 text-muted sm:text-base">
+            Supplier pages on {site.name} are checked by {SUPPLIER_PAGE_AUTHOR.name}. Browse the{' '}
+            <Link href="/suppliers" className="font-semibold text-brand hover:underline">
+              supplier directory
+            </Link>
+            , compare{' '}
+            <Link href="/price-checker" className="font-semibold text-brand hover:underline">
+              peptide prices per mg
+            </Link>{' '}
+            or read the{' '}
+            <Link href="/lab-reports" className="font-semibold text-brand hover:underline">
+              published lab reports
+            </Link>
+            .
           </p>
         </section>
 

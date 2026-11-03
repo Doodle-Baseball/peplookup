@@ -111,7 +111,6 @@ function organizationNode(): JsonLdNode {
     logo: { '@type': 'ImageObject', url: `${SITE_URL}/logo.png` },
     email: site.contactEmail,
     description: ORGANIZATION_DESCRIPTION,
-    sameAs: [site.communityUrl],
   };
 }
 
