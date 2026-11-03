@@ -78,7 +78,9 @@ export async function generateMetadata({
   const override = metadata.openGraph;
   const coverImages = guide.coverImageUrl
     ? [{ url: guide.coverImageUrl, alt: guide.coverImageAlt || guide.title }]
-    : undefined;
+    : guide.shareImageUrl
+      ? [{ url: guide.shareImageUrl, alt: `${site.name} logo` }]
+      : undefined;
   const withSocial: Metadata = {
     ...metadata,
     openGraph: {
@@ -139,6 +141,9 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
   const anchorIds = sectionAnchorIds(guide.sections.map((section) => section.heading));
   const tocItems = guide.sections.map((section, index) => ({ id: anchorIds[index]!, heading: section.heading }));
   const lastUpdated = guide.updatedAt ?? guide.publishedAt;
+  // A guide that is its own landing page drops the promotion, the product rail
+  // and the FAQ block; its questions are part of the article itself.
+  const standalone = guide.standalone === true;
 
   return (
     <>
@@ -149,11 +154,37 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
       <article className="min-w-0 lg:col-span-8">
         <PageSeo
           seo={guideSeoDefaults(guide)}
-          article={{ datePublished: guide.publishedAt, image: guide.coverImageUrl }}
-          subsection={categoryCrumb(guide.category)}
+          article={{
+            datePublished: guide.publishedAt,
+            image: guide.coverImageUrl,
+            author: guide.author ? { name: guide.author.name, url: guide.author.href } : null,
+            description: guide.schemaDescription ?? null,
+          }}
+          subsection={standalone ? undefined : categoryCrumb(guide.category)}
           dataDates={[guide.publishedAt, guide.updatedAt]}
         />
 
+        {standalone ? (
+          <nav aria-label="Breadcrumb" className="text-sm text-muted">
+            <ol className="flex flex-wrap items-center gap-1.5">
+              <li>
+                <Link href="/" className="font-semibold text-brand hover:underline">
+                  Home
+                </Link>
+              </li>
+              <li aria-hidden="true">/</li>
+              <li>
+                <Link href="/guides" className="font-semibold text-brand hover:underline">
+                  Guides
+                </Link>
+              </li>
+              <li aria-hidden="true">/</li>
+              <li aria-current="page" className="font-semibold text-content">
+                {guide.title}
+              </li>
+            </ol>
+          </nav>
+        ) : (
         <Link
           href="/guides"
           className="group/back inline-flex items-center gap-2 rounded-pill border border-line border-b-2 bg-surface-raised py-1.5 pl-1.5 pr-4 text-sm font-bold text-content shadow-card transition-all duration-200 hover:-translate-y-0.5 hover:border-accent/40 hover:text-accent-strong hover:shadow-lift active:translate-y-0"
@@ -163,6 +194,7 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
           </span>
           All guides
         </Link>
+        )}
 
         <GuideCover
           imageUrl={guide.coverImageUrl}
@@ -187,7 +219,24 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
         <h1 className="mt-3 text-[clamp(1.75rem,5vw,2.5rem)] font-black leading-tight text-content">
           {seo?.h1 || guide.title}
         </h1>
-        <p className="mt-3 text-base leading-relaxed text-muted sm:text-lg">{guide.excerpt}</p>
+        {guide.intro ? (
+          <div className="mt-3 text-base leading-relaxed text-muted sm:text-lg">
+            <GuideMarkdown source={guide.intro} sponsoredHosts={linkHosts} />
+          </div>
+        ) : (
+          <p className="mt-3 text-base leading-relaxed text-muted sm:text-lg">{guide.excerpt}</p>
+        )}
+        {guide.author ? (
+          <p className="mt-4 text-sm italic text-muted">
+            By{' '}
+            <Link href={guide.author.href} rel="author" className="font-bold not-italic text-brand hover:underline">
+              {guide.author.name}
+            </Link>
+            , {guide.author.role}
+            <span aria-hidden="true"> &middot; </span>
+            Last updated <time dateTime={lastUpdated}>{formatDate(lastUpdated)}</time>
+          </p>
+        ) : (
         <p className="mt-4 text-sm text-muted">
           Author:{' '}
           <Link href="/about" rel="author" className="font-bold text-brand hover:underline">
@@ -196,6 +245,7 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
           <span aria-hidden="true"> &middot; </span>
           Last updated: <time dateTime={lastUpdated}>{formatDate(lastUpdated)}</time>
         </p>
+        )}
 
         {/* Phones and tablets: the contents sit here, collapsed, since there is no sidebar. */}
         <div className="mt-8 lg:hidden">
@@ -209,7 +259,7 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
               <div className="mt-3 space-y-3 text-sm leading-relaxed text-muted sm:text-base">
                 {/* Joined back into one document so a list or table split
                     across blank lines still renders as one block. */}
-                <GuideMarkdown source={section.body.join('\n\n')} sponsoredHosts={linkHosts} />
+                <GuideMarkdown source={section.body.join('\n\n')} sponsoredHosts={linkHosts} subheadings={standalone} />
               </div>
             </section>
           ))}
@@ -243,17 +293,21 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
           <div className="hidden lg:block">
             <GuideToc items={tocItems} />
           </div>
-          {promo ? <GuidePromoCard promo={promo.promo} product={promo.product} /> : null}
+          {promo && !standalone ? <GuidePromoCard promo={promo.promo} product={promo.product} /> : null}
         </div>
       </aside>
       </div>
 
       {/* Outside the reading column so the product rail runs the full width of the screen. */}
-      <BuyPeptidesSection supplierSlug={SHOP_SUPPLIER_SLUG} className="mt-12 sm:mt-14" />
+      {standalone ? null : (
+        <>
+          <BuyPeptidesSection supplierSlug={SHOP_SUPPLIER_SLUG} className="mt-12 sm:mt-14" />
 
-      <div className="mx-auto max-w-shell px-4">
-        <PageFaqSection path={`/guides/${guide.slug}`} className="mt-8 sm:mt-10" />
-      </div>
+          <div className="mx-auto max-w-shell px-4">
+            <PageFaqSection path={`/guides/${guide.slug}`} className="mt-8 sm:mt-10" />
+          </div>
+        </>
+      )}
 
       {more.length > 0 ? (
         <section className="mx-auto max-w-shell px-4 pb-12">

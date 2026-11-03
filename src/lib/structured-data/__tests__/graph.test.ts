@@ -29,8 +29,12 @@ describe('buildPageGraph: base graph', () => {
       logo: { '@type': 'ImageObject', url: `${SITE}/logo.png` },
       email: 'info@peplookup.com',
     });
-    // The community link is shown on the pages, never in the structured data.
+    // The brand's other profiles are listed on the homepage's Organization node only.
     expect(org).not.toHaveProperty('sameAs');
+    expect(node(buildPageGraph(page('/')), 'Organization')?.sameAs).toEqual([
+      'https://chromewebstore.google.com/detail/pogbkndeefgihpmgpgidimjapbocfckd',
+      'https://www.skool.com/peptide-5115',
+    ]);
     expect(node(graph, 'WebSite')).toMatchObject({ '@id': `${SITE}/#website`, publisher: { '@id': `${SITE}/#organization` } });
     expect(node(graph, 'WebPage')).toMatchObject({
       '@id': `${SITE}/privacy#webpage`,

@@ -96,13 +96,27 @@ export interface PageGraphInput {
   dateModified?: string | null;
   itemList?: readonly ItemListEntry[];
   supplier?: SupplierSubject;
-  article?: { datePublished?: string | null; dateModified?: string | null; image?: string | null };
+  article?: {
+    datePublished?: string | null;
+    dateModified?: string | null;
+    image?: string | null;
+    /** A named author; without one the article is credited to the Organization. */
+    author?: { name: string; url: string } | null;
+    /** The article's own summary when it differs from the page's meta description. */
+    description?: string | null;
+  };
   /** A crumb between the section and the page, such as a guide's category. */
   subsection?: Required<BreadcrumbItem>;
   product?: ProductOfferSummary | null;
 }
 
-function organizationNode(): JsonLdNode {
+/** The brand's own profiles elsewhere, listed on the homepage's Organization node only. */
+const ORGANIZATION_SAME_AS = [
+  'https://chromewebstore.google.com/detail/pogbkndeefgihpmgpgidimjapbocfckd',
+  'https://www.skool.com/peptide-5115',
+];
+
+function organizationNode(isHomepage: boolean): JsonLdNode {
   return {
     '@type': 'Organization',
     '@id': ORGANIZATION_ID,
@@ -111,6 +125,7 @@ function organizationNode(): JsonLdNode {
     logo: { '@type': 'ImageObject', url: `${SITE_URL}/logo.png` },
     email: site.contactEmail,
     description: ORGANIZATION_DESCRIPTION,
+    ...(isHomepage ? { sameAs: ORGANIZATION_SAME_AS } : {}),
   };
 }
 
@@ -198,11 +213,13 @@ function articleNode(canonical: string, input: PageGraphInput): JsonLdNode {
     '@type': 'Article',
     '@id': `${canonical}#article`,
     headline: input.heading,
-    description: input.description,
+    description: input.article?.description ?? input.description,
     ...(input.article?.image ? { image: input.article.image } : {}),
     ...(datePublished ? { datePublished } : {}),
     ...(dateModified ? { dateModified } : {}),
-    author: { '@id': ORGANIZATION_ID },
+    author: input.article?.author
+      ? { '@type': 'Person', name: input.article.author.name, url: absoluteUrl(input.article.author.url) }
+      : { '@id': ORGANIZATION_ID },
     publisher: { '@id': ORGANIZATION_ID },
     mainEntityOfPage: { '@id': `${canonical}#webpage` },
   };
@@ -268,7 +285,7 @@ export function buildPageGraph(input: PageGraphInput): JsonLdGraph {
     ...(input.dateModified ? { dateModified: input.dateModified } : {}),
   };
 
-  const graph: JsonLdNode[] = [organizationNode(), websiteNode(), webPage];
+  const graph: JsonLdNode[] = [organizationNode(cleanPath(input.path) === '/'), websiteNode(), webPage];
   if (trail.length > 0) graph.push(breadcrumbNode(breadcrumbId, trail));
   if (kind === 'collection' && hasItems(input)) graph.push(itemListNode(`${canonical}#itemlist`, input.itemList));
   if ((kind === 'supplier' || kind === 'coupon' || kind === 'review') && input.supplier) {

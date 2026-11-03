@@ -113,11 +113,12 @@ export function supplierSeoDefaults(
   };
 }
 
-export function guideSeoDefaults(guide: { slug: string; title: string; excerpt: string }): SeoDefaults {
+export function guideSeoDefaults(guide: { slug: string; title: string; excerpt: string; seoTitle?: string }): SeoDefaults {
   return {
     path: `/guides/${guide.slug}`,
-    // The guide's H1 is written as its search title already, e.g. "… Sizes, Price & Facts (2026)".
-    title: guide.title,
+    // The guide's H1 is written as its search title already, e.g. "… Sizes, Price & Facts (2026)",
+    // unless the guide gives a separate search title.
+    title: guide.seoTitle ?? guide.title,
     description: guide.excerpt,
     h1: guide.title,
   };

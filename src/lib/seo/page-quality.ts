@@ -31,11 +31,10 @@ export interface PageQualityIndex {
  */
 const getPageQualityIndexCached = unstable_cache(
   async (): Promise<PageQualityIndex> => {
-    const [suppliers, offers, products, guides, savedContent] = await Promise.all([
+    const [suppliers, offers, products, savedContent] = await Promise.all([
       getSuppliers(),
       getAllOffers(),
       getProducts(),
-      getGuides(),
       getSavedSupplierContentOverrides(),
     ]);
     const productSlugs = new Set(products.map((product) => product.slug));
@@ -104,22 +103,32 @@ const getPageQualityIndexCached = unstable_cache(
     for (const product of products) {
       facts[`/products/${product.slug}`] = { type: 'product', activeSupplierCount: sellers.get(product.slug)?.size ?? 0 };
     }
-    for (const guide of guides) {
-      facts[`/guides/${guide.slug}`] = {
-        type: 'guide',
-        reviewedByMe: guide.reviewedByMe === true,
-        hasContent: guideHasContent(guide),
-        isPublished: guide.isPublished !== false,
-      };
-    }
     return { facts, textContext };
   },
   ['page-quality-index'],
   {
     revalidate: OFFERS_REVALIDATE_SECONDS,
-    tags: ['suppliers', 'offers', 'products', 'guides', SUPPLIER_CONTENT_CACHE_TAG],
+    tags: ['suppliers', 'offers', 'products', SUPPLIER_CONTENT_CACHE_TAG],
   },
 );
+
+/**
+ * Guide facts are added after the cache, from the live guide list: a guide
+ * shipped in the repository is then judged as published on its first deploy,
+ * not as a draft until a cache entry written before it existed expires.
+ */
+async function withGuideFacts(index: PageQualityIndex): Promise<PageQualityIndex> {
+  const facts = { ...index.facts };
+  for (const guide of await getGuides()) {
+    facts[`/guides/${guide.slug}`] = {
+      type: 'guide',
+      reviewedByMe: guide.reviewedByMe === true,
+      hasContent: guideHasContent(guide),
+      isPublished: guide.isPublished !== false,
+    };
+  }
+  return { ...index, facts };
+}
 
 /**
  * One read in flight per server process. unstable_cache doesn't share a miss
@@ -133,7 +142,7 @@ const IN_FLIGHT_MS = 30_000;
 export const getPageQualityIndex = cache(async (): Promise<PageQualityIndex> => {
   const now = Date.now();
   if (!inFlight || now - inFlight.startedAt > IN_FLIGHT_MS) {
-    const promise = getPageQualityIndexCached();
+    const promise = getPageQualityIndexCached().then(withGuideFacts);
     inFlight = { promise, startedAt: now };
     // A failed read must not be reused by the next request.
     promise.catch(() => {

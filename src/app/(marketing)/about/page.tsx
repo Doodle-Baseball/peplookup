@@ -203,6 +203,13 @@ export default async function AboutPage() {
             .
           </p>
         </section>
+
+        <p className="mx-auto mt-8 max-w-4xl text-center text-sm text-muted sm:text-base">
+          New here? Read{' '}
+          <Link href="/guides/what-is-peplookup" className="font-semibold text-brand hover:underline">
+            What is PepLookup?
+          </Link>
+        </p>
       </div>
     </div>
   );

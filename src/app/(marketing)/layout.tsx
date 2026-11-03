@@ -9,6 +9,10 @@ import { HighlightsBar } from '@/components/layout/highlights-bar';
 import { highlightItems } from '@/components/layout/highlights-bar-items';
 import { buildPromotedSupplier } from '@/lib/promoted-supplier';
 import { PROMOTED_SUPPLIER } from '@/config/highlights-bar';
+import { HideOnPaths } from '@/components/layout/hide-on-paths';
+
+/** Pages that carry no supplier promotion at all, the top bar's featured partner and rating included. */
+const PATHS_WITHOUT_PROMOTION = ['/guides/what-is-peplookup'];
 
 /**
  * The frame every public page shares: header, notices and footer only.
@@ -33,7 +37,9 @@ export default async function MarketingLayout({ children }: { children: React.Re
       </a>
       {/* No promotion is live until one is configured; the bar renders nothing. */}
       <PromoBar promotion={null} />
-      <HighlightsBar promo={promotedSupplier} stats={highlightItems(suppliers, offers)} />
+      <HideOnPaths paths={PATHS_WITHOUT_PROMOTION}>
+        <HighlightsBar promo={promotedSupplier} stats={highlightItems(suppliers, offers)} />
+      </HideOnPaths>
       <SiteHeader />
       <ResearchNotice />
       <main id="main" className="flex-1">

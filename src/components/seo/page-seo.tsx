@@ -16,7 +16,12 @@ export interface PageSeoProps {
   dataDates?: readonly (string | null | undefined)[];
   itemList?: readonly ItemListEntry[];
   supplier?: SupplierSubject;
-  article?: { datePublished?: string | null; image?: string | null };
+  article?: {
+    datePublished?: string | null;
+    image?: string | null;
+    author?: { name: string; url: string } | null;
+    description?: string | null;
+  };
   /** A crumb between the section and the page, such as a guide's category. */
   subsection?: { name: string; path: string };
   product?: ProductOfferSummary | null;
@@ -51,7 +56,15 @@ export async function PageSeo({
     dateModified,
     itemList,
     supplier,
-    article: article ? { datePublished: article.datePublished, dateModified, image: article.image } : undefined,
+    article: article
+      ? {
+          datePublished: article.datePublished,
+          dateModified,
+          image: article.image,
+          author: article.author,
+          description: article.description,
+        }
+      : undefined,
     subsection,
     product,
   });

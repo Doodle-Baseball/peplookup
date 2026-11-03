@@ -256,23 +256,28 @@ export function orderSuppliersForDisplay(
  * slug, an admin-created guide is added, and one that reuses a shipped slug
  * replaces it. Newest first. An unmigrated table simply means the built-in set.
  */
-const getGuidesCached = unstable_cache(
+const getDbGuidesCached = unstable_cache(
   async (): Promise<readonly Guide[]> => {
     const client = getSupabaseServerClient();
     const fromDb = client ? await fetchGuidesFromDb(client) : null;
     if (client && fromDb === null) throw new SourceUnavailableError('guides');
-    if (fromDb === null || fromDb.length === 0) return seedGuides;
-
-    const merged = new Map<string, Guide>(seedGuides.map((guide) => [guide.slug, guide]));
-    for (const guide of fromDb) merged.set(guide.slug, guide);
-    return [...merged.values()].sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
+    return fromDb ?? [];
   },
-  ['guides'],
+  ['guides-db'],
   { revalidate: CATALOGUE_REVALIDATE_SECONDS, tags: ['guides'] },
 );
 
+/**
+ * Only the database rows are cached; the shipped guides are merged in after,
+ * so a guide added to the repository shows on the next deploy instead of
+ * waiting for a cache entry written before it existed.
+ */
 export async function getGuides(): Promise<readonly Guide[]> {
-  return readOr(getGuidesCached, () => seedGuides);
+  const fromDb = await readOr<readonly Guide[]>(getDbGuidesCached, () => []);
+  if (fromDb.length === 0) return seedGuides;
+  const merged = new Map<string, Guide>(seedGuides.map((guide) => [guide.slug, guide]));
+  for (const guide of fromDb) merged.set(guide.slug, guide);
+  return [...merged.values()].sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
 }
 
 export async function getGuideBySlug(slug: string): Promise<Guide | null> {

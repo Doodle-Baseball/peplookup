@@ -111,6 +111,7 @@ export const footerNav: readonly { heading: string; links: readonly NavChild[] }
     heading: 'Company',
     links: [
       { label: 'About Us', href: '/about' },
+      { label: 'What is PepLookup?', href: '/guides/what-is-peplookup' },
       { label: 'Research Guides', href: '/guides' },
       { label: 'Community', href: '/community' },
       { label: 'Contact Us', href: '/contact' },
