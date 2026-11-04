@@ -17,6 +17,7 @@ import { formatDate } from '@/lib/format';
 import { hostsFromUrls, normaliseHost } from '@/lib/guide-links';
 import { sectionAnchorIds } from '@/lib/guide-toc';
 import { site } from '@/config/site';
+import { cn } from '@/lib/cn';
 import { guideSeoDefaults, pageMetadata } from '@/lib/seo-defaults';
 import { getSeoOverride, withSeo } from '@/lib/seo';
 import { PageSeo } from '@/components/seo/page-seo';
@@ -202,7 +203,10 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
           accent={guide.accent}
           alt={guide.coverImageAlt || `${guide.title} cover image`}
           priority
-          className="mt-5 aspect-[16/9] w-full rounded-card sm:rounded-panel"
+          className={cn(
+            'mt-5 aspect-[16/9] w-full rounded-card sm:rounded-panel',
+            guide.coverBorder && 'border-2 border-solid border-line',
+          )}
         />
 
         <div className="mt-6 flex flex-wrap items-center gap-x-2 gap-y-1.5 text-micro font-bold uppercase text-faint">
@@ -252,11 +256,27 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
           <GuideToc items={tocItems} defaultOpen={false} />
         </div>
 
-        <div className="mt-10 space-y-8">
+        <div className="mt-10 space-y-5">
           {guide.sections.map((section, index) => (
-            <section key={anchorIds[index]} id={anchorIds[index]} className="scroll-mt-24">
-              <h2 className="text-xl font-black leading-tight text-content sm:text-2xl">{section.heading}</h2>
-              <div className="mt-3 space-y-3 text-sm leading-relaxed text-muted sm:text-base">
+            <section
+              key={anchorIds[index]}
+              id={anchorIds[index]}
+              aria-labelledby={`${anchorIds[index]}-heading`}
+              className="scroll-mt-24 rounded-card border border-line bg-surface-raised p-5 shadow-card transition-all duration-300 hover:-translate-y-0.5 hover:border-accent/30 hover:shadow-lift sm:p-7"
+            >
+              <div className="flex items-start gap-3">
+                {/* Same numbering as the "On this page" list beside the article. */}
+                <span
+                  aria-hidden="true"
+                  className="mt-0.5 flex h-8 min-w-8 shrink-0 items-center justify-center rounded-pill bg-accent-tint px-2 font-mono text-xs font-black text-accent-strong"
+                >
+                  {String(index + 1).padStart(2, '0')}
+                </span>
+                <h2 id={`${anchorIds[index]}-heading`} className="text-xl font-black leading-tight text-content sm:text-2xl">
+                  {section.heading}
+                </h2>
+              </div>
+              <div className="mt-4 space-y-3 text-sm leading-relaxed text-muted sm:text-base">
                 {/* Joined back into one document so a list or table split
                     across blank lines still renders as one block. */}
                 <GuideMarkdown source={section.body.join('\n\n')} sponsoredHosts={linkHosts} subheadings={standalone} />
@@ -299,18 +319,11 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
       </div>
 
       {/* Outside the reading column so the product rail runs the full width of the screen. */}
-      {standalone ? null : (
-        <>
-          <BuyPeptidesSection supplierSlug={SHOP_SUPPLIER_SLUG} className="mt-12 sm:mt-14" />
+      {standalone ? null : <BuyPeptidesSection supplierSlug={SHOP_SUPPLIER_SLUG} className="mt-12 sm:mt-14" />}
 
-          <div className="mx-auto max-w-shell px-4">
-            <PageFaqSection path={`/guides/${guide.slug}`} className="mt-8 sm:mt-10" />
-          </div>
-        </>
-      )}
-
+      {/* Related guides come before the questions, so a reader finishing the article sees what to read next. */}
       {more.length > 0 ? (
-        <section className="mx-auto max-w-shell px-4 pb-12">
+        <section className="mx-auto max-w-shell px-4">
           <div className="mt-12 border-t border-line pt-10 sm:mt-14">
             <h2 className="text-micro font-bold uppercase text-faint">Related guides</h2>
             <ul className="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -320,9 +333,15 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
             </ul>
           </div>
         </section>
-      ) : (
-        <div className="pb-12" />
+      ) : null}
+
+      {standalone ? null : (
+        <div className="mx-auto max-w-shell px-4">
+          <PageFaqSection path={`/guides/${guide.slug}`} className="mt-8 sm:mt-10" />
+        </div>
       )}
+
+      <div className="pb-12" />
     </>
   );
 }

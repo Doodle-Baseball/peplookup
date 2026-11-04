@@ -47,7 +47,7 @@ const GA_MEASUREMENT_ID = 'G-CTRYVJ794V';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${archivo.variable} ${jetbrainsMono.variable}`} suppressHydrationWarning>
+    <html lang="en-US" className={`${archivo.variable} ${jetbrainsMono.variable}`} suppressHydrationWarning>
       <body className="flex min-h-screen flex-col" suppressHydrationWarning>
         <Script src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`} strategy="afterInteractive" />
         <Script id="google-analytics" strategy="afterInteractive">
