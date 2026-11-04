@@ -12,6 +12,9 @@ import { StarIcon } from '@/components/icons/icons';
 import { PageSeo } from '@/components/seo/page-seo';
 import { compareReviewVendors, DEFAULT_REVIEW_SORT } from '@/components/reviews/review-sort';
 import { ratingSourceLabel, reviewsPagePath } from '@/lib/review-pages';
+import Link from 'next/link';
+import { getExtensionFeed } from '@/lib/extension/store';
+import { ExtensionPromoPill, ExtensionPromoSection, previewSupplierFrom } from '@/components/extension/extension-promo';
 
 const PAGE = staticSeoPage('/reviews');
 
@@ -25,12 +28,16 @@ export async function generateMetadata(): Promise<Metadata> {
 export const revalidate = 1800;
 
 export default async function ReviewsPage() {
-  const [seo, allSuppliers, storedSlugs, offers, products] = await Promise.all([
+  const [seo, allSuppliers, storedSlugs, offers, products, extensionFeed] = await Promise.all([
     getSeoOverride(PAGE.path),
     getSuppliers(),
     getSupplierSlugsWithReviews(),
     getAllOffers(),
     getProducts(),
+    getExtensionFeed().catch((error: unknown) => {
+      console.error('[reviews] extension feed could not be read:', error);
+      return null;
+    }),
   ]);
   // A vendor with no reviews has no card here and no reviews page.
   const suppliers = allSuppliers.filter((supplier) => supplierHasReviews(supplier, storedSlugs));
@@ -94,6 +101,8 @@ export default async function ReviewsPage() {
           them.
         </p>
 
+        <ExtensionPromoPill variant="reviews" className="mt-6" />
+
         <dl className="mt-8 max-w-md">
           <div className="rounded-card border border-accent/30 bg-accent-tint p-4">
             <dt className="eyebrow">Ratings</dt>
@@ -111,11 +120,22 @@ export default async function ReviewsPage() {
           <ReviewsBrowser vendors={vendors} />
         )}
 
+        <ExtensionPromoSection
+          variant="reviews"
+          supportedCount={extensionFeed?.suppliers.length ?? null}
+          preview={extensionFeed ? previewSupplierFrom(extensionFeed.suppliers) : null}
+          className="mt-12"
+        />
+
         <PageFaqSection path="/reviews" className="mt-14" />
 
-        {/* The supplier directory that follows on every page lists all of them, rated or not. */}
+        {/* The supplier directory lists all of them, rated or not. */}
         <p className="mt-10 text-sm text-muted">
-          Not every supplier has a public review source yet. See the full list below.
+          Not every supplier has a public review source yet. See the full list in the{' '}
+          <Link href="/suppliers" className="font-semibold text-brand hover:underline">
+            supplier directory
+          </Link>
+          .
         </p>
       </div>
     </div>

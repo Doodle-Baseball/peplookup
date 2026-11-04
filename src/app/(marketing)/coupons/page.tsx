@@ -10,6 +10,8 @@ import { PageFaqSection } from '@/components/faq/page-faq-section';
 import { PageSeo } from '@/components/seo/page-seo';
 import { compareCouponVendors, DEFAULT_COUPON_SORT } from '@/components/coupons/coupon-sort';
 import { couponPagePath } from '@/lib/coupon-pages';
+import { getExtensionFeed } from '@/lib/extension/store';
+import { ExtensionPromoPill, ExtensionPromoSection, previewSupplierFrom } from '@/components/extension/extension-promo';
 
 const PAGE = staticSeoPage('/coupons');
 
@@ -26,10 +28,15 @@ export async function generateMetadata(): Promise<Metadata> {
 export const revalidate = 1800;
 
 export default async function CouponsPage() {
-  const [seo, suppliers, offers] = await Promise.all([
+  const [seo, suppliers, offers, extensionFeed] = await Promise.all([
     getSeoOverride(PAGE.path),
     getSuppliers(),
     getAllOffers(),
+    // Stores the extension works on, from its own feed; unknown (not zero) if the feed can't be read.
+    getExtensionFeed().catch((error: unknown) => {
+      console.error('[coupons] extension feed could not be read:', error);
+      return null;
+    }),
   ]);
 
   // One pass over the catalogue rather than a count query per vendor card.
@@ -74,6 +81,8 @@ export default async function CouponsPage() {
           {site.name} never handles the order.
         </p>
 
+        <ExtensionPromoPill className="mt-6" />
+
         {vendors.length === 0 ? (
           <p className="mt-10 rounded-card border border-dashed border-line p-10 text-center text-sm text-muted">
             No coupon codes are active right now. Check back soon.
@@ -81,6 +90,12 @@ export default async function CouponsPage() {
         ) : (
           <CouponBrowser vendors={vendors} totalSupplierCount={suppliers.length} />
         )}
+
+        <ExtensionPromoSection
+          supportedCount={extensionFeed?.suppliers.length ?? null}
+          preview={extensionFeed ? previewSupplierFrom(extensionFeed.suppliers) : null}
+          className="mt-10"
+        />
 
         {/* Heading across the top, text full width below, so a short paragraph never sits
             beside a tall heading with empty space under it. Callout as in the supplier guide. */}
