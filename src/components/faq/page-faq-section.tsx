@@ -23,12 +23,16 @@ export async function PageFaqSection({
    * FAQPage goes out twice. The visible section still renders.
    */
   includeSchema = true,
+  pick,
 }: {
   path: string;
   className?: string;
   includeSchema?: boolean;
+  /** Narrows or reorders the questions before they render (and before the schema), without touching what is saved. */
+  pick?: (faqs: readonly FaqItem[]) => readonly FaqItem[];
 }) {
-  const [faqs, decision] = await Promise.all([getFaqsForPath(path), getIndexDecision(path)]);
+  const [allFaqs, decision] = await Promise.all([getFaqsForPath(path), getIndexDecision(path)]);
+  const faqs = pick ? pick(allFaqs) : allFaqs;
   if (faqs.length === 0) return null;
   // A noindex page carries no structured data at all.
   const emitsSchema = includeSchema && decision.indexable;

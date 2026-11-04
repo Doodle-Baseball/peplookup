@@ -9,7 +9,7 @@ import { ownedSchemaTypes } from '@/lib/structured-data/graph';
 import { stripOwnedJsonLd } from '@/lib/structured-data/pasted-json-ld';
 import { fillVendorCountDeep } from '@/lib/vendor-count';
 import { followRedirects, rowToSeoRedirect, type SeoRedirect, type SeoRedirectRow } from '@/lib/seo-redirects';
-import { getPageQualityIndex, getSupplierTextContext } from '@/lib/seo/page-quality';
+import { getInactiveReviewFacts, getPageQualityIndex, getSupplierTextContext } from '@/lib/seo/page-quality';
 import { QUALITY_RULES_ENFORCED } from '@/config/seo-quality';
 import {
   indexDecision,
@@ -20,6 +20,7 @@ import {
   type PageQualityFacts,
 } from '@/lib/seo/indexing';
 import { cleanSeoText, qualifyClaims, qualifyTitleClaims } from '@/lib/seo/text';
+import { isContentV2 } from '@/lib/seo/protected';
 
 export {
   clearRedirectCache,
@@ -244,7 +245,7 @@ function titleText(title: Metadata['title']): string | undefined {
  */
 export async function getIndexDecision(path: string): Promise<IndexDecision> {
   const [quality, override] = await Promise.all([getPageQualityIndex(), getSeoOverride(path)]);
-  return decide(path, quality.facts[path], override);
+  return decide(path, quality.facts[path] ?? (await getInactiveReviewFacts(path)) ?? undefined, override);
 }
 
 /** Decisions for many paths at once (the sitemap, the admin, the SEO jobs), from one read of each source. */
@@ -271,6 +272,7 @@ function decide(path: string, facts: PageQualityFacts | undefined, override: Seo
     adminRobotsIndex: override ? override.robotsIndex : null,
     readyToIndex: override ? override.readyToIndex : null,
     now: new Date(),
+    contentV2: isContentV2(),
   };
   const type = pageTypeForPath(path);
   if (facts && facts.type === type) return indexDecision(facts, context);

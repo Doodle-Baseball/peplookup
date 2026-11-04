@@ -74,15 +74,18 @@ function ContentBox({
 export function SupplierContentSections({
   vendorName,
   content,
+  keys = ['about', 'why', 'compare'],
   className,
 }: {
   vendorName: string;
   content: SupplierContent;
+  /** Which boxes to render, in order; all three unless a page asks for fewer. */
+  keys?: readonly SupplierContentKey[];
   className?: string;
 }) {
   return (
     <div className={cn('space-y-4 sm:space-y-6', className)}>
-      {(['about', 'why', 'compare'] as const).map((key) => (
+      {keys.map((key) => (
         <ContentBox
           key={key}
           id={`vendor-${key}`}

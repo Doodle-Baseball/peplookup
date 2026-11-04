@@ -30,6 +30,9 @@ import {
   CheckBadgeIcon,
 } from '@/components/icons/icons';
 import { getSupplierTextContext } from '@/lib/seo/page-quality';
+import { isContentV2 } from '@/lib/seo/protected';
+import { getSupplierFacts } from '@/lib/supplier-facts-store';
+import { CouponPriceTable } from '@/components/supplier-card/supplier-facts-sections';
 import { qualifyClaims } from '@/lib/seo/text';
 
 /**
@@ -103,6 +106,8 @@ export default async function CouponCodePage({ params }: { params: Promise<{ slu
   // Shown only when someone has actually tested the code; never "verified" without a date.
   const lastTested = supplier.couponVerifiedAt ?? null;
   const reviewsPage = supplierHasReviews(supplier, slugsWithReviews) ? reviewsPagePath(supplier.slug) : null;
+  // Content v2: what the code does to this supplier's real prices, a table no other page carries.
+  const couponRows = isContentV2() ? (await getSupplierFacts(supplier)).couponRows : [];
   // Purity, testing and same-day wording follows the same rules as the supplier page (A7).
   const claimContext = await getSupplierTextContext(path);
   const intro = content.intro && claimContext ? qualifyClaims(content.intro, claimContext) : content.intro;
@@ -294,6 +299,8 @@ export default async function CouponCodePage({ params }: { params: Promise<{ slu
             <span className="font-black">Working note:</span> <WithCode text={content.workingNote} code={coupon.code} />
           </p>
         </section>
+
+        <CouponPriceTable supplierName={supplier.name} percentOff={coupon.percentOff} rows={couponRows} className="mt-12" />
 
         {/* ------------------------------------------- Where to go next */}
         <nav aria-label={`More about ${supplier.name}`} className="mt-8 flex flex-wrap items-center gap-3">

@@ -65,6 +65,8 @@ export interface IndexContext {
   /** The "Ready to index" tick on the page's /admin/seo row; null when the page has no row. */
   readyToIndex: boolean | null;
   now: Date;
+  /** CONTENT_V2=true: a reviews page with no review summary is noindex until one is written. */
+  contentV2?: boolean;
 }
 
 export interface IndexDecision {
@@ -160,6 +162,9 @@ export function indexDecision(facts: PageQualityFacts, context: IndexContext): I
   if (!context.isProduction) reasons.push('preview deployment (only production is indexed)');
   if (facts.type === 'guide' && !facts.isPublished) reasons.push('guide is a draft');
   if (facts.type === 'guide' && !facts.hasContent) reasons.push('guide has no text yet');
+  if (facts.type === 'review' && context.contentV2 && facts.summaryWords === 0) {
+    reasons.push('no review summary written yet (content v2)');
+  }
   if (context.adminRobotsIndex === false) reasons.push('"Index" is switched off in /admin/seo');
   if (enforced) {
     reasons.push(...failures);

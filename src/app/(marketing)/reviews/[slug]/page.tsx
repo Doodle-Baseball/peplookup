@@ -38,6 +38,7 @@ import {
   TagIcon,
 } from '@/components/icons/icons';
 import { getSupplierTextContext } from '@/lib/seo/page-quality';
+import { isContentV2 } from '@/lib/seo/protected';
 import { qualifyClaims } from '@/lib/seo/text';
 
 /**
@@ -340,7 +341,7 @@ export default async function VendorReviewsPage({ params }: { params: Promise<{ 
             href={`/suppliers/${supplier.slug}`}
             className="group/profile inline-flex items-center gap-2 rounded-pill border border-line bg-surface-raised px-4 py-2.5 text-sm font-bold text-content transition-colors hover:border-accent hover:text-accent-strong"
           >
-            See all {supplier.name} products and prices
+            {isContentV2() ? `See ${supplier.name} prices and products` : `See all ${supplier.name} products and prices`}
             <ArrowRightIcon className="h-4 w-4 transition-transform group-hover/profile:translate-x-1" />
           </Link>
           {supplier.coupon ? (

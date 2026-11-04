@@ -177,3 +177,16 @@ export async function getSupplierTextContext(path: string): Promise<SupplierText
     shippingSpeed: supplier.shippingSpeed,
   };
 }
+
+/**
+ * Review-page facts for a supplier switched off in the admin: the index only
+ * holds live suppliers, but its reviews page still answers, so its summary is
+ * read from its own record. Null for any other path.
+ */
+export async function getInactiveReviewFacts(path: string): Promise<PageQualityFacts | null> {
+  const slug = supplierSlugFromReviewsPath(path);
+  if (!slug) return null;
+  const supplier = await getSupplier(slug);
+  if (!supplier) return null;
+  return { type: 'review', summaryWords: wordCountOf(supplier.reviewSummary), mostSimilarSummary: null };
+}

@@ -40,6 +40,16 @@ import {
 } from '@/components/icons/icons';
 import { PageFaqSection } from '@/components/faq/page-faq-section';
 import { SupplierContentSections } from '@/components/supplier-content/supplier-content-sections';
+import { SupplierGlanceTable, SupplierPriceComparison } from '@/components/supplier-card/supplier-facts-sections';
+import { supplierPageUsesContentV2 } from '@/lib/seo/protected';
+import { getSupplierFacts } from '@/lib/supplier-facts-store';
+import {
+  isComparisonToolAnswer,
+  supplierSpecificFaqs,
+  supplierSummary,
+  supplierTitleWithoutCompetingWords,
+} from '@/lib/supplier-facts';
+import { getFaqsForPath } from '@/lib/page-faqs';
 import { getSupplierContent } from '@/lib/supplier-content-store';
 import { SUPPLIER_PAGE_AUTHOR } from '@/config/site';
 
@@ -78,7 +88,25 @@ export async function generateMetadata({
   if (!supplier) return { title: 'Supplier not found' };
   const [offers, products] = await Promise.all([getOffersForSupplier(supplier.slug), getProducts()]);
   const facts = supplierSeoFacts(offers, new Map(products.map((product) => [product.slug, product])));
-  return withSeo(`/suppliers/${supplier.slug}`, pageMetadata(supplierSeoDefaults(supplier, facts)));
+  const metadata = await withSeo(`/suppliers/${supplier.slug}`, pageMetadata(supplierSeoDefaults(supplier, facts)));
+  if (!supplierPageUsesContentV2(supplier.slug)) return metadata;
+  // Content v2: the title drops "Review", "Coupon" and "Discount" so it stops
+  // competing with this supplier's reviews and coupon pages. Rendering only;
+  // the saved title is untouched.
+  const title = titleOf(metadata.title);
+  if (!title) return metadata;
+  const v2Title = supplierTitleWithoutCompetingWords(title);
+  return {
+    ...metadata,
+    title: { absolute: v2Title },
+    ...(metadata.openGraph ? { openGraph: { ...metadata.openGraph, title: v2Title } } : {}),
+  };
+}
+
+function titleOf(title: Metadata['title']): string | null {
+  if (!title) return null;
+  if (typeof title === 'string') return title;
+  return 'absolute' in title && title.absolute ? title.absolute : null;
 }
 
 export default async function SupplierPage({
@@ -108,6 +136,15 @@ export default async function SupplierPage({
     getSupplierSlugsWithReviews(),
   ]);
   const supplierContent = await getSupplierContent(supplier, marketOffers);
+  // Content v2 (CONTENT_V2=true, never on the hand-written protected pages):
+  // facts true only for this supplier replace the text it shares with others.
+  const contentV2 = supplierPageUsesContentV2(supplier.slug);
+  const v2 = contentV2 ? await getSupplierFacts(supplier) : null;
+  const v2Summary = v2 ? supplierSummary(v2.facts) : '';
+  // The "comparison tool" answer moves from the FAQ to the bottom of the page, word for word.
+  const comparisonToolNote = contentV2
+    ? ((await getFaqsForPath(`/suppliers/${supplier.slug}`)).find((faq) => isComparisonToolAnswer(faq.answer))?.answer ?? null)
+    : null;
   const productsBySlug = new Map(allProducts.map((p) => [p.slug, p]));
   // Offers whose product no longer resolves are dropped rather than shown
   // with a missing name.
@@ -230,6 +267,12 @@ export default async function SupplierPage({
                   </p>
                 ) : null}
 
+                {v2Summary ? (
+                  <p id="supplier-summary" className="mt-3 max-w-2xl text-base leading-7 text-content">
+                    {v2Summary}
+                  </p>
+                ) : null}
+
                 {supplier.description ? (
                   <p className="mt-3 max-w-2xl text-base leading-7 text-muted">{supplier.description}</p>
                 ) : null}
@@ -312,6 +355,8 @@ export default async function SupplierPage({
           ) : null}
         </section>
 
+        {v2 ? <SupplierGlanceTable facts={v2.facts} className="mt-8" /> : null}
+
         {/* ---------------------------------------------------- Store details */}
         <StoreDetailsSection supplier={supplier} className="mt-12" />
 
@@ -342,11 +387,34 @@ export default async function SupplierPage({
 
         {/* About / Why researchers choose / vs other suppliers, editable per
             vendor from the supplier's popup in /admin/seo. */}
-        <SupplierContentSections vendorName={supplier.name} content={supplierContent} className="mt-12" />
+        {v2 ? (
+          <>
+            {/* Content v2: the About box stays; "Why researchers choose" is hidden and
+                "vs other suppliers" becomes a price table. */}
+            <SupplierContentSections vendorName={supplier.name} content={supplierContent} keys={['about']} className="mt-12" />
+            <SupplierPriceComparison facts={v2.facts} title={supplierContent.compare.title} className="mt-4 sm:mt-6" />
+          </>
+        ) : (
+          <SupplierContentSections vendorName={supplier.name} content={supplierContent} className="mt-12" />
+        )}
 
         {/* FAQs for this vendor, generated from their own record until a set is
             saved for this path in /admin/seo. */}
-        <PageFaqSection path={`/suppliers/${supplier.slug}`} className="mt-14" />
+        <PageFaqSection
+          path={`/suppliers/${supplier.slug}`}
+          className="mt-14"
+          pick={
+            contentV2
+              ? (faqs) => supplierSpecificFaqs(faqs.filter((faq) => !isComparisonToolAnswer(faq.answer)), supplier)
+              : undefined
+          }
+        />
+
+        {comparisonToolNote ? (
+          <p className="mt-8 rounded-card border border-line bg-surface-raised px-5 py-4 text-sm leading-6 text-muted">
+            {comparisonToolNote}
+          </p>
+        ) : null}
 
         {/* ---------------------------------------------------------- Explore */}
         {otherSuppliers.length > 0 ? (
