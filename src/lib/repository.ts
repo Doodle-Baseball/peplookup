@@ -9,6 +9,7 @@ import { withDemoData } from '@/data/demo-overlay';
 import { withDemoProductContent } from '@/data/demo-products';
 import { withPublishedCoaLink } from '@/data/vendor-coa-links';
 import { getSupplierSlugAliases } from '@/lib/seo-redirects';
+import { fillVendorCountDeep } from '@/lib/vendor-count';
 import { getSupabaseServerClient } from './supabase/server';
 import { fetchSuppliersFromDb, fetchSupplierFromDb } from './supabase/suppliers';
 import { fetchSupplierReviewsFromDb } from './supabase/supplier-reviews';
@@ -272,12 +273,30 @@ const getDbGuidesCached = unstable_cache(
  * so a guide added to the repository shows on the next deploy instead of
  * waiting for a cache entry written before it existed.
  */
+/** The page settings only a shipped guide can set, carried over when an admin-saved copy replaces it. */
+function shippedPageSettings(guide: Guide): Partial<Guide> {
+  const { seoTitle, schemaDescription, author, intro, shareImageUrl, standalone, coverBorder } = guide;
+  return Object.fromEntries(
+    Object.entries({ seoTitle, schemaDescription, author, intro, shareImageUrl, standalone, coverBorder }).filter(
+      ([, value]) => value !== undefined,
+    ),
+  );
+}
+
 export async function getGuides(): Promise<readonly Guide[]> {
-  const fromDb = await readOr<readonly Guide[]>(getDbGuidesCached, () => []);
-  if (fromDb.length === 0) return seedGuides;
+  const [fromDb, vendorCount] = await Promise.all([readOr<readonly Guide[]>(getDbGuidesCached, () => []), getVendorCount()]);
   const merged = new Map<string, Guide>(seedGuides.map((guide) => [guide.slug, guide]));
-  for (const guide of fromDb) merged.set(guide.slug, guide);
-  return [...merged.values()].sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
+  for (const guide of fromDb) {
+    // A guide saved in the admin keeps the page settings its shipped version sets (search title, author,
+    // breadcrumb layout...): the admin has no fields for them, so saving it must not drop them.
+    const seed = merged.get(guide.slug);
+    merged.set(guide.slug, seed ? { ...shippedPageSettings(seed), ...guide, reviewedByMe: guide.reviewedByMe || seed.reviewedByMe } : guide);
+  }
+  // `{vendorCount}` in guide text becomes the live supplier count, the same one the directory shows.
+  return fillVendorCountDeep(
+    [...merged.values()].sort((a, b) => b.publishedAt.localeCompare(a.publishedAt)),
+    vendorCount,
+  );
 }
 
 export async function getGuideBySlug(slug: string): Promise<Guide | null> {

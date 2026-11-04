@@ -42,6 +42,8 @@ export interface Guide {
   intro?: string;
   shareImageUrl?: string;
   standalone?: boolean;
+  /** A 2px border round the cover image, for a cover (a page screenshot) that would otherwise blend into the page. */
+  coverBorder?: boolean;
   sections: readonly GuideSection[];
   /** One of the site's own calculators/checkers this guide points to, where relevant. */
   relatedTool?: { label: string; href: string };
@@ -58,81 +60,105 @@ export const guides: readonly Guide[] = [
     title: 'What Is PepLookup?',
     seoTitle: 'What Is PepLookup? Peptide Price Comparison Explained',
     excerpt:
-      "PepLookup compares research peptide prices per mg across 90+ suppliers, with coupon codes, COAs and Trustpilot ratings in one place. Here's how it works.",
+      "PepLookup compares research peptide prices per mg across {vendorCount} suppliers, with coupon codes, COAs and Trustpilot ratings in one place. Here's how it works.",
     schemaDescription:
-      'PepLookup compares research peptide prices per mg across 90+ suppliers, with coupon codes, COAs and Trustpilot ratings in one place.',
+      'PepLookup compares research peptide prices per mg across {vendorCount} suppliers, with coupon codes, COAs and Trustpilot ratings in one place.',
     category: 'About PepLookup',
     icon: 'globe',
     accent: 'cat-1',
-    readMinutes: 4,
+    readMinutes: 7,
     publishedAt: '2026-11-04',
     reviewedByMe: true,
     author: { name: 'Adam Dan', role: 'founder of PepLookup', href: '/about' },
     intro:
-      '**PepLookup is a free price comparison site for research peptides.** It shows the price per mg of the same compound across 90+ suppliers, the coupon code for each supplier, their published lab reports (COAs) and their Trustpilot rating, all in one place. You can see who is cheapest before you buy.',
+      "**PepLookup is a free price comparison website for research peptides.** It puts the price per mg of the same compound side by side across {vendorCount} suppliers, together with each supplier's coupon code, the certificates of analysis (COAs) it publishes and its public rating. The idea is simple: see who is actually cheapest, and what you are buying, before you spend anything.",
     shareImageUrl: '/logo.png',
     standalone: true,
+    coverBorder: true,
     sections: [
+      {
+        heading: 'PepLookup in one minute',
+        body: [
+          'PepLookup is an independent comparison site. It does not make, sell or ship peptides. Instead, it collects the prices that research peptide suppliers publish on their own websites and turns every one of them into the same unit: **price per milligram**. Once every listing speaks the same language, the cheapest option stops being a guess.',
+          'Around that price, PepLookup adds the details that decide whether a listing is worth it:',
+          "- the supplier's current **coupon code** and what it takes off\n- the **COAs** the supplier publishes, linked straight from the listing\n- the supplier's **public rating**, linked to the place it comes from\n- **stock status** and **when the price was last seen**, so an old price never passes for a new one",
+          "Every listing links to the supplier's own product page, and you buy there, under the supplier's terms.",
+        ],
+      },
       {
         heading: 'Why PepLookup exists',
         body: [
-          'Buying research peptides usually means opening ten tabs. One supplier sells a 5 mg vial, another sells 10 mg, a third sells a kit of 10. One has a 15% code, another has free shipping over $150. Working out who is actually cheaper takes a calculator and half an hour.',
-          'PepLookup does that maths for you. Every price is converted to **price per mg**, so a 5 mg vial and a 10 mg vial can be compared side by side.',
+          'Comparing research peptide prices by hand is slow and easy to get wrong. One supplier sells a 5 mg vial, another a 10 mg vial, a third a kit of ten. One runs a 15% code, another offers free shipping over a set amount, a third has a sale price that ends on Friday. The sticker prices tell you almost nothing on their own.',
+          'Take a simple example. A 5 mg vial at $45 works out at $9.00 per mg. A 10 mg vial at $80 works out at $8.00 per mg. The second listing costs more at checkout but less for every milligram you get. Now repeat that across dozens of suppliers, several sizes and a handful of coupon codes, and the spreadsheet takes an evening.',
+          'PepLookup does that arithmetic for every listing it holds, so you can see the real comparison in seconds instead of rebuilding it every time you shop.',
         ],
       },
       {
         heading: 'What you can do on PepLookup',
         body: [
           '### Compare prices per mg',
-          'Each compound has its own page listing every supplier that sells it, sorted by price per mg. For example, see [BPC-157 prices per mg](/products/bpc-157) or [tirzepatide prices per mg](/products/tirzepatide). To compare any product across suppliers, use the [price checker](/price-checker).',
-          '### Find a coupon code for each supplier',
-          'The [coupon directory](/coupons) lists the current code for each supplier we track, with the discount and how to apply it at checkout.',
-          "### See each supplier's profile",
-          'Every supplier has a profile in the [supplier directory](/suppliers) showing its products and prices, shipping and payment options, published COAs, and its Trustpilot rating where one exists, linked to the source.',
-          '### Check lab reports',
-          "The [lab reports](/coas) page collects the certificates of analysis (COAs) that suppliers publish, so you can see which products have a test report and which don't. To understand what a COA says, try the [COA reader](/tools/coa-reader).",
+          'Each compound has its own page that lists every supplier selling it, ranked by price per mg. You can filter by form and size, so a 10 mg vial is compared with other 10 mg vials. Start with BPC-157 prices per mg or tirzepatide prices per mg, or search any compound in the [price checker](/price-checker).',
+          '### Look up a supplier',
+          "The [supplier directory](/suppliers) has a profile for every supplier PepLookup tracks. Each profile shows the supplier's products and prices, its shipping and payment options, the COAs it publishes and its rating where one exists. It is the quickest way to size up a supplier you have not used before.",
+          '### Find a coupon code',
+          'The [coupon directory](/coupons) lists the current code for every supplier that has one, with the discount it gives and how to apply it at checkout. Where a supplier runs a sitewide code, the prices on PepLookup already show what you would pay with it.',
+          '### Check the COAs',
+          'The [COA directory](/coas) gathers the certificates of analysis that suppliers publish, by compound and by supplier, so you can see which listings come with a test report and which do not. If you are new to reading one, the COA reader walks through what each part of a certificate means.',
           '### Use the free tools',
-          [
-            '- [Price per mg calculator](/tools/price-per-mg): compare any two listings yourself',
-            '- [Reconstitution calculator](/tools/calculator): work out the concentration after adding bacteriostatic water',
-            '- [Bacteriostatic water guide](/guides/hospira-bacteriostatic-water): sizes, prices and facts about Hospira bacteriostatic water',
-          ].join('\n'),
-          '### Get codes automatically with the Chrome extension',
-          "The [PepLookup Chrome extension](/extension) shows the code and the Trustpilot rating while you're on a supplier's website. You copy or fill in the code with one click. It never places orders or submits forms for you.",
+          '- Price per mg calculator: compare any two listings yourself\n- Reconstitution calculator: work out the concentration after adding bacteriostatic water\n- Hospira bacteriostatic water guide: sizes, prices and facts about the most common diluent',
+          '### Get codes automatically',
+          'The [PepLookup Chrome extension](/extension) shows the code and rating for the supplier you are on, the moment you open its store in Chrome. You copy the code or fill it into the coupon field in one click. It never presses Apply, places an order or submits a form for you.',
         ],
       },
       {
         heading: 'How PepLookup works',
         body: [
-          [
-            "1. **We list suppliers.** Each supplier's products, sizes and prices are added to our database.",
-            '2. **We convert every price to price per mg.** That makes different vial sizes and kits comparable.',
-            "3. **We add the supplier's code, COAs and Trustpilot rating.** Ratings come from Trustpilot and link back to it. We don't make up our own scores.",
-            "4. **You compare and choose.** PepLookup doesn't sell anything. You buy directly from the supplier.",
-          ].join('\n'),
+          "1. **Listings are added from each supplier's own site.** Products, sizes, prices and stock are taken from the supplier's product pages, with the date each price was seen.\n2. **Every price becomes a price per mg.** The price is divided by the total milligrams in the pack, so single vials, multi-vial packs and kits are comparable.\n3. **Codes, COAs and ratings are attached.** Each listing carries the supplier's code, any COA it publishes and its public rating, each linked to its source.\n4. **Out-of-stock listings never win.** A price you cannot buy is shown as out of stock and left out of the cheapest-first ranking.\n5. **You choose and buy from the supplier.** PepLookup sends you to the supplier's own page. The order, the payment and the delivery are all between you and the supplier.",
+        ],
+      },
+      {
+        heading: 'How to read a PepLookup price',
+        body: [
+          '### Price per mg comes first',
+          'The headline number on a listing is its cost for each milligram, because that is the only figure you can compare fairly between sizes. The pack price sits beside it for reference.',
+          '### Sale prices and codes are kept apart',
+          "A supplier's own sale price and the original price are shown side by side, never merged. A coupon code is a separate rule: where one applies, PepLookup shows the price with the code, and you still enter the code at the supplier's checkout.",
+          '### The date matters',
+          "Every price shows when it was last seen. Prices change, so treat an older price as a guide and confirm it on the supplier's page before you order.",
         ],
       },
       {
         heading: 'How PepLookup makes money',
         body: [
-          "PepLookup is free to use. When you visit a supplier through PepLookup and place an order, we may earn a commission from that supplier. It costs you nothing extra, and it doesn't change how suppliers are sorted. Prices are always sorted by price per mg.",
+          'PepLookup is free to use. When you visit a supplier through a PepLookup link and place an order, PepLookup may earn a commission from that supplier. It costs you nothing extra, and it never changes the price you pay.',
+          'It does not change the rankings either: price comparisons are always sorted by price per mg. Where a supplier is promoted as a featured partner, it is labelled as featured on the page, so you can always tell a placement from a price ranking.',
         ],
       },
       {
         heading: 'Is PepLookup legit?',
         body: [
-          "PepLookup is an independent comparison site run by Adam Dan. It doesn't sell peptides, take payments or hold your details. Every supplier page links to the supplier's own site, and every rating links to its Trustpilot source, so you can check anything we show. Questions or a code that doesn't work? [Contact us](/contact).",
+          'PepLookup is an independent comparison site run by Adam Dan. It does not sell peptides, take payments or hold your card details, so there is nothing to buy from PepLookup itself.',
+          "Everything PepLookup shows can be checked. Every supplier page links to the supplier's own site, every COA links to the supplier's published document, and every rating links to the review page it comes from. If something looks wrong, or a code stops working, contact us and it will be rechecked.",
+        ],
+      },
+      {
+        heading: 'What PepLookup is not',
+        body: [
+          'PepLookup is not a shop, a manufacturer or a laboratory. It does not test products itself: the COAs it links are the ones suppliers publish, and a certificate describes the batch it was issued for. Ratings come from public review sources such as Trustpilot, and each one names its source. Where a supplier has no rating, PepLookup shows none rather than an estimate.',
+          'PepLookup also does not give medical, dosing or protocol advice. Its calculators do arithmetic; they do not recommend anything.',
         ],
       },
       {
         heading: 'Who PepLookup is for',
         body: [
-          'PepLookup is for researchers and labs who buy research peptides and want the best price per mg from a supplier with published lab reports. All products listed are sold by suppliers for **laboratory research use only**. PepLookup does not give medical or dosing advice. See our [disclaimer](/disclaimer).',
+          'PepLookup is for researchers and labs who buy research peptides and want the best price per mg from a supplier with published lab reports. All products listed are sold by suppliers for **laboratory research use only**, not for human or animal consumption. See the disclaimer for the full terms.',
         ],
       },
       {
         heading: 'Join the PepLookup community',
-        body: ['Want to talk about suppliers, codes and prices with other researchers? Join the [PepLookup community](/community).'],
+        body: [
+          'Want to compare notes on suppliers, codes and prices with other researchers? Join the PepLookup community.',
+        ],
       },
       {
         heading: 'Frequently asked questions',
@@ -140,13 +166,15 @@ export const guides: readonly Guide[] = [
           '### Is PepLookup free?',
           'Yes. Comparing prices, using the tools and installing the Chrome extension are all free.',
           '### Does PepLookup sell peptides?',
-          'No. PepLookup is a comparison site. You buy directly from the supplier.',
+          "No. PepLookup is a comparison site. You buy directly from the supplier, on the supplier's own website.",
           '### How many suppliers does PepLookup compare?',
-          'More than 90 research peptide suppliers. See the full list in the [supplier directory](/suppliers).',
+          '{vendorCount} research peptide suppliers right now. See every one of them in the supplier directory.',
+          '### How often are prices updated?',
+          "Each price shows the date it was last seen, so you always know how fresh it is. Check the supplier's page for the live price before you order.",
           '### Where do the ratings come from?',
-          "From Trustpilot. Each rating links to the supplier's Trustpilot page. If a supplier has no Trustpilot rating, we don't show one.",
+          "From public review sources such as Trustpilot. Each rating links to the supplier's page on that source. If a supplier has no rating, PepLookup does not show one.",
           '### Can my company be listed on PepLookup?',
-          'Yes. Suppliers can apply through the [supplier listing](/supplier-listing) page.',
+          'Yes. Suppliers can apply through the supplier listing page.',
         ],
       },
     ],
