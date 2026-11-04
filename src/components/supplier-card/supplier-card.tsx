@@ -42,7 +42,7 @@ export function SupplierCard({ supplier, productCount }: { supplier: Supplier; p
   const hiddenPaymentCount = supplier.paymentMethods.length - visiblePayments.length;
   const hasPaymentInfo = supplier.paymentMethods.length > 0;
   const hasShippingInfo = supplier.shippingCost.kind !== 'unknown' || supplier.shippingSpeed !== null;
-  const labReportsHref = `/lab-reports?supplier=${supplier.slug}`;
+  const labReportsHref = `/coas?supplier=${supplier.slug}`;
 
   return (
     <article

@@ -48,7 +48,7 @@ export const primaryNav: readonly NavItem[] = [
     ],
   },
   { label: 'Coupons', href: '/coupons' },
-  { label: 'Lab Reports', href: '/lab-reports' },
+  { label: 'COAs', href: '/coas' },
   {
     label: 'Price Checker',
     href: '/price-checker',
@@ -92,7 +92,7 @@ export const footerNav: readonly { heading: string; links: readonly NavChild[] }
   {
     heading: 'Verification',
     links: [
-      { label: 'Lab Reports', href: '/lab-reports' },
+      { label: 'COAs', href: '/coas' },
       { label: 'Verified Labs', href: '/labs' },
       { label: 'COA Reader', href: '/tools/coa-reader' },
     ],

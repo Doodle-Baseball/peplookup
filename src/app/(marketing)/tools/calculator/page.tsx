@@ -122,7 +122,7 @@ export default async function ReconstitutionToolPage() {
               <p className="border-t border-line pt-5 text-xs leading-6 text-muted">
                 For research use only. This tool converts units; it does not recommend amounts. Check the vial size
                 against the{' '}
-                <Link href="/lab-reports" className={INLINE_LINK_CLASS}>
+                <Link href="/coas" className={INLINE_LINK_CLASS}>
                   batch certificate of analysis
                 </Link>{' '}
                 for the product in hand.
@@ -207,7 +207,7 @@ export default async function ReconstitutionToolPage() {
                 price checker
               </Link>
               , and check batch{' '}
-              <Link href="/lab-reports" className={INLINE_LINK_CLASS}>
+              <Link href="/coas" className={INLINE_LINK_CLASS}>
                 lab reports
               </Link>{' '}
               before you choose.

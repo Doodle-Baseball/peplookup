@@ -73,7 +73,7 @@ export function buildPromotedSupplier(
 
   const listings = offers.filter((offer) => offer.supplierSlug === supplier.slug);
   const inStockCompounds = new Set(listings.filter((offer) => offer.inStock).map((offer) => offer.productSlug));
-  // Same test as /labs and /lab-reports: a document or the lab's own page to link to.
+  // Same test as /labs and /coas: a document or the lab's own page to link to.
   const coaListings = listings.filter((offer) => offer.coaUrl || offer.labReport?.reportUrl || offer.labReport?.labUrl);
   const processingTime = supplier.shippingSpeed?.split(';')[0]?.trim() || null;
 

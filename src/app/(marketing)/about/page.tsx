@@ -148,7 +148,7 @@ export default async function AboutPage() {
               peptide prices per mg
             </Link>{' '}
             or read the{' '}
-            <Link href="/lab-reports" className="font-semibold text-brand hover:underline">
+            <Link href="/coas" className="font-semibold text-brand hover:underline">
               published lab reports
             </Link>
             .

@@ -17,7 +17,7 @@ import { PageFaqSection } from '@/components/faq/page-faq-section';
 import { AccentedHeading } from '@/components/ui/accented-heading';
 import { PageSeo } from '@/components/seo/page-seo';
 
-const PAGE = staticSeoPage('/lab-reports');
+const PAGE = staticSeoPage('/coas');
 
 export async function generateMetadata(): Promise<Metadata> {
   return withSeo(PAGE.path, pageMetadata(PAGE));
@@ -226,7 +226,7 @@ export default async function LabReportsPage({
         </div>
       </section>
 
-      <PageFaqSection path="/lab-reports" className="mt-14" />
+      <PageFaqSection path="/coas" className="mt-14" />
     </div>
   );
 }

@@ -185,7 +185,7 @@ export default async function PriceCheckerPage() {
                 supplier
               </Link>
               &rsquo;s published{' '}
-              <Link href="/lab-reports" className="font-bold text-brand hover:underline">
+              <Link href="/coas" className="font-bold text-brand hover:underline">
                 lab reports
               </Link>{' '}
               as well.

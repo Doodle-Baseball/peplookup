@@ -27,7 +27,7 @@ const EXACT_KINDS: Readonly<Record<string, PageKind>> = {
   '/coupons': 'collection',
   '/reviews': 'collection',
   '/products': 'collection',
-  '/lab-reports': 'collection',
+  '/coas': 'collection',
   '/labs': 'collection',
   '/tools': 'collection',
   '/guides': 'collection',

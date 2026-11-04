@@ -131,7 +131,7 @@ export const DEFAULT_PAGE_FAQS: Readonly<Record<string, readonly FaqItem[]>> = {
     },
   ],
 
-  '/lab-reports': [
+  '/coas': [
     {
       question: 'What is a certificate of analysis?',
       answer: `A COA is a laboratory document describing what a specific batch of material was found to contain, typically covering identity and purity, and sometimes heavy metals, endotoxins or sterility. It should name the product, the batch or lot, the analytical method used and the laboratory that ran it.`,

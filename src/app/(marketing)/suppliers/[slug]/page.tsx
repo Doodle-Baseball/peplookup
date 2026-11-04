@@ -46,7 +46,7 @@ import { SUPPLIER_PAGE_AUTHOR } from '@/config/site';
 /** How many other vendors show in "Explore more vendors". */
 const EXPLORE_VENDOR_COUNT = 6;
 
-/** The COA link a listing carries, with the same precedence /lab-reports uses. */
+/** The COA link a listing carries, with the same precedence /coas uses. */
 function coaUrlOf(offer: Offer): string | null {
   return offer.labReport?.reportUrl ?? offer.labReport?.labUrl ?? offer.coaUrl ?? null;
 }
@@ -118,7 +118,7 @@ export default async function SupplierPage({
     .slice(0, EXPLORE_VENDOR_COUNT);
 
   // The vendor's real COA documents, derived from offers we already loaded
-  // rather than a second query, with the same link precedence /lab-reports
+  // rather than a second query, with the same link precedence /coas
   // uses. Sizes sharing one document collapse into a single entry.
   const coaReportsByKey = new Map<
     string,

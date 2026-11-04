@@ -255,7 +255,7 @@ export function SupplierTrustPanel({
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-chip bg-accent-tint text-accent-strong">
                 <FlaskIcon className="h-5 w-5" />
               </span>
-              <h3 className="truncate text-xl font-black text-content sm:text-2xl">Lab Reports &amp; COAs</h3>
+              <h3 className="truncate text-xl font-black text-content sm:text-2xl">COAs</h3>
             </div>
             <span className="inline-flex shrink-0 items-center rounded-pill border border-accent/30 bg-accent-tint px-3 py-1.5 text-micro font-bold uppercase text-accent-strong">
               {coaReports.length} {coaReports.length === 1 ? 'report' : 'reports'}

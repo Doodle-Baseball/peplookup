@@ -328,7 +328,7 @@ export async function getOffersForProduct(productSlug: string): Promise<readonly
   return (await allOffers()).filter((o) => o.productSlug === productSlug);
 }
 
-/** Every offer across every vendor, used by the lab-reports directory, which needs the whole catalogue at once. */
+/** Every offer across every vendor, used by the COAs directory, which needs the whole catalogue at once. */
 export async function getAllOffers(): Promise<readonly Offer[]> {
   return allOffers();
 }

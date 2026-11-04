@@ -90,7 +90,7 @@ export const guides: readonly Guide[] = [
           "### See each supplier's profile",
           'Every supplier has a profile in the [supplier directory](/suppliers) showing its products and prices, shipping and payment options, published COAs, and its Trustpilot rating where one exists, linked to the source.',
           '### Check lab reports',
-          "The [lab reports](/lab-reports) page collects the certificates of analysis (COAs) that suppliers publish, so you can see which products have a test report and which don't. To understand what a COA says, try the [COA reader](/tools/coa-reader).",
+          "The [lab reports](/coas) page collects the certificates of analysis (COAs) that suppliers publish, so you can see which products have a test report and which don't. To understand what a COA says, try the [COA reader](/tools/coa-reader).",
           '### Use the free tools',
           [
             '- [Price per mg calculator](/tools/price-per-mg): compare any two listings yourself',

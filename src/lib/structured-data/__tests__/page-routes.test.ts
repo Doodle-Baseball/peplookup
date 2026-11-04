@@ -7,7 +7,7 @@ describe('pageKindForPath', () => {
     ['/suppliers', 'collection'],
     ['/coupons', 'collection'],
     ['/reviews', 'collection'],
-    ['/lab-reports', 'collection'],
+    ['/coas', 'collection'],
     ['/labs', 'collection'],
     ['/tools', 'collection'],
     ['/guides', 'collection'],

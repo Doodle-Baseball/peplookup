@@ -29,6 +29,8 @@ const nextConfig = {
       // Vendor coupon and reviews pages live under /coupons and /reviews; these were their addresses at the site root first.
       { source: '/:slug-coupon-code', destination: '/coupons/:slug-coupon-code', statusCode: 301 },
       { source: '/:slug-reviews', destination: '/reviews/:slug-reviews', statusCode: 301 },
+      // The COA directory lived at /lab-reports until November 2026.
+      { source: '/lab-reports', destination: '/coas', statusCode: 301 },
     ];
   },
   async headers() {
@@ -51,7 +53,7 @@ const nextConfig = {
       { source: '/products/:slug', headers: sharedPageCache },
       { source: '/suppliers', headers: sharedPageCache },
       { source: '/suppliers/:slug', headers: sharedPageCache },
-      { source: '/lab-reports', headers: sharedPageCache },
+      { source: '/coas', headers: sharedPageCache },
       { source: '/coupons/:slug', headers: sharedPageCache },
       { source: '/reviews/:slug', headers: sharedPageCache },
       { source: '/compounds-images/:path*', headers: staticAssetCache },

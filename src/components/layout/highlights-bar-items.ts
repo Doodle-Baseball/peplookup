@@ -21,7 +21,7 @@ export function highlightItems(
 ): string[] {
   const { supplierCount, compoundCount } = catalogueStats(suppliers, offers);
   const listedSlugs = new Set(suppliers.map((supplier) => supplier.slug));
-  // Same test as /labs and /lab-reports: a document or the lab's own page to link to.
+  // Same test as /labs and /coas: a document or the lab's own page to link to.
   const coaCount = offers.filter(
     (offer) =>
       listedSlugs.has(offer.supplierSlug) && (offer.coaUrl || offer.labReport?.reportUrl || offer.labReport?.labUrl),

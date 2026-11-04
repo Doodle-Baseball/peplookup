@@ -206,7 +206,7 @@ export default async function ToolsHubPage() {
           <p className="mx-auto mt-2 max-w-2xl text-sm text-muted">
             All tools on this page are intended strictly for research, educational, and laboratory use. They are
             not a substitute for professional medical advice. Always verify a product against a real{' '}
-            <Link href="/lab-reports" className="font-bold text-brand hover:underline">
+            <Link href="/coas" className="font-bold text-brand hover:underline">
               certificate of analysis
             </Link>{' '}
             and consult a qualified professional before starting any protocol.
