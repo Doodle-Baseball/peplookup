@@ -14,6 +14,7 @@ import type { ProductForm } from '@/lib/schema';
 import { ChevronRightIcon, ExternalIcon, FlaskIcon, StarIcon } from '@/components/icons/icons';
 import { splitCategories } from '@/lib/categories';
 import { CARD_ROW_LIMIT as ROW_LIMIT, rowCountKey } from '@/lib/product-filters';
+import { featuredPositionFor, isFeaturedPlacement } from '@/config/featured-placements';
 
 const FORM_LABELS: Record<ProductForm, string> = {
   vial: 'Vial',
@@ -91,7 +92,21 @@ export function ProductCardView({ data, view = 'total' }: { data: ProductCardDat
       return a.priceCents - b.priceCents;
     });
   }, [rowsForDose]);
-  const shownRows = sortedRows.slice(0, ROW_LIMIT);
+  // Five different suppliers, each at its cheapest listing for the selection.
+  const distinctRows = useMemo(() => {
+    const seen = new Set<string>();
+    return sortedRows.filter((row) => (seen.has(row.supplierSlug) ? false : (seen.add(row.supplierSlug), true)));
+  }, [sortedRows]);
+  const cheapestRow = distinctRows.find((row) => row.inStock) ?? null;
+  const shownRows = useMemo(() => {
+    const top = distinctRows.slice(0, ROW_LIMIT);
+    // The featured partner, when it sells this selection, takes a fixed spot in the top five, labelled "Featured".
+    const featured = distinctRows.find((row) => row.inStock && isFeaturedPlacement(data.slug, row.supplierSlug));
+    if (!featured) return top;
+    const others = top.filter((row) => row !== featured).slice(0, ROW_LIMIT - 1);
+    const position = featuredPositionFor(data.slug, others.length + 1);
+    return [...others.slice(0, position), featured, ...others.slice(position)];
+  }, [distinctRows, data.slug]);
   // Counted from the untrimmed offers on the server: `data.rows` only carries
   // the listings this card can reach, so counting it would undersell the rest.
   const totalForSelection = selectedForm
@@ -200,11 +215,12 @@ export function ProductCardView({ data, view = 'total' }: { data: ProductCardDat
           ) : null}
 
           <ul className="space-y-2">
-            {shownRows.map((row, i) => (
+            {shownRows.map((row) => (
               <MiniPriceRow
                 key={`${row.supplierSlug}-${row.doseLabel}`}
                 row={row}
-                isBest={i === 0 && row.inStock}
+                isBest={row === cheapestRow}
+                featured={isFeaturedPlacement(data.slug, row.supplierSlug)}
                 view={view}
               />
             ))}
@@ -228,10 +244,13 @@ export function ProductCardView({ data, view = 'total' }: { data: ProductCardDat
 function MiniPriceRow({
   row,
   isBest,
+  featured,
   view,
 }: {
   row: ProductCardRow;
   isBest: boolean;
+  /** Placed by the featured-partner arrangement rather than by price; always labelled. */
+  featured: boolean;
   view: 'total' | 'permg';
 }) {
   return (
@@ -256,6 +275,11 @@ function MiniPriceRow({
               {row.supplierName}
             </Link>
             {row.hasLabReport ? <FlaskIcon className="h-3 w-3 shrink-0 text-brand" aria-label="Lab report available" /> : null}
+            {featured ? (
+              <span className="shrink-0 rounded-pill bg-coupon-tint px-1.5 py-0.5 text-micro font-bold uppercase text-coupon-ink">
+                Featured
+              </span>
+            ) : null}
           </div>
           <p className={`text-micro font-semibold ${row.inStock ? 'text-brand-strong' : 'text-danger'}`}>
             {row.inStock ? 'In Stock' : 'Out of Stock'}

@@ -1,6 +1,7 @@
 import 'server-only';
 import { getOffersForProduct, toListing } from '@/lib/repository';
 import { CARD_ROW_LIMIT, rowCountKey } from '@/lib/product-filters';
+import { isFeaturedPlacement } from '@/config/featured-placements';
 import { effectivePrice, hasDiscount, pricePerMg, couponAdjustedPrice, pricePerMgFor } from '@/lib/price';
 import type { Offer, Product, ProductForm, Supplier } from '@/lib/schema';
 
@@ -68,7 +69,7 @@ function byCardOrder(a: ProductCardRow, b: ProductCardRow): number {
  * global top five is beaten by at most four others, so it is in its own dose
  * group's top five too.
  */
-function trimRowsForCard(rows: readonly ProductCardRow[]): ProductCardRow[] {
+function trimRowsForCard(rows: readonly ProductCardRow[], productSlug: string): ProductCardRow[] {
   const groups = new Map<string, ProductCardRow[]>();
   for (const row of rows) {
     const key = rowCountKey(row.form, row.doseLabel);
@@ -81,6 +82,10 @@ function trimRowsForCard(rows: readonly ProductCardRow[]): ProductCardRow[] {
   for (const group of groups.values()) {
     if (group.length > CARD_ROW_LIMIT) group.sort(byCardOrder);
     for (const row of group.slice(0, CARD_ROW_LIMIT)) kept.push(row);
+    // A featured partner placed on this card must reach the browser even when it isn't among the cheapest.
+    for (const row of group.slice(CARD_ROW_LIMIT)) {
+      if (isFeaturedPlacement(productSlug, row.supplierSlug)) kept.push(row);
+    }
   }
   return kept;
 }
@@ -171,7 +176,7 @@ export async function getProductCardData(
     hasCoupon: rows.some((r) => r.couponCode !== null),
     anyInStock: rows.some((r) => r.inStock),
     minPriceCents: prices.length ? Math.min(...prices) : null,
-    rows: trimRowsForCard(rows),
+    rows: trimRowsForCard(rows, product.slug),
     rowCounts: { byForm, byFormDose },
     totalOffers: resolvedOffers.length,
   };
