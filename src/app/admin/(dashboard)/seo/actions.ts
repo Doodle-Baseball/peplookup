@@ -5,6 +5,7 @@ import { z } from 'zod';
 import {
   assertSeoPageExists,
   deleteSeoRedirect,
+  findMostSimilarSupplierText,
   renamePageSlug,
   resetSeoPage,
   saveSeoPage,
@@ -15,6 +16,7 @@ import { clearRedirectCache, SEO_CACHE_TAG, type SeoTaskStatus } from '@/lib/seo
 import { savePageFaqs } from '@/lib/admin/page-faqs';
 import { FAQS_CACHE_TAG } from '@/lib/page-faqs';
 import { uniqueValues } from '@/lib/compound-content';
+import { QUALITY_THRESHOLDS } from '@/config/seo-quality';
 import { saveSupplierContent } from '@/lib/admin/supplier-content';
 import { getGeneratedSupplierContent, SUPPLIER_CONTENT_CACHE_TAG } from '@/lib/supplier-content-store';
 import {
@@ -29,6 +31,11 @@ export interface SeoSaveState {
   fieldErrors: Partial<Record<string, string>>;
   /** Changes on every successful save, so the form can close itself. */
   savedAt: number | null;
+  /**
+   * Saved, but worth reading before closing: the About text is more than 70%
+   * similar to another supplier's (B3), so the dialog stays open to show it.
+   */
+  warning?: string | null;
 }
 
 const SLUG_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
@@ -66,6 +73,7 @@ const seoFormSchema = z.object({
   ),
   robotsIndex: z.boolean(),
   robotsFollow: z.boolean(),
+  readyToIndex: z.boolean(),
   headHtml: customHtml('Custom head code'),
   bodyHtml: customHtml('Custom HTML'),
 });
@@ -135,6 +143,7 @@ function isDefaultInput(input: SeoPageInput): boolean {
     !input.ogImageUrl &&
     input.robotsIndex &&
     input.robotsFollow &&
+    !input.readyToIndex &&
     !input.headHtml &&
     !input.bodyHtml
   );
@@ -158,6 +167,7 @@ export async function saveSeoPageAction(_prevState: SeoSaveState, formData: Form
     ogImageUrl: text(formData, 'ogImageUrl'),
     robotsIndex: formData.get('robotsIndex') === 'on',
     robotsFollow: formData.get('robotsFollow') === 'on',
+    readyToIndex: formData.get('readyToIndex') === 'on',
     headHtml: text(formData, 'headHtml'),
     bodyHtml: text(formData, 'bodyHtml'),
   });
@@ -193,6 +203,7 @@ export async function saveSeoPageAction(_prevState: SeoSaveState, formData: Form
     ogImageUrl: form.ogImageUrl,
     robotsIndex: form.robotsIndex,
     robotsFollow: form.robotsFollow,
+    readyToIndex: form.readyToIndex,
     headHtml: form.headHtml,
     bodyHtml: form.bodyHtml,
   };
@@ -200,6 +211,7 @@ export async function saveSeoPageAction(_prevState: SeoSaveState, formData: Form
   let path = form.path;
   let renamed = false;
   let seoSaved = false;
+  let warning: string | null = null;
   try {
     await assertSeoPageExists(form.kind, form.path);
     if (renaming && (form.kind === 'compound' || form.kind === 'supplier' || form.kind === 'guide')) {
@@ -213,7 +225,9 @@ export async function saveSeoPageAction(_prevState: SeoSaveState, formData: Form
       const slug = path.slice('/suppliers/'.length);
       const generated = await getGeneratedSupplierContent(slug);
       if (!generated) throw new Error(`No supplier exists at ${path}.`);
-      await saveSupplierContent(slug, toSupplierContentOverride(supplierContent.content, generated));
+      const override = toSupplierContentOverride(supplierContent.content, generated);
+      await saveSupplierContent(slug, override);
+      warning = await duplicateAboutWarning(slug, override.about.body);
     }
   } catch (error) {
     // A rename or SEO save that succeeded is already live, so the page must
@@ -232,7 +246,24 @@ export async function saveSeoPageAction(_prevState: SeoSaveState, formData: Form
   }
 
   revalidateSite();
-  return { error: null, fieldErrors: {}, savedAt: Date.now() };
+  return { error: null, fieldErrors: {}, savedAt: Date.now(), warning };
+}
+
+/**
+ * "This text is 82% similar to Purgo Labs": the B3 check, run by pg_trgm in
+ * the database on every save of a supplier's own About text. The page is
+ * flagged by the quality rules until the text is rewritten.
+ */
+async function duplicateAboutWarning(slug: string, aboutBody: string | null): Promise<string | null> {
+  if (!aboutBody) return null;
+  try {
+    const closest = await findMostSimilarSupplierText('about', slug, aboutBody);
+    if (!closest || closest.score <= QUALITY_THRESHOLDS.maxSimilarity) return null;
+    return `Saved. This About text is ${Math.round(closest.score * 100)}% similar to ${closest.name}. The page fails the quality check until it is rewritten in this supplier's own terms.`;
+  } catch (error) {
+    // The save itself succeeded; a failed comparison is reported, not hidden.
+    return `Saved, but the duplicate-text check could not run: ${messageOf(error, 'unknown error')}`;
+  }
 }
 
 export async function resetSeoPageAction(path: string): Promise<{ error: string | null }> {

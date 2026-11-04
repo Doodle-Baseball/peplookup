@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { footerNav, site, whatsappUrl } from '@/config/site';
 import { LogoMark } from '@/components/layout/logo-mark';
-import packageJson from '../../../package.json';
 
 export function SiteFooter() {
   const year = new Date().getUTCFullYear();
@@ -83,7 +82,6 @@ export function SiteFooter() {
           <span>
             © {year} {site.name}. All rights reserved.
           </span>
-          <span>v{packageJson.version}</span>
         </div>
 
         {/* Oversized faded wordmark, purely decorative, so hidden from screen

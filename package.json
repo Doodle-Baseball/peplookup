@@ -5,6 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "postbuild": "node scripts/seo-check.mjs",
+    "seo-check": "node scripts/seo-check.mjs --url http://localhost:3000",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",

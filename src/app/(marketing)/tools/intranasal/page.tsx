@@ -84,7 +84,7 @@ export default async function IntranasalToolPage() {
               </p>
               <p className="border-t border-line pt-5 text-xs leading-6 text-muted">
                 Check the vial size against the{' '}
-                <Link href="/lab-reports" className={INLINE_LINK_CLASS}>
+                <Link href="/coas" className={INLINE_LINK_CLASS}>
                   batch certificate of analysis
                 </Link>{' '}
                 for the product in hand. For research use only; this tool converts units and does not recommend
@@ -140,7 +140,7 @@ export default async function IntranasalToolPage() {
                 Selank
               </Link>{' '}
               prices across suppliers, and check batch{' '}
-              <Link href="/lab-reports" className={INLINE_LINK_CLASS}>
+              <Link href="/coas" className={INLINE_LINK_CLASS}>
                 lab reports
               </Link>{' '}
               before you choose.

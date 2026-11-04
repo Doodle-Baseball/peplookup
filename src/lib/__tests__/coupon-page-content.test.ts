@@ -9,7 +9,6 @@ import {
   type CouponDetailKey,
   type CouponPageContentOverride,
 } from '@/lib/coupon-page-content';
-import { couponPageIndexable } from '@/lib/coupon-pages';
 
 const VENDOR = {
   name: 'Amino Club',
@@ -104,23 +103,3 @@ describe('parseSteps', () => {
   });
 });
 
-describe('couponPageIndexable', () => {
-  const base = { robotsIndex: true, metaTitle: 'Amino Club Coupon Code: 20% Off', metaDescription: 'Get the code.' };
-
-  it('is off by default, with no saved SEO', () => {
-    expect(couponPageIndexable(null)).toBe(false);
-  });
-
-  it('stays off until both a title and a description are saved', () => {
-    expect(couponPageIndexable({ ...base, metaTitle: null })).toBe(false);
-    expect(couponPageIndexable({ ...base, metaDescription: '  ' })).toBe(false);
-  });
-
-  it('stays off while the indexing switch is off, even with SEO details saved', () => {
-    expect(couponPageIndexable({ ...base, robotsIndex: false })).toBe(false);
-  });
-
-  it('turns on once SEO details are saved and indexing is switched on', () => {
-    expect(couponPageIndexable(base)).toBe(true);
-  });
-});

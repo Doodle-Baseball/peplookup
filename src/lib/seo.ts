@@ -8,15 +8,34 @@ import { PRODUCT_OFFER_SCHEMA_ENABLED } from '@/config/features';
 import { ownedSchemaTypes } from '@/lib/structured-data/graph';
 import { stripOwnedJsonLd } from '@/lib/structured-data/pasted-json-ld';
 import { fillVendorCountDeep } from '@/lib/vendor-count';
+import { followRedirects, rowToSeoRedirect, type SeoRedirect, type SeoRedirectRow } from '@/lib/seo-redirects';
+import { getInactiveReviewFacts, getPageQualityIndex, getSupplierTextContext } from '@/lib/seo/page-quality';
+import { QUALITY_RULES_ENFORCED } from '@/config/seo-quality';
+import {
+  indexDecision,
+  isProductionDeployment,
+  pageTypeForPath,
+  staticPageDecision,
+  type IndexDecision,
+  type PageQualityFacts,
+} from '@/lib/seo/indexing';
+import { cleanSeoText, qualifyClaims, qualifyTitleClaims } from '@/lib/seo/text';
+import { isContentV2 } from '@/lib/seo/protected';
+
+export {
+  clearRedirectCache,
+  getRedirectTarget,
+  getSupplierSlugAliases,
+  rowToSeoRedirect,
+  supplierSlugAliases,
+  type SeoRedirect,
+} from '@/lib/seo-redirects';
 
 /** Revalidated by every save in /admin/seo. */
 export const SEO_CACHE_TAG = 'seo';
 
 /** Manual workflow status, set from the SEO edit dialog. Unset until chosen. */
 export type SeoTaskStatus = 'needs-work' | 'pending' | 'done';
-
-/** Longest redirect chain followed before giving up, so a bad row can never loop. */
-const MAX_REDIRECT_HOPS = 10;
 
 export interface SeoOverride {
   path: string;
@@ -31,13 +50,11 @@ export interface SeoOverride {
   headHtml: string | null;
   bodyHtml: string | null;
   taskStatus: SeoTaskStatus | null;
+  /** The "Ready to index" tick (0031). False on a row created after that migration until someone ticks it. */
+  readyToIndex: boolean;
+  /** When "Ready to index" was last ticked, for the "made indexable in the last 7 days" counter. */
+  readyToIndexAt: string | null;
   updatedAt: string;
-}
-
-export interface SeoRedirect {
-  fromPath: string;
-  toPath: string;
-  createdAt: string;
 }
 
 /** Snake_case row in `seo_pages` (0010_seo_management.sql). */
@@ -54,13 +71,10 @@ export interface SeoPageRow {
   head_html: string | null;
   body_html: string | null;
   task_status: string | null;
+  /** Added by 0031_seo_quality.sql; undefined until that migration runs. */
+  ready_to_index?: boolean;
+  ready_to_index_at?: string | null;
   updated_at: string;
-}
-
-interface SeoRedirectRow {
-  from_path: string;
-  to_path: string;
-  created_at: string;
 }
 
 const TASK_STATUSES: readonly SeoTaskStatus[] = ['needs-work', 'pending', 'done'];
@@ -83,12 +97,11 @@ export function rowToSeoOverride(row: SeoPageRow): SeoOverride {
     headHtml: row.head_html,
     bodyHtml: row.body_html,
     taskStatus: toTaskStatus(row.task_status),
+    // Before 0031 there is no tick; every saved page was live then, so it counts as ready.
+    readyToIndex: row.ready_to_index ?? true,
+    readyToIndexAt: row.ready_to_index_at ?? null,
     updatedAt: row.updated_at,
   };
-}
-
-export function rowToSeoRedirect(row: SeoRedirectRow): SeoRedirect {
-  return { fromPath: row.from_path, toPath: row.to_path, createdAt: row.created_at };
 }
 
 interface SeoData {
@@ -121,9 +134,8 @@ const getSeoDataCached = unstable_cache(
     if (!client) return { pages: [], redirects: [] };
 
     // The supplier count fills `{vendorCount}` in admin-written titles and
-    // descriptions. It is counted here, with the same active-only filter as
-    // the directory, because middleware imports this module and must not pull
-    // in the repository.
+    // descriptions. It is counted here with its own query, using the same
+    // active-only filter as the directory.
     const [pages, redirects, activeSuppliers] = await Promise.all([
       client.from('seo_pages').select('*'),
       client.from('seo_redirects').select('from_path, to_path, created_at'),
@@ -202,121 +214,6 @@ export async function getSeoOverridesByPath(): Promise<ReadonlyMap<string, SeoOv
   return new Map(pages.map((page) => [page.path, page]));
 }
 
-function followRedirects(path: string, redirects: readonly SeoRedirect[]): string {
-  const targets = new Map(redirects.map((redirect) => [redirect.fromPath, redirect.toPath]));
-  const seen = new Set([path]);
-  let current = path;
-  for (let hop = 0; hop < MAX_REDIRECT_HOPS; hop += 1) {
-    const next = targets.get(current);
-    if (!next || seen.has(next)) break;
-    seen.add(next);
-    current = next;
-  }
-  return current;
-}
-
-/** How long middleware reuses a redirect snapshot before querying again. */
-const REDIRECT_TTL_MS = 60_000;
-
-/**
- * Longest a redirect read may block a request. Middleware sits in front of
- * every product, supplier and guide page, so a hung Supabase must cost each
- * page this much at most, not the platform's 25s middleware limit (a 504).
- */
-const REDIRECT_QUERY_TIMEOUT_MS = 2_000;
-
-/**
- * After a failed read, how long to keep serving the previous snapshot before
- * trying again. Without it every request during an outage would wait out the
- * timeout above.
- */
-const REDIRECT_RETRY_MS = 15_000;
-
-/**
- * Last redirect read, held in module scope. A server instance keeps module
- * state between requests, so this is what stops the read below from running
- * per page view.
- */
-let redirectSnapshot: { rows: SeoRedirect[]; expiresAt: number } | null = null;
-
-/**
- * Drops the snapshot so the next request re-reads the table. Called after a
- * rename so the old URL starts redirecting at once rather than after the TTL,
- * which works whenever middleware shares a process with the admin action.
- */
-export function clearRedirectCache(): void {
-  redirectSnapshot = null;
-}
-
-/**
- * Reads `seo_redirects` directly, with no `unstable_cache` wrapper: this is
- * called from middleware, which runs on the Edge Runtime and has no
- * incremental cache to back `unstable_cache`, using it there throws on every
- * request.
- *
- * It is cached by hand instead. Middleware runs on every public request, so an
- * uncached read here is a blocking Supabase round trip (measured at 350ms+)
- * in front of every single page, including the statically prerendered ones,
- * and the table is usually empty. A short TTL brings that down to one query
- * per server instance per minute; the cost is that a slug renamed in
- * /admin/seo takes up to a minute before its old URL starts redirecting. The
- * new URL works immediately either way.
- */
-async function fetchRedirectsUncached(): Promise<SeoRedirect[]> {
-  const now = Date.now();
-  if (redirectSnapshot && redirectSnapshot.expiresAt > now) return redirectSnapshot.rows;
-
-  const client = getSupabaseServerClient();
-  if (!client) return [];
-  const { data, error } = await client
-    .from('seo_redirects')
-    .select('from_path, to_path, created_at')
-    .abortSignal(AbortSignal.timeout(REDIRECT_QUERY_TIMEOUT_MS));
-  // An unreachable or unmigrated table must not drop live redirects, so a
-  // previous snapshot keeps serving until the next attempt succeeds.
-  if (error) {
-    console.warn('[seo] seo_redirects could not be read, retrying in 15s:', error.message);
-    const rows = redirectSnapshot?.rows ?? [];
-    redirectSnapshot = { rows, expiresAt: now + REDIRECT_RETRY_MS };
-    return rows;
-  }
-
-  const rows = (data as SeoRedirectRow[]).map(rowToSeoRedirect);
-  redirectSnapshot = { rows, expiresAt: now + REDIRECT_TTL_MS };
-  return rows;
-}
-
-/**
- * Every earlier slug of each renamed supplier, keyed by its current slug.
- * A rename moves the row and everything stored against it, but data shipped
- * in code (e.g. the published COA links in src/data/vendor-coa-links.ts) is
- * still keyed by the slug it was written for, so lookups there must also try
- * the vendor's earlier slugs or a rename silently disconnects it.
- */
-export function supplierSlugAliases(redirects: readonly SeoRedirect[]): Map<string, string[]> {
-  const prefix = '/suppliers/';
-  const aliases = new Map<string, string[]>();
-  for (const { fromPath } of redirects) {
-    if (!fromPath.startsWith(prefix)) continue;
-    const target = followRedirects(fromPath, redirects);
-    if (target === fromPath || !target.startsWith(prefix)) continue;
-    const current = target.slice(prefix.length);
-    aliases.set(current, [...(aliases.get(current) ?? []), fromPath.slice(prefix.length)]);
-  }
-  return aliases;
-}
-
-export async function getSupplierSlugAliases(): Promise<Map<string, string[]>> {
-  return supplierSlugAliases(await fetchRedirectsUncached());
-}
-
-/** Where a renamed page lives now, or null when this path was never renamed. */
-export async function getRedirectTarget(path: string): Promise<string | null> {
-  const redirects = await fetchRedirectsUncached();
-  const target = followRedirects(path, redirects);
-  return target === path ? null : target;
-}
-
 /**
  * Rewrites hard-coded internal links (nav menus, featured quick links) to a
  * renamed page's current address, so they never point at an old slug.
@@ -341,32 +238,133 @@ function titleText(title: Metadata['title']): string | undefined {
 }
 
 /**
+ * The indexing decision for one path, from the single rule in
+ * src/lib/seo/indexing.ts. A path with no quality facts (a static page, or a
+ * product the catalogue no longer lists) is judged on the deployment and its
+ * /admin/seo switch alone.
+ */
+export async function getIndexDecision(path: string): Promise<IndexDecision> {
+  const [quality, override] = await Promise.all([getPageQualityIndex(), getSeoOverride(path)]);
+  return decide(path, quality.facts[path] ?? (await getInactiveReviewFacts(path)) ?? undefined, override);
+}
+
+/** Decisions for many paths at once (the sitemap, the admin, the SEO jobs), from one read of each source. */
+export async function getIndexDecisions(paths: readonly string[]): Promise<Map<string, IndexDecision>> {
+  const [quality, overrides] = await Promise.all([getPageQualityIndex(), getSeoOverridesByPath()]);
+  return new Map(paths.map((path) => [path, decide(path, quality.facts[path], overrides.get(path) ?? null)]));
+}
+
+/**
+ * The decision for one path from facts and an override the caller already
+ * holds; the admin passes the rows it has just read, so a save shows at once.
+ */
+export function indexDecisionFor(
+  path: string,
+  facts: PageQualityFacts | undefined,
+  override: SeoOverride | null,
+): IndexDecision {
+  return decide(path, facts, override);
+}
+
+function decide(path: string, facts: PageQualityFacts | undefined, override: SeoOverride | null): IndexDecision {
+  const context = {
+    isProduction: isProductionDeployment(),
+    adminRobotsIndex: override ? override.robotsIndex : null,
+    readyToIndex: override ? override.readyToIndex : null,
+    now: new Date(),
+    contentV2: isContentV2(),
+  };
+  const type = pageTypeForPath(path);
+  if (facts && facts.type === type) return indexDecision(facts, context);
+  if (type === 'static') return staticPageDecision(path, context);
+  // The index holds every published guide, so a guide missing from it is a draft: never indexed.
+  if (type === 'guide') {
+    return indexDecision({ type: 'guide', reviewedByMe: false, hasContent: true, isPublished: false }, context);
+  }
+  // A supplier switched off in the admin (and its coupon and reviews pages)
+  // still answers, outside the directory and the sitemap. Being inactive is a
+  // quality rule like the others: reported always, and only taken out of
+  // search while that page type's rules are enforced.
+  const decision = staticPageDecision(path, context);
+  const failure = type === 'product' ? 'product is not in the live catalogue' : 'supplier is not active';
+  const enforced = QUALITY_RULES_ENFORCED[type];
+  return {
+    ...decision,
+    indexable: decision.indexable && !enforced,
+    reasons: enforced ? [...decision.reasons, failure] : decision.reasons,
+    qualityFailures: [failure],
+    enforced,
+  };
+}
+
+/**
+ * The title and description exactly as they reach search engines: "★" and
+ * emoji removed (whatever was typed in the admin), a rating number dropped
+ * when the supplier has no rating, and the same-day/purity wording fixed.
+ * Supplier pages keep their researched wording: only the stars come out.
+ */
+export async function cleanPageText(
+  path: string,
+  text: { title: string; description: string },
+): Promise<{ title: string; description: string }> {
+  const context = await getSupplierTextContext(path);
+  const hasRating = context?.hasRating ?? false;
+  if (pageTypeForPath(path) === 'supplier') {
+    return { title: cleanSeoText(text.title, { hasRating }), description: cleanSeoText(text.description, { hasRating }) };
+  }
+  return {
+    title: qualifyTitleClaims(cleanSeoText(text.title, { hasRating })),
+    description: cleanSeoText(context ? qualifyClaims(text.description, context) : text.description, { hasRating }),
+  };
+}
+
+/** A page's meta keywords carry only its first few, most relevant terms, in the order they were saved. */
+const MAX_META_KEYWORDS = 3;
+
+function pageKeywords(keywords: Metadata['keywords']): Metadata['keywords'] {
+  if (!keywords) return keywords;
+  const list = (Array.isArray(keywords) ? keywords : keywords.split(','))
+    .map((keyword) => keyword.trim())
+    .filter(Boolean);
+  return list.length > 0 ? list.slice(0, MAX_META_KEYWORDS) : undefined;
+}
+
+/**
  * Layers a page's /admin/seo override (if any) on top of its default
- * metadata. A page nobody has edited gets exactly its defaults back.
+ * metadata, cleans the title and description, and sets the robots tag from
+ * the page's indexing decision. A page nobody has edited gets its defaults.
  */
 export async function withSeo(path: string, base: Metadata): Promise<Metadata> {
-  const seo = await getSeoOverride(path);
-  if (!seo) return base;
+  const [seo, decision] = await Promise.all([getSeoOverride(path), getIndexDecision(path)]);
 
-  const title = seo.metaTitle ? { absolute: seo.metaTitle } : base.title;
-  const description = seo.metaDescription ?? base.description;
-  const canonical = seo.canonicalUrl ?? base.alternates?.canonical;
-  const socialTitle = titleText(title);
+  const rawTitle = seo?.metaTitle ? seo.metaTitle : titleText(base.title);
+  const rawDescription = seo?.metaDescription ?? (typeof base.description === 'string' ? base.description : null);
+  const cleaned = await cleanPageText(path, { title: rawTitle ?? '', description: rawDescription ?? '' });
+  const title = rawTitle ? { absolute: cleaned.title } : base.title;
+  const description = rawDescription ? cleaned.description : base.description;
+  const canonical = seo?.canonicalUrl ?? base.alternates?.canonical;
+  const follow = seo?.robotsFollow ?? true;
+  const robots = !decision.indexable ? { index: false, follow } : follow ? base.robots : { index: true, follow: false };
 
   return {
     ...base,
     title,
     description,
-    keywords: seo.keywords.length > 0 ? seo.keywords : base.keywords,
+    keywords: pageKeywords(seo && seo.keywords.length > 0 ? seo.keywords : base.keywords),
     alternates: { ...base.alternates, canonical },
-    robots: seo.robotsIndex && seo.robotsFollow ? base.robots : { index: seo.robotsIndex, follow: seo.robotsFollow },
-    openGraph: {
-      ...(socialTitle ? { title: socialTitle } : {}),
-      ...(description ? { description } : {}),
-      ...(typeof canonical === 'string' ? { url: canonical } : {}),
-      ...(seo.ogImageUrl ? { images: [seo.ogImageUrl] } : {}),
-    },
-    other: { ...base.other, ...(seo.headHtml ? parseNamedMetaTags(seo.headHtml) : {}) },
+    ...(robots ? { robots } : {}),
+    // Social tags have always come from the override alone; a page nobody edited keeps the base ones.
+    ...(seo
+      ? {
+          openGraph: {
+            ...(rawTitle ? { title: cleaned.title } : {}),
+            ...(description ? { description } : {}),
+            ...(typeof canonical === 'string' ? { url: canonical } : {}),
+            ...(seo.ogImageUrl ? { images: [seo.ogImageUrl] } : {}),
+          },
+          other: { ...base.other, ...(seo.headHtml ? parseNamedMetaTags(seo.headHtml) : {}) },
+        }
+      : {}),
   };
 }
 

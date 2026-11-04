@@ -48,7 +48,7 @@ export const primaryNav: readonly NavItem[] = [
     ],
   },
   { label: 'Coupons', href: '/coupons' },
-  { label: 'Lab Reports', href: '/lab-reports' },
+  { label: 'COAs', href: '/coas' },
   {
     label: 'Price Checker',
     href: '/price-checker',
@@ -92,7 +92,7 @@ export const footerNav: readonly { heading: string; links: readonly NavChild[] }
   {
     heading: 'Verification',
     links: [
-      { label: 'Lab Reports', href: '/lab-reports' },
+      { label: 'COAs', href: '/coas' },
       { label: 'Verified Labs', href: '/labs' },
       { label: 'COA Reader', href: '/tools/coa-reader' },
     ],
@@ -111,6 +111,7 @@ export const footerNav: readonly { heading: string; links: readonly NavChild[] }
     heading: 'Company',
     links: [
       { label: 'About Us', href: '/about' },
+      { label: 'What is PepLookup?', href: '/guides/what-is-peplookup' },
       { label: 'Research Guides', href: '/guides' },
       { label: 'Community', href: '/community' },
       { label: 'Contact Us', href: '/contact' },
@@ -130,3 +131,6 @@ export const footerNav: readonly { heading: string; links: readonly NavChild[] }
 /** Shown site-wide above the fold. Research-use-only posture is non-negotiable. */
 export const RESEARCH_USE_NOTICE =
   'Research Use Only. Products listed are not for human or animal consumption. Statements have not been evaluated by the FDA.';
+
+/** Who checks the supplier pages, shown as "Last checked <date> by …" under each supplier's name. */
+export const SUPPLIER_PAGE_AUTHOR = { name: 'Adam Dan', href: '/about' } as const;

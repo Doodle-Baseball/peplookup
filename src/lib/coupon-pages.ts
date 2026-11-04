@@ -1,5 +1,3 @@
-import { indexableWhenSeoAdded } from '@/lib/seo-indexing';
-
 /**
  * Every vendor with a coupon gets its own page at `/coupons/<vendor-slug>-coupon-code`,
  * so each vendor's code can be found by the phrase people actually search.
@@ -24,6 +22,3 @@ export function supplierSlugFromCouponPath(path: string): string | null {
   const segment = path.slice(COUPON_PREFIX.length);
   return segment.includes('/') ? null : supplierSlugFromCouponSegment(segment);
 }
-
-/** Coupon pages start hidden from search engines; see {@link indexableWhenSeoAdded} for the rule. */
-export const couponPageIndexable = indexableWhenSeoAdded;

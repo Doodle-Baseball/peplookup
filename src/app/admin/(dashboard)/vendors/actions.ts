@@ -68,7 +68,7 @@ function revalidatePublicSupplierPages(slug?: string) {
   revalidatePath('/suppliers');
   revalidatePath('/suppliers/[slug]', 'page');
   revalidatePath('/products/[slug]', 'page');
-  revalidatePath('/lab-reports');
+  revalidatePath('/coas');
   revalidatePath('/price-checker');
   revalidatePath('/coupons');
   revalidatePath('/');

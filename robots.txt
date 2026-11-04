@@ -15,6 +15,6 @@ Disallow: /api/
 # skip them. Product filter URLs (/products/<slug>?form=...) are left crawlable so
 # search engines can read their canonical, which points at the clean product page.
 Disallow: /suppliers/*pq=
-Disallow: /lab-reports?
+Disallow: /coas?
  
 Sitemap: https://www.peplookup.com/sitemap.xml

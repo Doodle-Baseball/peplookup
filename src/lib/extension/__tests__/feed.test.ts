@@ -42,6 +42,7 @@ describe('buildExtensionFeed', () => {
           logoUrl: 'https://cdn.example.com/purgo.png',
           reviewRating: 4.7,
           reviewCount: { kind: 'exact', value: 120 },
+          reviewsUrl: 'https://www.trustpilot.com/review/purgolabs.com',
         }),
       ],
       [settings('purgo-labs', { storeDomains: ['purgolabs.com'], updatedAt: '2026-10-20T10:00:00.000Z' })],
@@ -112,7 +113,12 @@ describe('buildExtensionFeed', () => {
     const feed = buildExtensionFeed(
       [
         supplier({ slug: 'unrated' }),
-        supplier({ slug: 'at-least', reviewRating: 4.25, reviewCount: { kind: 'atLeast', value: 50 } }),
+        supplier({
+          slug: 'at-least',
+          reviewRating: 4.25,
+          reviewCount: { kind: 'atLeast', value: 50 },
+          reviewsUrl: 'https://www.trustpilot.com/review/at-least.com',
+        }),
       ],
       [settings('unrated'), settings('at-least')],
       ORIGIN,
@@ -194,5 +200,14 @@ describe('buildExtensionFeed', () => {
 describe('couponDiscountText', () => {
   it('matches the /coupons badge', () => {
     expect(couponDiscountText(15)).toBe('15% Off Sitewide');
+  });
+
+  it('leaves out a rating that has no source link, so nothing unattributed is labelled Trustpilot', () => {
+    const feed = buildExtensionFeed(
+      [supplier({ slug: 'no-link', reviewRating: 4.3, reviewCount: { kind: 'exact', value: 12 } })],
+      [settings('no-link')],
+      ORIGIN,
+    );
+    expect(feed.suppliers[0]?.trustpilot).toBeNull();
   });
 });

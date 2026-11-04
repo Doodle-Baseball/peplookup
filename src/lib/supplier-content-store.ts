@@ -33,6 +33,11 @@ const getSavedSupplierContent = unstable_cache(
   { revalidate: CATALOGUE_REVALIDATE_SECONDS, tags: [SUPPLIER_CONTENT_CACHE_TAG] },
 );
 
+/** Only what admins have saved, keyed by supplier slug, for the quality rules that count admin-written text alone. */
+export async function getSavedSupplierContentOverrides(): Promise<Readonly<Record<string, SupplierContentOverride>>> {
+  return getSavedSupplierContent();
+}
+
 /** The three boxes a supplier page renders: saved text where there is some, generated text elsewhere. */
 export async function getSupplierContent(supplier: Supplier, allOffers: readonly Offer[]): Promise<SupplierContent> {
   const [saved, vendorCount] = await Promise.all([getSavedSupplierContent(), getVendorCount()]);

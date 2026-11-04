@@ -23,6 +23,7 @@ import { SupplierDirectoryResults } from '@/components/suppliers/supplier-direct
 import { PageFaqSection } from '@/components/faq/page-faq-section';
 import { SupplierEvaluationGuide } from '@/components/suppliers/supplier-evaluation-guide';
 import { PageSeo } from '@/components/seo/page-seo';
+import { SitewideBlocks } from '@/components/layout/sitewide-blocks';
 
 const PAGE = staticSeoPage('/suppliers');
 
@@ -202,6 +203,8 @@ export default async function SuppliersPage({
       <section className="mx-auto max-w-shell px-4 pb-12">
         <PageFaqSection path="/suppliers" />
       </section>
+
+      <SitewideBlocks featuredPartner={false} />
     </>
   );
 }

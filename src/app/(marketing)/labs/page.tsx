@@ -40,7 +40,7 @@ export default async function LabsPage() {
   ]);
 
   // Counted from live listings so the numbers can never drift from what the
-  // lab-reports directory actually shows.
+  // COAs directory actually shows.
   const slugsWithCoa = new Set(
     offers.filter((o) => o.coaUrl || o.labReport?.reportUrl || o.labReport?.labUrl).map((o) => o.supplierSlug),
   );
@@ -142,7 +142,7 @@ export default async function LabsPage() {
               <ExternalIcon className="h-4 w-4" />
             </Link>
             <Link
-              href="/lab-reports"
+              href="/coas"
               className="inline-flex items-center rounded-chip border border-line bg-surface px-6 py-3 text-sm font-bold text-content transition-colors hover:border-brand"
             >
               Lab reports
@@ -154,7 +154,7 @@ export default async function LabsPage() {
           <h2 className="text-lg font-black text-content">Looking for the documents themselves?</h2>
           <p className="mx-auto mt-2 max-w-lg text-sm text-muted">
             The{' '}
-            <Link href="/lab-reports" className="font-semibold text-accent hover:underline">
+            <Link href="/coas" className="font-semibold text-accent hover:underline">
               lab reports directory
             </Link>{' '}
             lists every certificate we have linked, by compound and supplier.

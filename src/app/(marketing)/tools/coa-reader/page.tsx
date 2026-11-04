@@ -255,7 +255,7 @@ export default async function CoaReaderGuidePage() {
             <p className={cn('lg:col-span-2', GUIDE_TEXT_CLASS)}>
               This reader is one part of how {site.name} approaches certificate verification. Alongside
               this field guide, our{' '}
-              <Link href="/lab-reports" className={INLINE_LINK_CLASS}>
+              <Link href="/coas" className={INLINE_LINK_CLASS}>
                 lab reports directory
               </Link>{' '}
               links directly to supplier-published certificates, and every supplier profile notes whether
@@ -373,7 +373,7 @@ export default async function CoaReaderGuidePage() {
                 published for the same compound, and contact the testing lab directly if anything looks off.
               </p>
               <Link
-                href="/lab-reports"
+                href="/coas"
                 className="btn-3d inline-flex shrink-0 items-center gap-2 rounded-pill bg-brand px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-brand-strong"
               >
                 <DocumentIcon className="h-4 w-4" />

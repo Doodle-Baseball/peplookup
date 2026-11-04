@@ -30,7 +30,7 @@ const DESTINATIONS: { href: string; label: string; hint: string; icon: React.Rea
     icon: <BoxIcon className="h-5 w-5" />,
   },
   {
-    href: '/lab-reports',
+    href: '/coas',
     label: 'Lab reports',
     hint: 'Third-party COA results by supplier',
     icon: <FlaskIcon className="h-5 w-5" />,

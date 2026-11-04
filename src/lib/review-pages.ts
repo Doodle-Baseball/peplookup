@@ -1,8 +1,5 @@
 import type { Supplier } from '@/lib/schema';
-import { indexableWhenSeoAdded } from '@/lib/seo-indexing';
-
-/** Reviews pages start hidden from search engines; see {@link indexableWhenSeoAdded} for the rule. */
-export const reviewsPageIndexable = indexableWhenSeoAdded;
+import { formatReviewCount } from '@/lib/format';
 
 /**
  * Every vendor gets a reviews page at `/reviews/<vendor-slug>-reviews`, so each
@@ -35,6 +32,18 @@ export type RatingFacts = Pick<Supplier, 'reviewRating' | 'reviewCount' | 'revie
 /** True when we hold a rating for this vendor, the minimum for its page to say anything about reviews. */
 export function hasRating(supplier: Pick<Supplier, 'reviewRating'>): boolean {
   return supplier.reviewRating !== null;
+}
+
+/**
+ * "Trustpilot 4.3/5 from 120 reviews": the rating with its source and count,
+ * the only way a rating is labelled on the site. Null when the supplier has no
+ * rating, so callers show nothing at all rather than a default.
+ */
+export function ratingAttribution(facts: RatingFacts): string | null {
+  if (facts.reviewRating === null) return null;
+  const count = formatReviewCount(facts.reviewCount);
+  const score = `${facts.reviewRating.toFixed(1)}/5${count ? ` from ${count} reviews` : ''}`;
+  return facts.reviewsUrl ? `${ratingSourceLabel(facts.reviewsUrl)} ${score}` : `Rated ${score}`;
 }
 
 /**

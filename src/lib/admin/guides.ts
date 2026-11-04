@@ -15,6 +15,8 @@ const MIGRATION_HINT =
   'Run supabase/migrations/0012_guides.sql in the Supabase SQL editor first.';
 const COVER_MIGRATION_HINT =
   'Run supabase/migrations/0030_guide_cover_images.sql in the Supabase SQL editor first.';
+const QUALITY_MIGRATION_HINT =
+  'Run supabase/migrations/0031_seo_quality.sql in the Supabase SQL editor first.';
 
 function requireClient() {
   const client = getSupabaseServerClient();
@@ -28,7 +30,12 @@ function requireClient() {
 
 /** Points at whichever migration the failing column actually comes from. */
 function guideDbError(message: string): AdminDbError {
-  return new AdminDbError(`${message}. ${message.includes('cover_image_alt') ? COVER_MIGRATION_HINT : MIGRATION_HINT}`);
+  const hint = message.includes('cover_image_alt')
+    ? COVER_MIGRATION_HINT
+    : message.includes('reviewed_by_me')
+      ? QUALITY_MIGRATION_HINT
+      : MIGRATION_HINT;
+  return new AdminDbError(`${message}. ${hint}`);
 }
 
 export const GUIDE_SLUG_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;

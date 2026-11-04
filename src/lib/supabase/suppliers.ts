@@ -44,6 +44,10 @@ export interface SupplierRow {
   domain_registered_at: string | null;
   /** Added by 0013_display_order.sql; undefined until that migration runs. */
   position?: number | null;
+  /** Added by 0029_chrome_extension.sql. */
+  coupon_verified_at?: string | null;
+  /** Added by 0031_seo_quality.sql; undefined until that migration runs. */
+  review_summary?: string | null;
 }
 
 export function rowToSupplier(row: SupplierRow): Supplier {
@@ -91,6 +95,9 @@ export function rowToSupplier(row: SupplierRow): Supplier {
     coaLabName: row.coa_lab_name,
     domainRegisteredAt: row.domain_registered_at,
     position: row.position ?? null,
+    updatedAt: row.updated_at,
+    couponVerifiedAt: row.coupon_verified_at ?? null,
+    reviewSummary: row.review_summary?.trim() || null,
   };
 }
 

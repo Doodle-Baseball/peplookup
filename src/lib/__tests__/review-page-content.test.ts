@@ -5,8 +5,6 @@ import {
   resolveReviewPageContent,
   toReviewPageContentOverride,
 } from '@/lib/review-page-content';
-import { indexableWhenSeoAdded } from '@/lib/seo-indexing';
-import { reviewsPageIndexable } from '@/lib/review-pages';
 
 const VENDOR = { name: 'IDUN Peptides', description: 'A U.S. research peptide supplier.' };
 
@@ -47,19 +45,3 @@ describe('resolveReviewPageContent', () => {
   });
 });
 
-describe('indexableWhenSeoAdded', () => {
-  const base = { robotsIndex: true, metaTitle: 'IDUN Peptides Reviews', metaDescription: 'Ratings and reviews.' };
-
-  it('is off with no saved SEO, with a missing title or description, or with the switch off', () => {
-    expect(indexableWhenSeoAdded(null)).toBe(false);
-    expect(indexableWhenSeoAdded({ ...base, metaTitle: null })).toBe(false);
-    expect(indexableWhenSeoAdded({ ...base, metaDescription: ' ' })).toBe(false);
-    expect(indexableWhenSeoAdded({ ...base, robotsIndex: false })).toBe(false);
-  });
-
-  it('turns on once SEO details are saved and indexing is switched on, for review pages too', () => {
-    expect(indexableWhenSeoAdded(base)).toBe(true);
-    expect(reviewsPageIndexable(base)).toBe(true);
-    expect(reviewsPageIndexable(null)).toBe(false);
-  });
-});

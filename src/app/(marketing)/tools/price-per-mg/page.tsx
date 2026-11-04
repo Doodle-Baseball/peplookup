@@ -22,7 +22,7 @@ const SPLIT_HEADING_CLASS = 'mt-3 text-2xl font-black leading-tight text-content
 const COMPARE_LINKS: { href: string; label: string; title: string; icon: React.ReactNode }[] = [
   { href: '/suppliers', label: 'Browse all suppliers', title: 'Every listed supplier', icon: <ListIcon className="h-5 w-5" /> },
   { href: '/price-checker', label: 'Compare by compound', title: 'Side-by-side pricing', icon: <TagIcon className="h-5 w-5" /> },
-  { href: '/lab-reports', label: 'Listings with lab reports', title: 'COA test reports', icon: <DocumentIcon className="h-5 w-5" /> },
+  { href: '/coas', label: 'Listings with lab reports', title: 'COA test reports', icon: <DocumentIcon className="h-5 w-5" /> },
 ];
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -158,7 +158,7 @@ export default async function PricePerMgToolPage() {
                 supplier
               </Link>{' '}
               says it is, so check for a batch-specific COA in the supplier&rsquo;s published{' '}
-              <Link href="/lab-reports" className="font-bold text-brand hover:underline">
+              <Link href="/coas" className="font-bold text-brand hover:underline">
                 lab reports
               </Link>{' '}
               before you decide. Research use only.

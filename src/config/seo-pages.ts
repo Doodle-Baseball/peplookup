@@ -41,7 +41,7 @@ export const STATIC_SEO_PAGES = [
     h1: 'Research Peptide Suppliers Directory',
   },
   {
-    path: '/lab-reports',
+    path: '/coas',
     name: 'Lab reports',
     group: 'Main pages',
     title: `COA Lab Reports | Verified Peptide Test Results | ${site.name}`,

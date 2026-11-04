@@ -41,7 +41,7 @@ vi.mock('../supabase/suppliers', () => ({
 vi.mock('../supabase/offers', () => ({ fetchOffersFromDb: mocks.fetchOffersFromDb }));
 vi.mock('../supabase/guides', () => ({ fetchGuidesFromDb: mocks.fetchGuidesFromDb }));
 vi.mock('../supabase/supplier-reviews', () => ({ fetchSupplierReviewsFromDb: mocks.fetchSupplierReviewsFromDb }));
-vi.mock('@/lib/seo', () => ({ getSupplierSlugAliases: async () => new Map<string, string[]>() }));
+vi.mock('@/lib/seo-redirects', () => ({ getSupplierSlugAliases: async () => new Map<string, string[]>() }));
 
 const dbProduct: Product = { ...seedProducts[0]!, slug: 'db-compound', name: 'From the database' };
 const dbSupplier: Supplier = { ...seedSuppliers[0]!, slug: 'db-vendor', name: 'Database Vendor' };

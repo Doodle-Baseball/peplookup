@@ -1,10 +1,11 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import type { SeoEntry, SeoPageKind } from '@/lib/admin/seo';
+import type { SeoEntry, SeoPageKind, SeoQualitySummary } from '@/lib/admin/seo';
 import type { SeoRedirect } from '@/lib/seo';
 import { effectiveSeo, seoChecks, seoStatus, taskStatusLabel, type EffectiveSeo, type SeoStatus } from '@/lib/seo-status';
-import { indexableWhenSeoAdded } from '@/lib/seo-indexing';
+import { indexStatusLabel } from '@/lib/seo/indexing';
+import { QUALITY_THRESHOLDS } from '@/config/seo-quality';
 import type { SeoTaskStatus } from '@/lib/seo';
 import { SeoEditDialog } from '@/components/admin/seo/seo-edit-dialog';
 import { cn } from '@/lib/cn';
@@ -16,6 +17,7 @@ const VISIBLE_KEYWORDS = 4;
 type KindFilter = 'all' | SeoPageKind;
 type StatusFilter = 'any' | SeoStatus | 'customized';
 type TaskStatusFilter = 'all' | SeoTaskStatus;
+type IndexingFilter = 'all' | 'indexed' | 'not-indexed' | 'failing';
 
 const SELECT_CLASS =
   'cursor-pointer rounded-chip border border-line bg-surface px-3.5 py-2.5 text-sm font-semibold text-content outline-none transition-colors hover:border-brand focus-visible:border-brand focus-visible:ring-2 focus-visible:ring-brand/40';
@@ -80,26 +82,27 @@ function StatTile({ label, value, tone }: { label: string; value: number; tone?:
 export function SeoDashboard({
   entries,
   redirects,
+  quality,
   setupError,
 }: {
   entries: SeoEntry[];
   redirects: SeoRedirect[];
+  quality: SeoQualitySummary;
   setupError: string | null;
 }) {
   const [query, setQuery] = useState('');
   const [kind, setKind] = useState<KindFilter>('all');
   const [status, setStatus] = useState<StatusFilter>('any');
   const [taskStatus, setTaskStatus] = useState<TaskStatusFilter>('all');
+  const [indexing, setIndexing] = useState<IndexingFilter>('all');
   const [page, setPage] = useState(0);
   const [editingPath, setEditingPath] = useState<string | null>(null);
 
   const rows = useMemo<Row[]>(
     () =>
       entries.map((entry) => {
-        const baseSeo = effectiveSeo(entry.defaults, entry.override);
-        // Coupon and review pages are noindex until SEO details are saved and indexing is switched on.
-        const hiddenByDefault = entry.kind === 'coupon' || entry.kind === 'review';
-        const seo = hiddenByDefault ? { ...baseSeo, robotsIndex: indexableWhenSeoAdded(entry.override) } : baseSeo;
+        // Whether the page is indexed comes from the one indexing decision, not the switch alone.
+        const seo = { ...effectiveSeo(entry.defaults, entry.override), robotsIndex: entry.indexing.indexable };
         const checks = seoChecks(seo);
         const taskStatus = entry.override?.taskStatus ?? null;
         return {
@@ -127,6 +130,9 @@ export function SeoDashboard({
     if (status === 'customized' && !row.entry.override) return false;
     if (status !== 'any' && status !== 'customized' && row.status !== status) return false;
     if (taskStatus !== 'all' && row.taskStatus !== taskStatus) return false;
+    if (indexing === 'indexed' && !row.entry.indexing.indexable) return false;
+    if (indexing === 'not-indexed' && row.entry.indexing.indexable) return false;
+    if (indexing === 'failing' && row.entry.indexing.qualityFailures.length === 0) return false;
     if (!needle) return true;
     return (
       row.entry.name.toLowerCase().includes(needle) ||
@@ -172,6 +178,8 @@ export function SeoDashboard({
         <StatTile label="Redirects" value={redirects.length} />
       </div>
 
+      <QualityPanel quality={quality} totalPages={rows.length} />
+
       <section className="rounded-card border border-line bg-surface-raised p-5 sm:p-6">
         <div className="flex flex-wrap items-center gap-3">
           <label className="flex min-w-[14rem] flex-1 items-center gap-2 rounded-chip border border-line bg-surface px-3.5 py-2.5 focus-within:border-brand">
@@ -197,6 +205,19 @@ export function SeoDashboard({
               <option value="needs-work">Needs work</option>
               <option value="noindex">Noindex</option>
               <option value="customized">Customized</option>
+            </select>
+          </label>
+          <label className="flex items-center gap-2 text-sm font-semibold text-content">
+            Indexing
+            <select
+              value={indexing}
+              onChange={(event) => resetPaging(setIndexing)(event.target.value as IndexingFilter)}
+              className={SELECT_CLASS}
+            >
+              <option value="all">All</option>
+              <option value="indexed">Indexed</option>
+              <option value="not-indexed">Not indexed</option>
+              <option value="failing">Failing quality check</option>
             </select>
           </label>
           <label className="flex items-center gap-2 text-sm font-semibold text-content">
@@ -351,6 +372,8 @@ function SeoCard({ row, onEdit, disabled }: { row: Row; onEdit: () => void; disa
         </div>
       </dl>
 
+      <IndexingLine entry={entry} />
+
       <div className="mt-auto flex items-center justify-between gap-3 pt-4">
         <span className="text-xs text-muted">
           {row.passed}/{row.total} checks passed
@@ -366,5 +389,72 @@ function SeoCard({ row, onEdit, disabled }: { row: Row; onEdit: () => void; disa
         </button>
       </div>
     </li>
+  );
+}
+
+/** "Indexed ✓" or "Not indexed – reason: …", plus any quality rule the page fails. */
+function IndexingLine({ entry }: { entry: SeoEntry }) {
+  const { indexing } = entry;
+  return (
+    <div className="mt-3 space-y-1 text-xs">
+      <p className={cn('font-bold', indexing.indexable ? 'text-ok' : 'text-warn')}>{indexStatusLabel(indexing)}</p>
+      {indexing.qualityFailures.length > 0 ? (
+        <p className="text-muted">
+          <span className="font-semibold text-content">
+            Quality check failing{indexing.enforced ? '' : ' (not enforced)'}:
+          </span>{' '}
+          {indexing.qualityFailures.join('; ')}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+/** B4 and B6 at a glance: how many pages are indexed, how fast new ones go live, and whose prices are stale. */
+function QualityPanel({ quality, totalPages }: { quality: SeoQualitySummary; totalPages: number }) {
+  const stale = quality.stalePriceSuppliers;
+  return (
+    <section aria-label="Indexing and quality" className="space-y-3">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+        <StatTile label={`Indexed (of ${totalPages})`} value={quality.indexableCount} tone="ok" />
+        <StatTile label="Failing quality check" value={quality.failingQualityCount} tone="warn" />
+        <StatTile
+          label="Pages made indexable in the last 7 days"
+          value={quality.madeIndexableLast7Days}
+          tone={quality.tooManyNewlyIndexable ? 'warn' : 'info'}
+        />
+      </div>
+      {quality.tooManyNewlyIndexable ? (
+        <p role="alert" className="flex gap-2 rounded-card border border-warn/30 bg-warn/5 px-4 py-3 text-sm text-content">
+          <WarningIcon className="mt-0.5 h-4 w-4 shrink-0 text-warn" />
+          {quality.madeIndexableLast7Days} pages were made indexable in the last 7 days, more than{' '}
+          {QUALITY_THRESHOLDS.maxNewlyIndexablePerWeek}. Put pages live a few at a time, not in bulk.
+        </p>
+      ) : null}
+      {stale.length > 0 ? (
+        <details className="rounded-card border border-warn/30 bg-warn/5 px-4 py-3 text-sm text-content">
+          <summary className="flex cursor-pointer items-center gap-2 font-semibold">
+            <WarningIcon className="h-4 w-4 shrink-0 text-warn" />
+            {stale.length} {stale.length === 1 ? 'supplier has' : 'suppliers have'} prices not updated in{' '}
+            {QUALITY_THRESHOLDS.stalePriceDays} days
+          </summary>
+          <ul className="mt-2 grid grid-cols-1 gap-1 sm:grid-cols-2 lg:grid-cols-3">
+            {stale.map((supplier) => (
+              <li key={supplier.slug} className="text-muted">
+                <a
+                  href={`/suppliers/${supplier.slug}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-semibold text-brand hover:underline"
+                >
+                  {supplier.name}
+                </a>{' '}
+                · {supplier.daysOld} days
+              </li>
+            ))}
+          </ul>
+        </details>
+      ) : null}
+    </section>
   );
 }

@@ -1,6 +1,6 @@
 import 'server-only';
 import type { SeoDefaults } from '@/lib/seo-defaults';
-import { getSeoOverride } from '@/lib/seo';
+import { cleanPageText, getIndexDecision, getSeoOverride } from '@/lib/seo';
 import { absoluteUrl, SITE_URL } from '@/lib/structured-data/graph';
 import { cleanPath } from '@/lib/structured-data/page-routes';
 
@@ -24,23 +24,23 @@ function canonicalFor(path: string, override: string | null): string {
 
 /**
  * Resolves the same values withSeo() puts in the page's metadata, so the
- * structured data can never disagree with the title, description and H1.
- * `indexable` lets pages with their own indexing rule (coupon and review
- * pages) pass the result they already computed.
+ * structured data can never disagree with the title, description, H1 or the
+ * page's indexing decision.
  */
-export async function resolvePageSeo(
-  defaults: SeoDefaults,
-  options: { indexable?: boolean } = {},
-): Promise<ResolvedPageSeo> {
+export async function resolvePageSeo(defaults: SeoDefaults): Promise<ResolvedPageSeo> {
   const path = cleanPath(defaults.path);
-  const override = await getSeoOverride(path);
+  const [override, decision] = await Promise.all([getSeoOverride(path), getIndexDecision(path)]);
+  const text = await cleanPageText(path, {
+    title: override?.metaTitle || defaults.title,
+    description: override?.metaDescription ?? defaults.description,
+  });
   return {
     path,
     canonicalUrl: canonicalFor(path, override?.canonicalUrl ?? null),
-    title: override?.metaTitle || defaults.title,
-    description: override?.metaDescription ?? defaults.description,
+    title: text.title,
+    description: text.description,
     heading: override?.h1 || defaults.h1,
-    indexable: options.indexable ?? override?.robotsIndex ?? true,
+    indexable: decision.indexable,
     updatedAt: override?.updatedAt ?? null,
   };
 }

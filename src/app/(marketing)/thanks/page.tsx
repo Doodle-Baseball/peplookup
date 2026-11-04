@@ -15,10 +15,11 @@ import {
 } from '@/components/icons/icons';
 import { verifyPaymentId, verifyWithWhop } from '@/lib/vendor-listing/payment';
 import { getRequest, type VendorListingRequest } from '@/lib/vendor-listing/requests';
+import { privatePageRobots } from '@/lib/seo/indexing';
 
 export const metadata: Metadata = {
   title: 'Request received | PepLookup',
-  robots: { index: false, follow: false },
+  robots: privatePageRobots('/thanks'),
 };
 
 // Payment status changes after the buyer lands here; never serve a snapshot.

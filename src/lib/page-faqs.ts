@@ -12,6 +12,8 @@ import {
   type FaqItem,
 } from '@/data/default-page-faqs';
 import { getGuideBySlug, getSupplier, getVendorCount } from '@/lib/repository';
+import { getSupplierTextContext } from '@/lib/seo/page-quality';
+import { qualifyClaims } from '@/lib/seo/text';
 import { fillVendorCountDeep } from '@/lib/vendor-count';
 import { supplierSlugFromCouponPath } from '@/lib/coupon-pages';
 import { ratingSourceLabel, supplierSlugFromReviewsPath } from '@/lib/review-pages';
@@ -96,7 +98,14 @@ async function defaultFaqsFor(path: string): Promise<readonly FaqItem[]> {
 export async function getFaqsForPath(path: string): Promise<readonly FaqItem[]> {
   const [stored, vendorCount] = await Promise.all([getStoredFaqs(), getVendorCount()]);
   const saved = stored[path];
-  return fillVendorCountDeep(saved ?? (await defaultFaqsFor(path)), vendorCount);
+  const faqs = fillVendorCountDeep(saved ?? (await defaultFaqsFor(path)), vendorCount);
+
+  // Supplier pages keep their researched FAQ wording exactly as saved; the
+  // coupon and reviews pages get the purity and same-day wording rules.
+  if (path.startsWith('/suppliers/')) return faqs;
+  const context = await getSupplierTextContext(path);
+  if (!context) return faqs;
+  return faqs.map((faq) => ({ question: qualifyClaims(faq.question, context), answer: qualifyClaims(faq.answer, context) }));
 }
 
 /** Whether a path's questions come from the database rather than the built-in defaults. */

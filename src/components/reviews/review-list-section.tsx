@@ -1,7 +1,8 @@
 import type { SupplierReview } from '@/lib/schema';
 import { formatRating, formatReviewDate } from '@/lib/format';
 import { StarTiles } from '@/components/ui/star-tiles';
-import { ExternalIcon, StarIcon } from '@/components/icons/icons';
+import { StarRating } from '@/components/ui/star-rating';
+import { ExternalIcon } from '@/components/icons/icons';
 
 /**
  * What customers wrote about one vendor, as individual cards. Shows only
@@ -12,7 +13,7 @@ export function ReviewListSection({
   supplierName,
   reviews,
   rating,
-  reviewCountText,
+  ratingLabel,
   sourceLabel,
   reviewsUrl,
   note,
@@ -21,7 +22,8 @@ export function ReviewListSection({
   supplierName: string;
   reviews: readonly SupplierReview[];
   rating: number | null;
-  reviewCountText: string | null;
+  /** "Trustpilot 4.3/5 from 120 reviews", or null when there is no rating. */
+  ratingLabel: string | null;
   sourceLabel: string;
   reviewsUrl: string | null;
   /** The small print under the cards. */
@@ -41,10 +43,16 @@ export function ReviewListSection({
             What customers say about <span className="text-accent">{supplierName}.</span>
           </h2>
         </div>
-        {rating !== null ? (
+        {rating !== null && ratingLabel ? (
           <span className="inline-flex items-center gap-2 rounded-pill border border-accent/30 bg-accent-tint px-3.5 py-2 text-sm font-bold text-accent-strong">
-            <StarIcon className="h-4 w-4 fill-current text-rating" />
-            {formatRating(rating)} / 5{reviewCountText ? ` · ${reviewCountText} reviews` : ''}
+            <StarRating rating={rating} starClassName="h-4 w-4" />
+            {reviewsUrl ? (
+              <a href={reviewsUrl} target="_blank" rel="nofollow noopener noreferrer" className="hover:underline">
+                {ratingLabel}
+              </a>
+            ) : (
+              ratingLabel
+            )}
           </span>
         ) : null}
       </div>
@@ -66,6 +74,21 @@ export function ReviewListSection({
                     <>
                       <span aria-hidden="true">·</span>
                       <time dateTime={review.reviewedAt}>{formatReviewDate(review.reviewedAt)}</time>
+                    </>
+                  ) : null}
+                  {/* Each excerpt names and links its source, so none reads as our own review. */}
+                  {reviewsUrl ? (
+                    <>
+                      <span aria-hidden="true">·</span>
+                      <a
+                        href={reviewsUrl}
+                        target="_blank"
+                        rel="nofollow noopener noreferrer"
+                        className="inline-flex items-center gap-1 font-semibold text-accent-strong hover:underline"
+                      >
+                        on {sourceLabel}
+                        <ExternalIcon className="h-3 w-3" />
+                      </a>
                     </>
                   ) : null}
                 </p>

@@ -1,5 +1,5 @@
 import { getFaqsForPath } from '@/lib/page-faqs';
-import { getSeoOverride } from '@/lib/seo';
+import { getIndexDecision } from '@/lib/seo';
 import type { FaqItem } from '@/data/default-page-faqs';
 import { ChevronDownIcon } from '@/components/icons/icons';
 import { cn } from '@/lib/cn';
@@ -19,20 +19,23 @@ export async function PageFaqSection({
   path,
   className,
   /**
-   * Set false on a page that already emits its own FAQPage schema, or that is
-   * noindex by its own rule (coupon and review pages), so no FAQPage goes out
-   * where it shouldn't. The visible section still renders.
+   * Set false on a page that already emits its own FAQPage schema, so no
+   * FAQPage goes out twice. The visible section still renders.
    */
   includeSchema = true,
+  pick,
 }: {
   path: string;
   className?: string;
   includeSchema?: boolean;
+  /** Narrows or reorders the questions before they render (and before the schema), without touching what is saved. */
+  pick?: (faqs: readonly FaqItem[]) => readonly FaqItem[];
 }) {
-  const [faqs, seo] = await Promise.all([getFaqsForPath(path), getSeoOverride(path)]);
+  const [allFaqs, decision] = await Promise.all([getFaqsForPath(path), getIndexDecision(path)]);
+  const faqs = pick ? pick(allFaqs) : allFaqs;
   if (faqs.length === 0) return null;
-  // A page switched to noindex in /admin/seo carries no structured data at all.
-  const emitsSchema = includeSchema && (seo?.robotsIndex ?? true);
+  // A noindex page carries no structured data at all.
+  const emitsSchema = includeSchema && decision.indexable;
 
   return (
     <section

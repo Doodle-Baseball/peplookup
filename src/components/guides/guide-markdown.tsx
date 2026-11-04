@@ -62,6 +62,7 @@ function components(sponsoredHosts: ReadonlySet<string>): Components {
         </a>
       );
     },
+    h3: ({ children }) => <h3 className="pt-2 text-lg font-black leading-tight text-content">{children}</h3>,
     strong: ({ children }) => <strong className="font-bold text-content">{children}</strong>,
     ul: ({ children }) => <ul className="list-disc space-y-1.5 pl-5">{children}</ul>,
     ol: ({ children, start }) => (
@@ -113,15 +114,18 @@ function components(sponsoredHosts: ReadonlySet<string>): Components {
 export function GuideMarkdown({
   source,
   sponsoredHosts,
+  subheadings = false,
 }: {
   source: string;
   /** Supplier hosts: links to these are marked rel="sponsored nofollow". */
   sponsoredHosts: ReadonlySet<string>;
+  /** Renders "###" as an H3 under the section's H2. Off for admin-written guides, which keep plain text. */
+  subheadings?: boolean;
 }) {
   return (
     <Markdown
       remarkPlugins={[remarkGfm]}
-      allowedElements={ALLOWED_ELEMENTS}
+      allowedElements={subheadings ? [...ALLOWED_ELEMENTS, 'h3'] : ALLOWED_ELEMENTS}
       unwrapDisallowed
       skipHtml
       components={components(sponsoredHosts)}

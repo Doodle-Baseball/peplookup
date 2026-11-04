@@ -12,13 +12,16 @@ import { latestDate, resolvePageSeo } from '@/lib/structured-data/page-seo';
 export interface PageSeoProps {
   /** The same defaults the page passes to pageMetadata(), so both resolve identically. */
   seo: SeoDefaults;
-  /** For pages with their own indexing rule; otherwise the /admin/seo setting applies. */
-  indexable?: boolean;
   /** Dates the page's own data last changed (offer scrapes, publish dates). */
   dataDates?: readonly (string | null | undefined)[];
   itemList?: readonly ItemListEntry[];
   supplier?: SupplierSubject;
-  article?: { datePublished?: string | null; image?: string | null };
+  article?: {
+    datePublished?: string | null;
+    image?: string | null;
+    author?: { name: string; url: string } | null;
+    description?: string | null;
+  };
   /** A crumb between the section and the page, such as a guide's category. */
   subsection?: { name: string; path: string };
   product?: ProductOfferSummary | null;
@@ -32,7 +35,6 @@ export interface PageSeoProps {
  */
 export async function PageSeo({
   seo,
-  indexable,
   dataDates = [],
   itemList,
   supplier,
@@ -40,7 +42,7 @@ export async function PageSeo({
   subsection,
   product,
 }: PageSeoProps) {
-  const page = await resolvePageSeo(seo, { indexable });
+  const page = await resolvePageSeo(seo);
   if (!page.indexable || isSchemaExcluded(page.path)) return null;
 
   const dateModified = latestDate([page.updatedAt, ...dataDates]);
@@ -54,7 +56,15 @@ export async function PageSeo({
     dateModified,
     itemList,
     supplier,
-    article: article ? { datePublished: article.datePublished, dateModified, image: article.image } : undefined,
+    article: article
+      ? {
+          datePublished: article.datePublished,
+          dateModified,
+          image: article.image,
+          author: article.author,
+          description: article.description,
+        }
+      : undefined,
     subsection,
     product,
   });

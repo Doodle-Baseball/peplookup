@@ -150,6 +150,12 @@ export const supplierSchema = z.object({
   domainRegisteredAt: z.string().datetime().nullable(),
   /** Manual display order set in the admin. Null until placed; nulls sort last. */
   position: z.number().int().nullable().default(null),
+  /** When the record was last saved; shown as "Last checked" on the supplier page. */
+  updatedAt: z.string().nullable().optional(),
+  /** YYYY-MM-DD the coupon code was last tested. Null until someone tests it, never assumed. */
+  couponVerifiedAt: z.string().nullable().optional(),
+  /** The site owner's own summary of this supplier's reviews (0031). Null until written. */
+  reviewSummary: z.string().nullable().optional(),
 });
 export type Supplier = z.infer<typeof supplierSchema>;
 

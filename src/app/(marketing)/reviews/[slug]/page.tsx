@@ -11,8 +11,9 @@ import {
 import { loadReviewsSupplierOrExit } from '@/lib/reviews-page-route';
 import { supplierGoPath } from '@/lib/go-links';
 import { site } from '@/config/site';
-import { formatRating, formatReviewCount } from '@/lib/format';
-import { ratingSourceLabel, reviewsPageIndexable, reviewsPagePath } from '@/lib/review-pages';
+import { formatRating } from '@/lib/format';
+import { ratingAttribution, ratingSourceLabel, reviewsPagePath } from '@/lib/review-pages';
+import { couponPagePath } from '@/lib/coupon-pages';
 import { pageMetadata, reviewsPageSeoDefaults } from '@/lib/seo-defaults';
 import { getSeoOverride, withSeo } from '@/lib/seo';
 import { PageSeo } from '@/components/seo/page-seo';
@@ -23,7 +24,6 @@ import { FavoriteButton } from '@/components/supplier-card/favorite-button';
 import { StarRating } from '@/components/ui/star-rating';
 import { JumpToNav } from '@/components/product-card/jump-to-nav';
 import { StoreDetailsSection } from '@/components/supplier-card/store-details-section';
-import { SupplierCatalogSection } from '@/components/supplier-card/supplier-catalog-section';
 import { PageFaqSection } from '@/components/faq/page-faq-section';
 import { getReviewPageContent } from '@/lib/review-page-content-store';
 import { ReviewListSection } from '@/components/reviews/review-list-section';
@@ -37,6 +37,9 @@ import {
   StarIcon,
   TagIcon,
 } from '@/components/icons/icons';
+import { getSupplierTextContext } from '@/lib/seo/page-quality';
+import { isContentV2 } from '@/lib/seo/protected';
+import { qualifyClaims } from '@/lib/seo/text';
 
 /**
  * The public address is /reviews/<vendor-slug>-reviews, so the route's `slug`
@@ -53,20 +56,16 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const supplier = await loadReviewsSupplierOrExit(slug);
   const defaults = reviewsPageSeoDefaults(supplier);
-  const [metadata, seo] = await Promise.all([withSeo(defaults.path, pageMetadata(defaults)), getSeoOverride(defaults.path)]);
-  // Hidden from search engines until its SEO details are saved and indexing is
-  // switched on for it in /admin/seo.
-  if (reviewsPageIndexable(seo)) return metadata;
-  return { ...metadata, robots: { index: false, follow: seo?.robotsFollow ?? true } };
+  // Indexing is decided by withSeo(), through the one rule in src/lib/seo/indexing.ts.
+  return withSeo(defaults.path, pageMetadata(defaults));
 }
 
-export default async function VendorReviewsPage({
-  params,
-  searchParams,
-}: {
-  params: Promise<{ slug: string }>;
-  searchParams: Promise<{ pq?: string; page?: string; form?: string; size?: string }>;
-}) {
+/**
+ * A reviews page is about reputation alone: the rating with its source, the
+ * excerpts linked to where they were written, and the site owner's own
+ * summary. The catalogue and COAs live on the supplier page, linked below.
+ */
+export default async function VendorReviewsPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const supplier = await loadReviewsSupplierOrExit(slug);
 
@@ -78,8 +77,6 @@ export default async function VendorReviewsPage({
     getSupplierReviews(supplier),
     getReviewPageContent(supplier),
   ]);
-  const { pq, page: pageParam, form: formParam, size: sizeParam } = await searchParams;
-  const catalogueQuery = (pq ?? '').trim();
 
   const productsBySlug = new Map(allProducts.map((p) => [p.slug, p]));
   // Offers whose product no longer resolves are dropped rather than shown with a missing name.
@@ -88,9 +85,14 @@ export default async function VendorReviewsPage({
   const logo = supplier.logoUrl ?? supplier.faviconUrl;
   const defaults = reviewsPageSeoDefaults(supplier);
   const shopHref = supplierGoPath(supplier.slug, 'website');
-  const reviewCountText = formatReviewCount(supplier.reviewCount);
   const sourceLabel = ratingSourceLabel(supplier.reviewsUrl);
   const rating = supplier.reviewRating;
+  // "Trustpilot 4.3/5 from 120 reviews"; null when there is no rating, and then no number shows anywhere.
+  const ratingLabel = ratingAttribution(supplier);
+  const summary = supplier.reviewSummary ?? null;
+  // Purity, testing and same-day wording follows the same rules as the supplier page (A7).
+  const claimContext = await getSupplierTextContext(path);
+  const intro = content.intro && claimContext ? qualifyClaims(content.intro, claimContext) : content.intro;
 
   // Only facts we actually hold for this vendor, no placeholder figures.
   const productCount = resolvedOffers.length;
@@ -101,7 +103,6 @@ export default async function VendorReviewsPage({
         {/* The rating shown here is the review source's, not a PepLookup score, so no Review node. */}
         <PageSeo
           seo={defaults}
-          indexable={reviewsPageIndexable(seo)}
           supplier={supplier}
           dataDates={[...reviews.map((review) => review.reviewedAt), ...resolvedOffers.map((offer) => offer.scrapedAt)]}
         />
@@ -154,8 +155,8 @@ export default async function VendorReviewsPage({
                       </>
                     )}
                   </h1>
-                  {content.intro ? (
-                    <p className="mt-3 max-w-2xl text-base leading-7 text-muted">{content.intro}</p>
+                  {intro ? (
+                    <p className="mt-3 max-w-2xl text-base leading-7 text-muted">{intro}</p>
                   ) : null}
 
                   <ul className="mt-4 flex flex-wrap gap-2">
@@ -218,9 +219,20 @@ export default async function VendorReviewsPage({
                   </p>
                   <p className="mt-4 flex flex-wrap items-center gap-2">
                     <StarRating rating={rating} starClassName="h-5 w-5" />
-                    <span className="text-sm font-semibold text-muted">
-                      {reviewCountText ? `${reviewCountText} reviews` : 'Review count not listed'}
-                    </span>
+                    {ratingLabel ? (
+                      supplier.reviewsUrl ? (
+                        <a
+                          href={supplier.reviewsUrl}
+                          target="_blank"
+                          rel="nofollow noopener noreferrer"
+                          className="text-sm font-semibold text-muted underline-offset-2 hover:text-accent-strong hover:underline"
+                        >
+                          {ratingLabel}
+                        </a>
+                      ) : (
+                        <span className="text-sm font-semibold text-muted">{ratingLabel}</span>
+                      )
+                    ) : null}
                   </p>
                 </>
               ) : (
@@ -265,9 +277,9 @@ export default async function VendorReviewsPage({
             <JumpToNav
               items={[
                 { id: 'overview', label: 'Overview' },
+                ...(summary ? [{ id: 'summary', label: 'Our Summary' }] : []),
                 { id: 'reviews', label: 'Reviews' },
                 { id: 'policies', label: 'Policies' },
-                { id: 'products', label: 'Products' },
                 { id: 'faq', label: 'FAQ' },
               ]}
             />
@@ -291,12 +303,27 @@ export default async function VendorReviewsPage({
           </div>
         ) : null}
 
+        {/* ---------------------------------------------------------- Summary */}
+        {summary ? (
+          <section
+            id="summary"
+            aria-labelledby="summary-heading"
+            className="reveal mt-12 scroll-mt-24 rounded-panel border border-line bg-surface-raised p-5 shadow-card sm:p-8"
+          >
+            <p className="eyebrow">In our words</p>
+            <h2 id="summary-heading" className="mt-2 text-2xl font-black text-content sm:text-3xl">
+              Our summary of {supplier.name} <span className="text-accent">reviews</span>
+            </h2>
+            <p className="mt-4 max-w-4xl whitespace-pre-line text-base leading-7 text-muted">{summary}</p>
+          </section>
+        ) : null}
+
         {/* ---------------------------------------------------------- Reviews */}
         <ReviewListSection
           supplierName={supplier.name}
           reviews={reviews}
           rating={rating}
-          reviewCountText={reviewCountText}
+          ratingLabel={ratingLabel}
           sourceLabel={sourceLabel}
           reviewsUrl={supplier.reviewsUrl}
           note={content.reviewsNote}
@@ -308,21 +335,28 @@ export default async function VendorReviewsPage({
           <StoreDetailsSection supplier={supplier} className="mt-12" />
         </div>
 
-        {/* ---------------------------------------------------------- Catalog */}
-        <SupplierCatalogSection
-          supplier={supplier}
-          offers={resolvedOffers}
-          productsBySlug={productsBySlug}
-          id="products"
-          query={catalogueQuery}
-          pageParam={pageParam}
-          formParam={formParam}
-          sizeParam={sizeParam}
-          className="mt-12"
-        />
+        {/* ------------------------------------------- Where to go next */}
+        <nav aria-label={`More about ${supplier.name}`} className="mt-12 flex flex-wrap items-center gap-3">
+          <Link
+            href={`/suppliers/${supplier.slug}`}
+            className="group/profile inline-flex items-center gap-2 rounded-pill border border-line bg-surface-raised px-4 py-2.5 text-sm font-bold text-content transition-colors hover:border-accent hover:text-accent-strong"
+          >
+            {isContentV2() ? `See ${supplier.name} prices and products` : `See all ${supplier.name} products and prices`}
+            <ArrowRightIcon className="h-4 w-4 transition-transform group-hover/profile:translate-x-1" />
+          </Link>
+          {supplier.coupon ? (
+            <Link
+              href={couponPagePath(supplier.slug)}
+              className="group/coupon inline-flex items-center gap-2 rounded-pill border border-line bg-surface-raised px-4 py-2.5 text-sm font-bold text-content transition-colors hover:border-accent hover:text-accent-strong"
+            >
+              {supplier.name} coupon code
+              <ArrowRightIcon className="h-4 w-4 transition-transform group-hover/coupon:translate-x-1" />
+            </Link>
+          ) : null}
+        </nav>
 
         {/* ------------------------------------------------------------- FAQ */}
-        <PageFaqSection path={path} includeSchema={reviewsPageIndexable(seo)} className="mt-12" />
+        <PageFaqSection path={path} className="mt-12" />
       </div>
     </div>
   );
