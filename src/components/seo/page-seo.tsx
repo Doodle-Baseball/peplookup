@@ -25,6 +25,8 @@ export interface PageSeoProps {
   /** A crumb between the section and the page, such as a guide's category. */
   subsection?: { name: string; path: string };
   product?: ProductOfferSummary | null;
+  /** The page writes its own title and description, so the ones saved in /admin/seo are not used. */
+  ignoreSavedText?: boolean;
 }
 
 /**
@@ -41,8 +43,9 @@ export async function PageSeo({
   article,
   subsection,
   product,
+  ignoreSavedText = false,
 }: PageSeoProps) {
-  const page = await resolvePageSeo(seo);
+  const page = await resolvePageSeo(seo, { ignoreSavedText });
   if (!page.indexable || isSchemaExcluded(page.path)) return null;
 
   const dateModified = latestDate([page.updatedAt, ...dataDates]);

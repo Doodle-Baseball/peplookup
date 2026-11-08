@@ -24,14 +24,17 @@ export async function PageFaqSection({
    */
   includeSchema = true,
   pick,
+  items,
 }: {
   path: string;
   className?: string;
   includeSchema?: boolean;
   /** Narrows or reorders the questions before they render (and before the schema), without touching what is saved. */
   pick?: (faqs: readonly FaqItem[]) => readonly FaqItem[];
+  /** Questions the page writes itself, used instead of what is saved for `path`. */
+  items?: readonly FaqItem[];
 }) {
-  const [allFaqs, decision] = await Promise.all([getFaqsForPath(path), getIndexDecision(path)]);
+  const [allFaqs, decision] = await Promise.all([items ?? getFaqsForPath(path), getIndexDecision(path)]);
   const faqs = pick ? pick(allFaqs) : allFaqs;
   if (faqs.length === 0) return null;
   // A noindex page carries no structured data at all.

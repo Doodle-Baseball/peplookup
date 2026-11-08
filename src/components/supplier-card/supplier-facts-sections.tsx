@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { cn } from '@/lib/cn';
 import { formatMoney, formatPerMg } from '@/lib/money';
 import { ordinal, type CouponPriceRow, type SupplierFacts } from '@/lib/supplier-facts';
@@ -81,10 +82,18 @@ export function SupplierPriceComparison({
   facts,
   title,
   className,
+  intro,
+  ownLabel = facts.name,
+  footer,
 }: {
   facts: SupplierFacts;
   title: string;
   className?: string;
+  /** Replaces the one-line description under the heading. */
+  intro?: ReactNode;
+  /** How the supplier's own columns are named ("Their $/mg"); the supplier's name by default. */
+  ownLabel?: string;
+  footer?: ReactNode;
 }) {
   const rows = facts.standings.filter((standing) => standing.supplierCount >= 2).slice(0, 5);
   if (rows.length === 0) return null;
@@ -96,19 +105,21 @@ export function SupplierPriceComparison({
         <h2 id="vendor-compare-heading" className="mt-3 text-2xl font-black leading-tight text-content break-words sm:text-3xl">
           {title}
         </h2>
-        <p className="mt-2 text-sm text-muted">
-          In-stock prices per mg, compared with every active supplier that lists the same compound.
-        </p>
+        {intro ?? (
+          <p className="mt-2 text-sm text-muted">
+            In-stock prices per mg, compared with every active supplier that lists the same compound.
+          </p>
+        )}
       </div>
       <div className="mt-5 overflow-x-auto">
         <table className="w-full border-collapse">
           <thead className="border-y border-line bg-accent-tint">
             <tr>
               <th scope="col" className={TH_CLASS}>Compound</th>
-              <th scope="col" className={TH_CLASS}>{facts.name} $/mg</th>
+              <th scope="col" className={TH_CLASS}>{ownLabel} $/mg</th>
               <th scope="col" className={TH_CLASS}>Cheapest $/mg (supplier)</th>
               <th scope="col" className={TH_CLASS}>Median $/mg</th>
-              <th scope="col" className={TH_CLASS}>{facts.name} rank</th>
+              <th scope="col" className={TH_CLASS}>{ownLabel} rank</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-line">
@@ -128,6 +139,7 @@ export function SupplierPriceComparison({
           </tbody>
         </table>
       </div>
+      {footer}
     </section>
   );
 }
