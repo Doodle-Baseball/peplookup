@@ -1,3 +1,4 @@
+import { supplierPath } from '@/lib/supplier-path';
 import type { Metadata } from 'next';
 import {
   getSuppliers,
@@ -69,7 +70,7 @@ export default async function SuppliersPage({
   const orderedSuppliers = orderSuppliersForDisplay(suppliers, slugsWithReviews);
   const directoryItems = orderedSuppliers.map((supplier) => ({
     name: supplier.name,
-    url: `/suppliers/${supplier.slug}`,
+    url: supplierPath(supplier.slug),
   }));
 
   const popularSuppliers = suppliers.slice(0, POPULAR_SUPPLIER_COUNT);

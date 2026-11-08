@@ -1,3 +1,4 @@
+import { supplierPath } from '@/lib/supplier-path';
 import type { Offer, Product, ProductForm, Supplier } from './schema';
 
 /**
@@ -32,7 +33,7 @@ export const MAX_AGE_DAYS = 30;
 export const OUTLIER_HIGH_MULTIPLE = 5n;
 export const OUTLIER_LOW_DIVISOR = 5n;
 
-const PROFILE_BASE_URL = 'https://www.peplookup.com/suppliers/';
+const SITE_ORIGIN = 'https://www.peplookup.com';
 
 export type DatasetForm = 'vial' | 'capsule' | 'nasal' | 'topical' | 'other';
 
@@ -333,7 +334,7 @@ function datasetCells(row: DatasetRow): string[] {
     formatUsdPerMg(pricePerMcg(row)),
     String(row.inStock),
     String(row.hasCoa),
-    `${PROFILE_BASE_URL}${row.supplierSlug}`,
+    `${SITE_ORIGIN}${supplierPath(row.supplierSlug)}`,
     row.lastChecked,
   ];
 }

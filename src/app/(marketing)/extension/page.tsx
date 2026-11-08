@@ -1,3 +1,4 @@
+import { supplierPath } from '@/lib/supplier-path';
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -75,7 +76,7 @@ function SupportedSuppliers({ suppliers }: { suppliers: ExtensionFeedEntry[] | n
       {suppliers.map((supplier) => (
         <li key={supplier.id}>
           <Link
-            href={`/suppliers/${supplier.id}`}
+            href={supplierPath(supplier.id)}
             className="flex items-center gap-3 rounded-card border border-line bg-surface-raised p-3 shadow-card transition-colors hover:border-brand"
           >
             <SupplierLogo src={supplier.logoUrl} name={supplier.name} size={36} className="h-9 w-9 rounded-chip" />
@@ -106,7 +107,7 @@ export default async function ExtensionPage() {
       <div className="mx-auto max-w-shell px-4 py-14">
         <PageSeo
           seo={PAGE}
-          itemList={(suppliers ?? []).map((supplier) => ({ name: supplier.name, url: `/suppliers/${supplier.id}` }))}
+          itemList={(suppliers ?? []).map((supplier) => ({ name: supplier.name, url: supplierPath(supplier.id) }))}
         />
 
         <header className="max-w-3xl">

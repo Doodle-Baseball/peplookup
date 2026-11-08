@@ -57,6 +57,7 @@ export function SupplierTrustPanel({
   reviewsPagePath,
   labName,
   coaReports,
+  showReviews = true,
 }: {
   supplierName: string;
   supplierSlug: string;
@@ -68,6 +69,8 @@ export function SupplierTrustPanel({
   reviewsPagePath: string | null;
   labName: string | null;
   coaReports: readonly SupplierCoaReport[];
+  /** False leaves out the reviews card (and the word in the heading), so only the COAs show. */
+  showReviews?: boolean;
 }) {
   // Named from the reviews link, so reviews from PepReviewPro (or any other
   // platform) aren't labelled Trustpilot. Without a link it stays Trustpilot,
@@ -127,7 +130,7 @@ export function SupplierTrustPanel({
   // Each card shows only when there is something to show.
   const listRef = useRef<HTMLUListElement>(null);
   const [listMaxHeight, setListMaxHeight] = useState<number | 'none' | null>(null);
-  const hasReviewSection = reviews.length > 0 || reviewsUrl !== null;
+  const hasReviewSection = showReviews && (reviews.length > 0 || reviewsUrl !== null);
   const hasCoaSection = coaReports.length > 0;
 
   // Cards differ in height, so the cap is measured: the top of the first
@@ -156,7 +159,7 @@ export function SupplierTrustPanel({
   return (
     <section aria-labelledby="trust-panel-heading" className="reveal mt-12">
       <h2 id="trust-panel-heading" className="sr-only">
-        {supplierName} reviews and lab reports
+        {showReviews ? `${supplierName} reviews and lab reports` : `${supplierName} lab reports`}
       </h2>
 
       <div className="grid items-stretch gap-6 lg:grid-cols-2">

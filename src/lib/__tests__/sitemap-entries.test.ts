@@ -122,3 +122,36 @@ describe('buildSitemapEntries', () => {
     expect(entries).toEqual([{ url: `${ORIGIN}/guides/saved`, lastModified: new Date('2026-10-27T09:30:00.000Z') }]);
   });
 });
+
+describe('buildSitemapEntries: a supplier profile that has moved', () => {
+  const suppliers = ['american-peptides', 'kylo-peptides'].map((slug) => ({ slug, hasCoupon: true, hasReviews: true, inventoryRefreshedAt: null }));
+  // As stored live: the override is keyed by the old path and its canonical names the new address.
+  const seoByPath = new Map([['/suppliers/american-peptides', { canonicalUrl: '/supplier/american-peptides' }]]);
+  const listed = urls(input({ staticPaths: [], suppliers, seoByPath }));
+
+  it('lists the new address and not the old one', () => {
+    expect(listed).toContain('https://www.peplookup.com/supplier/american-peptides');
+    expect(listed).not.toContain('https://www.peplookup.com/suppliers/american-peptides');
+  });
+
+  it("leaves every other entry, including the same supplier's coupon and reviews pages, as it was", () => {
+    expect(listed).toEqual([
+      'https://www.peplookup.com/supplier/american-peptides',
+      'https://www.peplookup.com/coupons/american-peptides-coupon-code',
+      'https://www.peplookup.com/reviews/american-peptides-reviews',
+      'https://www.peplookup.com/suppliers/kylo-peptides',
+      'https://www.peplookup.com/coupons/kylo-peptides-coupon-code',
+      'https://www.peplookup.com/reviews/kylo-peptides-reviews',
+    ]);
+  });
+
+  it('lists the new address whether the saved canonical names the old path or the new one', () => {
+    const oldCanonical = new Map([['/suppliers/american-peptides', { canonicalUrl: '/suppliers/american-peptides' }]]);
+    expect(urls(input({ staticPaths: [], suppliers, seoByPath: oldCanonical }))).toEqual(listed);
+  });
+
+  it('still drops the profile when its own page is noindex', () => {
+    const noindex = urls(input({ staticPaths: [], suppliers, seoByPath, isIndexable: (path) => path !== '/suppliers/american-peptides' }));
+    expect(noindex.some((url) => url.includes('/american-peptides') && url.includes('/supplier'))).toBe(false);
+  });
+});

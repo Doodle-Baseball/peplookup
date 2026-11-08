@@ -1,5 +1,6 @@
 'use client';
 
+import { supplierPath } from '@/lib/supplier-path';
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { SupplierLogo } from '@/components/ui/supplier-logo';
@@ -99,7 +100,7 @@ export function SupplierSearchBox({ suppliers }: { suppliers: SupplierSuggestion
               {suggestions.map((supplier) => (
                 <li key={supplier.slug}>
                   <Link
-                    href={`/suppliers/${supplier.slug}`}
+                    href={supplierPath(supplier.slug)}
                     onClick={() => setOpen(false)}
                     className="group/row flex items-center gap-3 border-b border-line px-4 py-3 transition-colors last:border-0 hover:bg-brand-tint"
                   >

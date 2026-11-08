@@ -238,3 +238,34 @@ describe('ownedSchemaTypes', () => {
     expect(ownedSchemaTypes('/products/bpc-157', { productOffers: true }).has('Product')).toBe(true);
   });
 });
+
+describe('buildPageGraph: a supplier profile that has moved', () => {
+  // American Peptides is served at /supplier/american-peptides; the page is still keyed by /suppliers/american-peptides.
+  const moved = buildPageGraph(
+    page('/suppliers/american-peptides', { heading: 'American Peptides', supplier: { ...supplier, slug: 'american-peptides', name: 'American Peptides' } }),
+  );
+  const NEW = `${SITE}/supplier/american-peptides`;
+
+  it('names the new address as the page url, @id and supplier @id', () => {
+    const webPage = node(moved, 'ProfilePage');
+    expect(webPage).toMatchObject({ '@id': `${NEW}#webpage`, url: NEW });
+    expect(JSON.stringify(moved)).toContain(`"${NEW}#supplier"`);
+  });
+
+  it('keys the BreadcrumbList to the new address, still under Suppliers', () => {
+    const breadcrumbs = node(moved, 'BreadcrumbList') as { '@id': string; itemListElement: { name: string; item?: string }[] };
+    expect(breadcrumbs['@id']).toBe(`${NEW}#breadcrumb`);
+    // The current page is the last crumb and, as on every page of the site, carries no item URL.
+    expect(breadcrumbs.itemListElement.at(-1)).toMatchObject({ name: 'American Peptides' });
+    expect(breadcrumbs.itemListElement.some((crumb) => crumb.name === 'Suppliers' && crumb.item === `${SITE}/suppliers`)).toBe(true);
+  });
+
+  it('never mentions the old address', () => {
+    expect(serializeGraph(moved)).not.toMatch(/\/suppliers\/american-peptides(?!-)/);
+  });
+
+  it('leaves every other supplier profile where it was', () => {
+    const other = buildPageGraph(page('/suppliers/licensed-peptides', { supplier }));
+    expect(node(other, 'ProfilePage')).toMatchObject({ url: `${SITE}/suppliers/licensed-peptides` });
+  });
+});

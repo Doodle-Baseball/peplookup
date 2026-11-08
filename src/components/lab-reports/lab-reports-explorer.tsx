@@ -13,6 +13,7 @@ import {
   SearchIcon,
 } from '@/components/icons/icons';
 import { SupplierLogo } from '@/components/ui/supplier-logo';
+import { OfferImage } from '@/components/offer-image/offer-image';
 import { splitCategories } from '@/lib/categories';
 import { cn } from '@/lib/cn';
 
@@ -381,7 +382,15 @@ function ReportCard({ card }: { card: ReportCardGroup }) {
           className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-chip border border-line bg-surface lg:h-20 lg:w-20"
         >
           {card.productImage ? (
-            <Image src={card.productImage} alt="" width={80} height={80} className="h-full w-full object-cover" unoptimized />
+            <OfferImage
+              src={card.productImage}
+              alt=""
+              width={80}
+              height={80}
+              className="h-full w-full object-cover"
+              unoptimized
+              fallback={<FlaskIcon className="h-6 w-6 text-faint" />}
+            />
           ) : (
             <FlaskIcon className="h-6 w-6 text-faint" />
           )}

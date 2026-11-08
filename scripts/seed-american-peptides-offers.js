@@ -4,8 +4,8 @@
 const { runSeed } = require('./lib/seed-vendor-offers');
 
 const media = (id) => `https://www.americanpeptides.us/media/${id}.png`;
-const doc = (file) => `https://www.americanpeptides.us/docs/${file}`;
-const product = (path) => `https://www.americanpeptides.us/products/${path}?ref=peplookup`;
+const doc = (file) => `https://www.americanpeptides.us/docs/${file}${file.includes('?') ? '&' : '?'}ref=uzmxt6yada`;
+const product = (path) => `https://www.americanpeptides.us/products/${path}?ref=uzmxt6yada`;
 
 // Prices in integer cents, sizes in mg (a blend's total). coaUrl is null where no certificate was
 // supplied; inStock: false where the listing was supplied as out of stock.

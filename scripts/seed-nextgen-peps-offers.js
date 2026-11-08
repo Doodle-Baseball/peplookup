@@ -3,7 +3,7 @@
 const { runSeed } = require('./lib/seed-vendor-offers');
 
 // The vendor's general COA page rather than a certificate per listing; it is the link supplied for every product.
-const COA_LIBRARY = 'https://nextgenpeps.com/coa-library/';
+const COA_LIBRARY = 'https://nextgenpeps.com/coa-library/?ref=PEPLOOKUP';
 
 const listings = [
   {

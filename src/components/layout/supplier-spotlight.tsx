@@ -1,5 +1,6 @@
 'use client';
 
+import { supplierPath } from '@/lib/supplier-path';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { CopyCode } from '@/components/ui/copy-code';
@@ -70,7 +71,7 @@ export function SupplierSpotlight({ supplier }: { supplier: SpotlightSupplier })
   };
 
   const { rating, coupon } = supplier;
-  const profileHref = `/suppliers/${supplier.slug}`;
+  const profileHref = supplierPath(supplier.slug);
   const ratingText = rating
     ? `${rating.value.toFixed(1)}${rating.reviewCountText ? ` · ${rating.reviewCountText} reviews` : ''}`
     : '';

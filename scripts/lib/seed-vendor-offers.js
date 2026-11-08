@@ -7,6 +7,9 @@
 const fs = require('fs');
 const path = require('path');
 const { createClient } = require('@supabase/supabase-js');
+const { mirrorRowImages } = require('./mirror-offer-images');
+
+let supabaseUrl;
 
 function createAdminClient() {
   const envPath = path.join(__dirname, '..', '..', '.env.local');
@@ -15,6 +18,7 @@ function createAdminClient() {
     const match = line.match(/^([A-Z0-9_]+)=(.*)$/);
     if (match) env[match[1]] = match[2];
   }
+  supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL;
   return createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SECRET_KEY, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
@@ -80,6 +84,8 @@ async function seedVendorOffers({ supplierSlug, listings }) {
     }));
 
   if (rows.length > 0) {
+    // Copies each supplier picture into our storage first, so a listing never goes in pointing at a hotlinked image.
+    await mirrorRowImages(client, supplierSlug, rows, supabaseUrl);
     const { data: inserted, error: insertError } = await client
       .from('offers')
       .insert(rows)

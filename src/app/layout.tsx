@@ -49,6 +49,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en-US" className={`${archivo.variable} ${jetbrainsMono.variable}`} suppressHydrationWarning>
       <body className="flex min-h-screen flex-col" suppressHydrationWarning>
+        {/* Bitdefender's browser extension stamps `bis_skin_checked` onto every div before React hydrates,
+            so React reports a mismatch for each one. Stripping the attribute as it appears keeps the
+            page's HTML matching what the server sent. */}
+        <Script id="strip-bitdefender-attribute" strategy="beforeInteractive">
+          {`(function(){var a='bis_skin_checked';function s(n){if(n.removeAttribute)n.removeAttribute(a);}
+new MutationObserver(function(m){for(var i=0;i<m.length;i++)s(m[i].target);}).observe(document.documentElement,{attributes:true,attributeFilter:[a],subtree:true});
+document.addEventListener('DOMContentLoaded',function(){document.querySelectorAll('['+a+']').forEach(s);});})();`}
+        </Script>
         <Script src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`} strategy="afterInteractive" />
         <Script id="google-analytics" strategy="afterInteractive">
           {`window.dataLayer = window.dataLayer || [];

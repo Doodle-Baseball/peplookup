@@ -1,5 +1,6 @@
 'use client';
 
+import { publicPath, supplierPath } from '@/lib/supplier-path';
 import { useMemo, useState } from 'react';
 import type { SeoEntry, SeoPageKind, SeoQualitySummary } from '@/lib/admin/seo';
 import type { SeoRedirect } from '@/lib/seo';
@@ -137,6 +138,7 @@ export function SeoDashboard({
     return (
       row.entry.name.toLowerCase().includes(needle) ||
       row.entry.path.toLowerCase().includes(needle) ||
+      publicPath(row.entry.path).toLowerCase().includes(needle) ||
       row.seo.title.toLowerCase().includes(needle) ||
       row.seo.keywords.some((keyword) => keyword.toLowerCase().includes(needle))
     );
@@ -321,12 +323,12 @@ function SeoCard({ row, onEdit, disabled }: { row: Row; onEdit: () => void; disa
           </div>
           <h3 className="mt-1.5 truncate font-black text-content">{entry.name}</h3>
           <a
-            href={entry.path}
+            href={publicPath(entry.path)}
             target="_blank"
             rel="noopener noreferrer"
             className="mt-0.5 inline-flex max-w-full items-center gap-1 truncate font-mono text-xs text-brand hover:underline"
           >
-            <span className="truncate">{entry.path}</span>
+            <span className="truncate">{publicPath(entry.path)}</span>
             <ExternalIcon className="h-3 w-3 shrink-0" />
           </a>
         </div>
@@ -442,7 +444,7 @@ function QualityPanel({ quality, totalPages }: { quality: SeoQualitySummary; tot
             {stale.map((supplier) => (
               <li key={supplier.slug} className="text-muted">
                 <a
-                  href={`/suppliers/${supplier.slug}`}
+                  href={supplierPath(supplier.slug)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="font-semibold text-brand hover:underline"

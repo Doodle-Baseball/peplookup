@@ -2,9 +2,9 @@
 // `offers` table. See scripts/lib/seed-vendor-offers.js.
 const { runSeed } = require('./lib/seed-vendor-offers');
 
-const product = (path) => `https://www.bioinfinity.co/product/${path}/?ref=adamdaFAKR`;
+const product = (path) => `https://www.bioinfinity.co/product/${path}/?ref=peplookup`;
 // The same general COA library page was supplied for every listing.
-const COA_PAGE = 'https://www.bioinfinity.co/coa-library/';
+const COA_PAGE = 'https://www.bioinfinity.co/coa-library/?ref=peplookup';
 
 // Prices in integer cents, sizes in mg (a blend's total). inStock: false where the listing was
 // supplied as out of stock.

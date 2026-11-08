@@ -1,3 +1,4 @@
+import { supplierPath } from '@/lib/supplier-path';
 import { site } from '@/config/site';
 import { getSuppliers } from '@/lib/repository';
 import { cronAuthError, isTestRun } from '@/lib/monitoring/cron-auth';
@@ -22,7 +23,7 @@ export async function GET(request: Request) {
   if (denied) return denied;
 
   const supplier = (await getSuppliers())[0];
-  const paths = ['/', ...(supplier ? [`/suppliers/${supplier.slug}`] : []), '/sitemap.xml'];
+  const paths = ['/', ...(supplier ? [supplierPath(supplier.slug)] : []), '/sitemap.xml'];
   const results = await Promise.all(
     paths.map(async (path) => {
       try {

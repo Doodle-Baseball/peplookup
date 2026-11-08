@@ -1,5 +1,6 @@
 'use client';
 
+import { supplierPath } from '@/lib/supplier-path';
 import { useMemo, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -271,7 +272,7 @@ function MiniPriceRow({
         </span>
         <div className="min-w-0">
           <div className="flex items-center gap-1.5">
-            <Link href={`/suppliers/${row.supplierSlug}`} className="truncate text-sm font-bold text-content hover:text-brand">
+            <Link href={supplierPath(row.supplierSlug)} className="truncate text-sm font-bold text-content hover:text-brand">
               {row.supplierName}
             </Link>
             {row.hasLabReport ? <FlaskIcon className="h-3 w-3 shrink-0 text-brand" aria-label="Lab report available" /> : null}
