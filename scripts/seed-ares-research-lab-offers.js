@@ -3,7 +3,7 @@
 const { runSeed } = require('./lib/seed-vendor-offers');
 
 const COA_BASE = 'https://aresresearchlab.com/coa?slug=';
-const REF = '?ref=peplookup';
+const REF = '?ref=PRODUCTS';
 
 const listings = [
   {
@@ -11,7 +11,7 @@ const listings = [
     mg: 5,
     priceCents: 2999,
     imageUrl: 'https://aresresearchlab.com/assets/bpc-157-800-on1vHS3w.webp',
-    coaUrl: `${COA_BASE}bpc-157&ref=peplookup`,
+    coaUrl: `${COA_BASE}bpc-157&ref=PRODUCTS`,
     productUrl: `https://aresresearchlab.com/catalog/bpc-157${REF}`,
   },
   {
@@ -19,7 +19,7 @@ const listings = [
     mg: 10,
     priceCents: 3999,
     imageUrl: 'https://aresresearchlab.com/assets/bpc-157-800-on1vHS3w.webp',
-    coaUrl: `${COA_BASE}bpc-157&ref=peplookup`,
+    coaUrl: `${COA_BASE}bpc-157&ref=PRODUCTS`,
     productUrl: `https://aresresearchlab.com/catalog/bpc-157${REF}`,
   },
   {
@@ -27,7 +27,7 @@ const listings = [
     mg: 20,
     priceCents: 5999,
     imageUrl: 'https://aresresearchlab.com/assets/bpc-157-800-on1vHS3w.webp',
-    coaUrl: `${COA_BASE}bpc-157&ref=peplookup`,
+    coaUrl: `${COA_BASE}bpc-157&ref=PRODUCTS`,
     productUrl: `https://aresresearchlab.com/catalog/bpc-157${REF}`,
   },
   {
@@ -36,7 +36,7 @@ const listings = [
     mg: 5,
     priceCents: 3499,
     imageUrl: 'https://aresresearchlab.com/assets/ares-cut-2-800-BO80doLy.webp',
-    coaUrl: `${COA_BASE}glp-2t&ref=peplookup`,
+    coaUrl: `${COA_BASE}glp-2t&ref=PRODUCTS`,
     productUrl: `https://aresresearchlab.com/catalog/ares-cut-2${REF}`,
   },
   {
@@ -44,7 +44,7 @@ const listings = [
     mg: 10,
     priceCents: 4999,
     imageUrl: 'https://aresresearchlab.com/assets/ares-cut-2-800-BO80doLy.webp',
-    coaUrl: `${COA_BASE}glp-2t&ref=peplookup`,
+    coaUrl: `${COA_BASE}glp-2t&ref=PRODUCTS`,
     productUrl: `https://aresresearchlab.com/catalog/ares-cut-2${REF}`,
   },
   {
@@ -52,7 +52,7 @@ const listings = [
     mg: 15,
     priceCents: 6499,
     imageUrl: 'https://aresresearchlab.com/assets/ares-cut-2-800-BO80doLy.webp',
-    coaUrl: `${COA_BASE}glp-2t&ref=peplookup`,
+    coaUrl: `${COA_BASE}glp-2t&ref=PRODUCTS`,
     productUrl: `https://aresresearchlab.com/catalog/ares-cut-2${REF}`,
   },
   {
@@ -60,7 +60,7 @@ const listings = [
     mg: 20,
     priceCents: 7999,
     imageUrl: 'https://aresresearchlab.com/assets/ares-cut-2-800-BO80doLy.webp',
-    coaUrl: `${COA_BASE}glp-2t&ref=peplookup`,
+    coaUrl: `${COA_BASE}glp-2t&ref=PRODUCTS`,
     productUrl: `https://aresresearchlab.com/catalog/ares-cut-2${REF}`,
   },
   {
@@ -68,7 +68,7 @@ const listings = [
     mg: 30,
     priceCents: 8999,
     imageUrl: 'https://aresresearchlab.com/assets/ares-cut-2-800-BO80doLy.webp',
-    coaUrl: `${COA_BASE}glp-2t&ref=peplookup`,
+    coaUrl: `${COA_BASE}glp-2t&ref=PRODUCTS`,
     productUrl: `https://aresresearchlab.com/catalog/ares-cut-2${REF}`,
   },
   {
@@ -76,7 +76,7 @@ const listings = [
     mg: 40,
     priceCents: 10999,
     imageUrl: 'https://aresresearchlab.com/assets/ares-cut-2-800-BO80doLy.webp',
-    coaUrl: `${COA_BASE}glp-2t&ref=peplookup`,
+    coaUrl: `${COA_BASE}glp-2t&ref=PRODUCTS`,
     productUrl: `https://aresresearchlab.com/catalog/ares-cut-2${REF}`,
   },
   {
@@ -84,7 +84,7 @@ const listings = [
     mg: 50,
     priceCents: 13999,
     imageUrl: 'https://aresresearchlab.com/assets/ares-cut-2-800-BO80doLy.webp',
-    coaUrl: `${COA_BASE}glp-2t&ref=peplookup`,
+    coaUrl: `${COA_BASE}glp-2t&ref=PRODUCTS`,
     productUrl: `https://aresresearchlab.com/catalog/ares-cut-2${REF}`,
   },
   {
@@ -92,7 +92,7 @@ const listings = [
     mg: 60,
     priceCents: 15999,
     imageUrl: 'https://aresresearchlab.com/assets/ares-cut-2-800-BO80doLy.webp',
-    coaUrl: `${COA_BASE}glp-2t&ref=peplookup`,
+    coaUrl: `${COA_BASE}glp-2t&ref=PRODUCTS`,
     productUrl: `https://aresresearchlab.com/catalog/ares-cut-2${REF}`,
   },
   {
@@ -100,7 +100,7 @@ const listings = [
     mg: 2,
     priceCents: 3499,
     imageUrl: 'https://aresresearchlab.com/assets/cjc-1295-no-dac-800-BQC92NqJ.webp',
-    coaUrl: `${COA_BASE}cjc-1295-no-dac&ref=peplookup`,
+    coaUrl: `${COA_BASE}cjc-1295-no-dac&ref=PRODUCTS`,
     productUrl: `https://aresresearchlab.com/catalog/cjc-1295-no-dac${REF}`,
   },
   {
@@ -108,7 +108,7 @@ const listings = [
     mg: 5,
     priceCents: 7499,
     imageUrl: 'https://aresresearchlab.com/assets/cjc-1295-no-dac-800-BQC92NqJ.webp',
-    coaUrl: `${COA_BASE}cjc-1295-no-dac&ref=peplookup`,
+    coaUrl: `${COA_BASE}cjc-1295-no-dac&ref=PRODUCTS`,
     productUrl: `https://aresresearchlab.com/catalog/cjc-1295-no-dac${REF}`,
   },
   {
@@ -116,7 +116,7 @@ const listings = [
     mg: 10,
     priceCents: 14999,
     imageUrl: 'https://aresresearchlab.com/assets/cjc-1295-no-dac-800-BQC92NqJ.webp',
-    coaUrl: `${COA_BASE}cjc-1295-no-dac&ref=peplookup`,
+    coaUrl: `${COA_BASE}cjc-1295-no-dac&ref=PRODUCTS`,
     productUrl: `https://aresresearchlab.com/catalog/cjc-1295-no-dac${REF}`,
   },
   {
@@ -124,7 +124,7 @@ const listings = [
     mg: 2,
     priceCents: 2499,
     imageUrl: 'https://aresresearchlab.com/assets/tesamorelin-800-CR_eU-UQ.webp',
-    coaUrl: `${COA_BASE}tesamorelin&ref=peplookup`,
+    coaUrl: `${COA_BASE}tesamorelin&ref=PRODUCTS`,
     productUrl: `https://aresresearchlab.com/catalog/tesamorelin${REF}`,
   },
   {
@@ -132,7 +132,7 @@ const listings = [
     mg: 5,
     priceCents: 3999,
     imageUrl: 'https://aresresearchlab.com/assets/tesamorelin-800-CR_eU-UQ.webp',
-    coaUrl: `${COA_BASE}tesamorelin&ref=peplookup`,
+    coaUrl: `${COA_BASE}tesamorelin&ref=PRODUCTS`,
     productUrl: `https://aresresearchlab.com/catalog/tesamorelin${REF}`,
   },
   {
@@ -140,7 +140,7 @@ const listings = [
     mg: 10,
     priceCents: 9999,
     imageUrl: 'https://aresresearchlab.com/assets/tesamorelin-800-CR_eU-UQ.webp',
-    coaUrl: `${COA_BASE}tesamorelin&ref=peplookup`,
+    coaUrl: `${COA_BASE}tesamorelin&ref=PRODUCTS`,
     productUrl: `https://aresresearchlab.com/catalog/tesamorelin${REF}`,
   },
   {
@@ -148,7 +148,7 @@ const listings = [
     mg: 20,
     priceCents: 16499,
     imageUrl: 'https://aresresearchlab.com/assets/tesamorelin-800-CR_eU-UQ.webp',
-    coaUrl: `${COA_BASE}tesamorelin&ref=peplookup`,
+    coaUrl: `${COA_BASE}tesamorelin&ref=PRODUCTS`,
     productUrl: `https://aresresearchlab.com/catalog/tesamorelin${REF}`,
   },
   {
@@ -156,7 +156,7 @@ const listings = [
     mg: 100,
     priceCents: 3999,
     imageUrl: 'https://aresresearchlab.com/assets/nad-plus-800-y4IWjjlx.webp',
-    coaUrl: `${COA_BASE}nad-plus&ref=peplookup`,
+    coaUrl: `${COA_BASE}nad-plus&ref=PRODUCTS`,
     productUrl: `https://aresresearchlab.com/catalog/nad-plus${REF}`,
   },
   {
@@ -164,7 +164,7 @@ const listings = [
     mg: 500,
     priceCents: 6499,
     imageUrl: 'https://aresresearchlab.com/assets/nad-plus-800-y4IWjjlx.webp',
-    coaUrl: `${COA_BASE}nad-plus&ref=peplookup`,
+    coaUrl: `${COA_BASE}nad-plus&ref=PRODUCTS`,
     productUrl: `https://aresresearchlab.com/catalog/nad-plus${REF}`,
   },
   {
@@ -172,7 +172,7 @@ const listings = [
     mg: 1000,
     priceCents: 9499,
     imageUrl: 'https://aresresearchlab.com/assets/nad-plus-800-y4IWjjlx.webp',
-    coaUrl: `${COA_BASE}nad-plus&ref=peplookup`,
+    coaUrl: `${COA_BASE}nad-plus&ref=PRODUCTS`,
     productUrl: `https://aresresearchlab.com/catalog/nad-plus${REF}`,
   },
   {
@@ -180,7 +180,7 @@ const listings = [
     mg: 500,
     priceCents: 3999,
     imageUrl: 'https://aresresearchlab.com/assets/glutathione-800-BP_20tCe.webp',
-    coaUrl: `${COA_BASE}glutathione&ref=peplookup`,
+    coaUrl: `${COA_BASE}glutathione&ref=PRODUCTS`,
     productUrl: `https://aresresearchlab.com/catalog/glutathione${REF}`,
   },
   {
@@ -188,7 +188,7 @@ const listings = [
     mg: 1500,
     priceCents: 7499,
     imageUrl: 'https://aresresearchlab.com/assets/glutathione-800-BP_20tCe.webp',
-    coaUrl: `${COA_BASE}glutathione&ref=peplookup`,
+    coaUrl: `${COA_BASE}glutathione&ref=PRODUCTS`,
     productUrl: `https://aresresearchlab.com/catalog/glutathione${REF}`,
   },
   {
@@ -196,7 +196,7 @@ const listings = [
     mg: 5,
     priceCents: 4999,
     imageUrl: 'https://aresresearchlab.com/assets/selank-800-CObHkgrL.webp',
-    coaUrl: `${COA_BASE}selank&ref=peplookup`,
+    coaUrl: `${COA_BASE}selank&ref=PRODUCTS`,
     productUrl: `https://aresresearchlab.com/catalog/selank${REF}`,
   },
   {
@@ -204,7 +204,7 @@ const listings = [
     mg: 10,
     priceCents: 8499,
     imageUrl: 'https://aresresearchlab.com/assets/selank-800-CObHkgrL.webp',
-    coaUrl: `${COA_BASE}selank&ref=peplookup`,
+    coaUrl: `${COA_BASE}selank&ref=PRODUCTS`,
     productUrl: `https://aresresearchlab.com/catalog/selank${REF}`,
   },
   {
@@ -214,7 +214,7 @@ const listings = [
     mg: 150,
     priceCents: 5499,
     imageUrl: 'https://aresresearchlab.com/assets/semax-nasal-800-MQM6PyhT.webp',
-    coaUrl: `${COA_BASE}semax-nasal&ref=peplookup`,
+    coaUrl: `${COA_BASE}semax-nasal&ref=PRODUCTS`,
     productUrl: `https://aresresearchlab.com/catalog/semax-nasal${REF}`,
   },
   {
@@ -222,7 +222,7 @@ const listings = [
     mg: 5,
     priceCents: 6499,
     imageUrl: 'https://aresresearchlab.com/assets/survodutide-800-48nQYI3V.webp',
-    coaUrl: `${COA_BASE}survodutide&ref=peplookup`,
+    coaUrl: `${COA_BASE}survodutide&ref=PRODUCTS`,
     productUrl: `https://aresresearchlab.com/catalog/survodutide${REF}`,
   },
   {
@@ -230,7 +230,7 @@ const listings = [
     mg: 10,
     priceCents: 10999,
     imageUrl: 'https://aresresearchlab.com/assets/survodutide-800-48nQYI3V.webp',
-    coaUrl: `${COA_BASE}survodutide&ref=peplookup`,
+    coaUrl: `${COA_BASE}survodutide&ref=PRODUCTS`,
     productUrl: `https://aresresearchlab.com/catalog/survodutide${REF}`,
   },
   {
@@ -238,7 +238,7 @@ const listings = [
     mg: 15,
     priceCents: 13999,
     imageUrl: 'https://aresresearchlab.com/assets/survodutide-800-48nQYI3V.webp',
-    coaUrl: `${COA_BASE}survodutide&ref=peplookup`,
+    coaUrl: `${COA_BASE}survodutide&ref=PRODUCTS`,
     productUrl: `https://aresresearchlab.com/catalog/survodutide${REF}`,
   },
   {
@@ -246,7 +246,7 @@ const listings = [
     mg: 80,
     priceCents: 10999,
     imageUrl: 'https://aresresearchlab.com/assets/klow-stack-800-D8LWdNvB.webp',
-    coaUrl: `${COA_BASE}klow-stack&ref=peplookup`,
+    coaUrl: `${COA_BASE}klow-stack&ref=PRODUCTS`,
     productUrl: `https://aresresearchlab.com/catalog/klow-stack${REF}`,
   },
 ];

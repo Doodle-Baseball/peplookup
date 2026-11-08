@@ -48,7 +48,7 @@ describe('withPublishedCoaLink', () => {
   it('never gives a spray the certificate of a vial with the same compound and size', () => {
     const vortex = { supplierSlug: 'vortex-research-2', productSlug: 'selank', vialSize: 10_000 };
     expect(withPublishedCoaLink(offer({ ...vortex, form: 'vial' })).coaUrl).toBe(
-      'https://vortexresearch.net/wp-content/uploads/2026/08/Selank_PS07-SK10_Summary.png',
+      'https://vortexresearch.net/wp-content/uploads/2026/08/Selank_PS07-SK10_Summary.png?ref=adamadam',
     );
     expect(withPublishedCoaLink(offer({ ...vortex, form: 'spray' })).coaUrl).toBeUndefined();
   });
@@ -58,7 +58,7 @@ describe('withPublishedCoaLink', () => {
       withPublishedCoaLink(
         offer({ supplierSlug: 'vortex-research-2', productSlug: 'melanotan-2', form: 'spray', vialSize: 10_000 }),
       ).coaUrl,
-    ).toBe('https://vortexresearch.net/wp-content/uploads/2026/08/Melanotan_II_PS07-MT210_Summary.png');
+    ).toBe('https://vortexresearch.net/wp-content/uploads/2026/08/Melanotan_II_PS07-MT210_Summary.png?ref=adamadam');
   });
 
   it("falls back to a vendor's general COA page only for that vendor's listings", () => {

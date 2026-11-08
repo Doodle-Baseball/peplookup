@@ -5,7 +5,7 @@
 // No stock status was supplied, so listings take the shared default (in stock).
 const { runSeed } = require('./lib/seed-vendor-offers');
 
-const REF = '?wpam_id=72';
+const REF = '?wpam_id=163';
 const COA_PAGE = `https://kylopeptides.com/coa/${REF}`;
 const UPLOADS = 'https://kylopeptides.com/wp-content/uploads/2026/07/';
 const product = (slug) => `https://kylopeptides.com/product/${slug}/${REF}`;
