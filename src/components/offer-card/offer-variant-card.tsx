@@ -1,11 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { cn } from '@/lib/cn';
 import { BoxIcon, ExternalIcon } from '@/components/icons/icons';
 import { CopyCode } from '@/components/ui/copy-code';
+import { OfferImage } from '@/components/offer-image/offer-image';
+import { offerImageAlt } from '@/components/offer-image/offer-image-alt';
 import type { CatalogProduct, CatalogVariant } from '@/components/supplier-card/catalog-products';
 import { DoseChipsExpandable } from '@/components/product-card/dose-chips-expandable';
 
@@ -83,22 +84,28 @@ export function OfferVariantCard({
     setSelectedKey(initialVariant(inForm).key);
   };
 
+  // What stands in for the picture when the size has none, or when its picture fails to load.
+  const imagePlaceholder = (
+    <BoxIcon className="h-10 w-10 text-faint transition-transform duration-200 group-hover:-translate-y-1 group-hover:text-accent" />
+  );
+
   return (
     <li className="tilt-card group flex flex-col gap-3 rounded-card border border-line bg-surface p-4 hover:border-accent/40">
       <span className="flex h-44 w-full items-center justify-center overflow-hidden rounded-chip bg-surface-raised">
         {variant.imageUrl ? (
-          <Image
+          <OfferImage
             src={variant.imageUrl}
-            alt={`${product.name} from ${supplierName}`}
+            alt={offerImageAlt(product.name, variant.sizeLabel, supplierName)}
             width={320}
             height={320}
             className="h-full w-full object-contain transition-transform duration-200 group-hover:scale-105"
             unoptimized
             // Some vendors (e.g. GenX) refuse image requests that name another site as the referrer.
             referrerPolicy="no-referrer"
+            fallback={imagePlaceholder}
           />
         ) : (
-          <BoxIcon className="h-10 w-10 text-faint transition-transform duration-200 group-hover:-translate-y-1 group-hover:text-accent" />
+          imagePlaceholder
         )}
       </span>
 

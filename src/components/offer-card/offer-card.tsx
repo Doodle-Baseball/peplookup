@@ -1,3 +1,4 @@
+import { supplierPath } from '@/lib/supplier-path';
 import Image from 'next/image';
 import Link from 'next/link';
 import type { Offer, Product, Supplier } from '@/lib/schema';
@@ -8,6 +9,8 @@ import { seenAgo, isStale } from '@/lib/format';
 import { cn } from '@/lib/cn';
 import { BoxIcon, ExternalIcon, FlaskIcon } from '@/components/icons/icons';
 import { CopyCode } from '@/components/ui/copy-code';
+import { OfferImage } from '@/components/offer-image/offer-image';
+import { offerImageAlt } from '@/components/offer-image/offer-image-alt';
 
 interface OfferCardProps {
   offer: Offer;
@@ -72,21 +75,27 @@ export function OfferCard({
   const coaHref = offer.labReport?.reportUrl ?? offer.labReport?.labUrl ?? offer.coaUrl ?? null;
   const compareHref = `/products/${product.slug}`;
 
+  // What stands in for the picture when the offer has none, or when its picture fails to load.
+  const imagePlaceholder = (
+    <BoxIcon className="h-10 w-10 text-faint transition-transform duration-200 group-hover:-translate-y-1 group-hover:text-accent" />
+  );
+
   if (layout === 'grid') {
     return (
       <li className="tilt-card group flex flex-col gap-3 rounded-card border border-line bg-surface p-4 hover:border-accent/40">
         <span className="flex h-44 w-full items-center justify-center overflow-hidden rounded-chip bg-surface-raised">
           {offer.imageUrl ? (
-            <Image
+            <OfferImage
               src={offer.imageUrl}
-              alt={`${product.name} from ${supplier.name}`}
+              alt={offerImageAlt(product.name, gridSizeLabel(offer), supplier.name)}
               width={320}
               height={320}
               className="h-full w-full object-contain transition-transform duration-200 group-hover:scale-105"
               unoptimized
+              fallback={imagePlaceholder}
             />
           ) : (
-            <BoxIcon className="h-10 w-10 text-faint transition-transform duration-200 group-hover:-translate-y-1 group-hover:text-accent" />
+            imagePlaceholder
           )}
         </span>
 
@@ -176,7 +185,7 @@ export function OfferCard({
             </span>
             <div className="min-w-0">
               <Link
-                href={`/suppliers/${supplier.slug}`}
+                href={supplierPath(supplier.slug)}
                 className="truncate text-sm font-bold text-content hover:text-brand"
               >
                 {supplier.name}

@@ -17,6 +17,8 @@ export interface OfferRow {
   in_stock: boolean;
   product_url: string;
   image_url: string | null;
+  /** The supplier's own address for the picture `image_url` was copied from (0032_offers_image_source_url.sql). */
+  image_source_url?: string | null;
   lab_report: LabReport | null;
   coa_url: string | null;
   scraped_at: string;
@@ -137,6 +139,8 @@ export interface OfferInput {
   inStock: boolean;
   productUrl: string;
   imageUrl: string | null;
+  /** Set only when `imageUrl` is our copy of a supplier picture; left out, the stored value is not touched. */
+  imageSourceUrl?: string | null;
   labReport: LabReport | null;
   /** Plain COA link with no grade/score. See the field's doc comment on `offerSchema`. */
   coaUrl?: string | null;
@@ -156,6 +160,7 @@ export function offerInputToInsertRow(input: OfferInput) {
     in_stock: input.inStock,
     product_url: input.productUrl,
     image_url: input.imageUrl,
+    ...(input.imageSourceUrl !== undefined ? { image_source_url: input.imageSourceUrl } : {}),
     lab_report: input.labReport,
     coa_url: input.coaUrl ?? null,
     scraped_at: new Date().toISOString(),

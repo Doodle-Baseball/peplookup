@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import Image from 'next/image';
 import { cn } from '@/lib/cn';
 import { BoxIcon, ExternalIcon } from '@/components/icons/icons';
+import { OfferImage } from '@/components/offer-image/offer-image';
+import { offerImageAlt } from '@/components/offer-image/offer-image-alt';
 import type { CatalogProduct, CatalogVariant } from '@/components/supplier-card/catalog-products';
 
 /** The size a card opens on: the first one in stock, so a sold-out size never leads. */
@@ -33,6 +34,8 @@ export function BuyPeptideCard({
   const [selectedKey, setSelectedKey] = useState(() => initialVariant(product.variants).key);
   const variant = product.variants.find((candidate) => candidate.key === selectedKey) ?? product.variants[0]!;
   const tabIndex = copy ? -1 : undefined;
+  // What stands in for the vial when the size has no picture, or when its picture fails to load.
+  const imagePlaceholder = <BoxIcon className="vial-3d h-12 w-12 text-faint" />;
 
   return (
     <article className="card-3d group flex h-full flex-col rounded-card border border-line bg-surface-raised p-3">
@@ -45,9 +48,9 @@ export function BuyPeptideCard({
 
         <div className="card-3d-layer relative flex h-full w-full items-center justify-center">
           {variant.imageUrl ? (
-            <Image
+            <OfferImage
               src={variant.imageUrl}
-              alt={copy ? '' : `${product.name} from ${supplierName}`}
+              alt={copy ? '' : offerImageAlt(product.name, variant.sizeLabel, supplierName)}
               width={200}
               height={200}
               className="vial-3d relative z-0 h-40 w-40 object-contain"
@@ -55,9 +58,10 @@ export function BuyPeptideCard({
               // Lazy loading misses images that slide into view on a moving track; there are only ten.
               loading="eager"
               referrerPolicy="no-referrer"
+              fallback={imagePlaceholder}
             />
           ) : (
-            <BoxIcon className="vial-3d h-12 w-12 text-faint" />
+            imagePlaceholder
           )}
           <span aria-hidden="true" className="vial-3d-shadow absolute bottom-2 h-3 w-28 rounded-pill" />
         </div>
