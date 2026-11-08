@@ -1,3 +1,4 @@
+import { supplierPath } from '@/lib/supplier-path';
 import Link from 'next/link';
 import {
   ArrowRightIcon,
@@ -109,7 +110,7 @@ function PartnerLogo({ promo }: { promo: PromotedSupplier }) {
  * prices with every other supplier.
  */
 export function FeaturedPartnerSection({ promo, now = new Date() }: { promo: PromotedSupplier; now?: Date }) {
-  const profilePath = `/suppliers/${promo.slug}`;
+  const profilePath = supplierPath(promo.slug);
   const month = currentMonthName(now);
 
   return (

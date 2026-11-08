@@ -1,3 +1,4 @@
+import { supplierPath } from '@/lib/supplier-path';
 import Link from 'next/link';
 import type { Supplier } from '@/lib/schema';
 import { cn } from '@/lib/cn';
@@ -64,7 +65,7 @@ function VendorGrid({ suppliers, className }: { suppliers: readonly Supplier[]; 
       {suppliers.map((supplier) => (
         <li key={supplier.slug} className="min-w-0">
           <Link
-            href={`/suppliers/${supplier.slug}`}
+            href={supplierPath(supplier.slug)}
             className="card-3d group flex min-w-0 items-center gap-2.5 rounded-card border border-line bg-surface-raised p-2.5 transition-colors hover:border-brand hover:bg-brand sm:gap-3 sm:p-3"
           >
             <SupplierLogo

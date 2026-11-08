@@ -21,6 +21,7 @@ import {
 } from '@/lib/seo/indexing';
 import { cleanSeoText, qualifyClaims, qualifyTitleClaims } from '@/lib/seo/text';
 import { isContentV2 } from '@/lib/seo/protected';
+import { publicCanonical } from '@/lib/supplier-path';
 
 export {
   clearRedirectCache,
@@ -342,7 +343,10 @@ export async function withSeo(path: string, base: Metadata): Promise<Metadata> {
   const cleaned = await cleanPageText(path, { title: rawTitle ?? '', description: rawDescription ?? '' });
   const title = rawTitle ? { absolute: cleaned.title } : base.title;
   const description = rawDescription ? cleaned.description : base.description;
-  const canonical = seo?.canonicalUrl ?? base.alternates?.canonical;
+  // publicCanonical: a saved canonical is keyed by the page's /suppliers/<slug> path, so it is turned into the served address here;
+  // a moved supplier profile therefore can't be pointed back at its old URL by saving it in /admin/seo.
+  const savedCanonical = seo?.canonicalUrl ?? base.alternates?.canonical;
+  const canonical = typeof savedCanonical === 'string' ? publicCanonical(savedCanonical) : savedCanonical;
   const follow = seo?.robotsFollow ?? true;
   const robots = !decision.indexable ? { index: false, follow } : follow ? base.robots : { index: true, follow: false };
 

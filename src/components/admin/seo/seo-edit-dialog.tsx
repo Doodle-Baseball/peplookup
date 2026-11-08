@@ -1,5 +1,6 @@
 'use client';
 
+import { publicCanonical, publicPath } from '@/lib/supplier-path';
 import {
   startTransition,
   useActionState,
@@ -236,7 +237,7 @@ export function SeoEditDialog({ entry, onClose }: { entry: SeoEntry; onClose: ()
               <h2 id="seo-edit-title" className="truncate text-xl font-black text-content">
                 {entry.name}
               </h2>
-              <p className="truncate font-mono text-xs text-muted">{entry.path}</p>
+              <p className="truncate font-mono text-xs text-muted">{publicPath(entry.path)}</p>
             </div>
             <button
               type="button"
@@ -408,8 +409,8 @@ export function SeoEditDialog({ entry, onClose }: { entry: SeoEntry; onClose: ()
                   <input
                     id="seo-canonical"
                     name="canonicalUrl"
-                    defaultValue={override?.canonicalUrl ?? ''}
-                    placeholder={entry.defaults.path}
+                    defaultValue={override?.canonicalUrl ? publicCanonical(override.canonicalUrl) : ''}
+                    placeholder={publicPath(entry.defaults.path)}
                     className={cn(inputClass, errors.canonicalUrl ? 'border-danger' : 'border-line')}
                   />
                   <FieldError message={errors.canonicalUrl} />

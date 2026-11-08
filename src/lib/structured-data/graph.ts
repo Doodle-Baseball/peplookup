@@ -1,4 +1,5 @@
 import { site } from '@/config/site';
+import { publicPath } from '@/lib/supplier-path';
 import {
   breadcrumbTrail,
   cleanPath,
@@ -52,8 +53,9 @@ export interface JsonLdGraph {
   '@graph': JsonLdNode[];
 }
 
+/** The full URL of a page given its key path; a supplier profile that has moved gets the address it is served at. */
 export function absoluteUrl(path: string): string {
-  const clean = cleanPath(path);
+  const clean = publicPath(cleanPath(path));
   return clean === '/' ? `${SITE_URL}/` : `${SITE_URL}${clean}`;
 }
 

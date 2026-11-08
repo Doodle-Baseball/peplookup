@@ -4,6 +4,7 @@ import { couponPagePath } from '@/lib/coupon-pages';
 import { ratingSourceLabel, reviewsPagePath } from '@/lib/review-pages';
 import { characterCount } from '@/lib/seo-status';
 import { formatReviewCount } from '@/lib/format';
+import { publicPath } from '@/lib/supplier-path';
 import type { ReviewCount } from '@/lib/schema';
 
 /**
@@ -26,7 +27,8 @@ export function pageMetadata(defaults: SeoDefaults): Metadata {
     title: { absolute: defaults.title },
     description: defaults.description,
     ...(defaults.keywords?.length ? { keywords: [...defaults.keywords] } : {}),
-    alternates: { canonical: defaults.path },
+    // publicPath: the path is the page's key; the canonical is where it is served (they differ for a moved supplier profile).
+    alternates: { canonical: publicPath(defaults.path) },
   };
 }
 

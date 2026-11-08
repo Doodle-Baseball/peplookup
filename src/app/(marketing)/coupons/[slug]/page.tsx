@@ -1,3 +1,4 @@
+import { supplierPath } from '@/lib/supplier-path';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import {
@@ -99,7 +100,7 @@ export default async function CouponCodePage({ params }: { params: Promise<{ slu
   const logo = supplier.logoUrl ?? supplier.faviconUrl;
   const defaults = couponPageSeoDefaults(supplier, coupon);
   const shopHref = supplierGoPath(supplier.slug, 'website');
-  const profilePath = `/suppliers/${supplier.slug}`;
+  const profilePath = supplierPath(supplier.slug);
 
   // Only facts we actually hold for this vendor, no placeholder figures.
   const productCount = resolvedOffers.length;

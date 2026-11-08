@@ -1,3 +1,4 @@
+import { supplierPath } from '@/lib/supplier-path';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getSuppliers, getProducts, getAllOffers } from '@/lib/repository';
@@ -110,7 +111,7 @@ export default async function LabReportsPage({
     })
     .sort((a, b) => a.name.localeCompare(b.name));
 
-  const reportItems = vendorGroups.map((group) => ({ name: group.name, url: `/suppliers/${group.slug}` }));
+  const reportItems = vendorGroups.map((group) => ({ name: group.name, url: supplierPath(group.slug) }));
 
   // Quick search covers every vendor that actually has at least one test on
   // file (first, with its logo) plus every real substance (compound) name,

@@ -1,3 +1,4 @@
+import { supplierPath } from '@/lib/supplier-path';
 import Link from 'next/link';
 import { cn } from '@/lib/cn';
 import { supplierGoPath } from '@/lib/go-links';
@@ -84,7 +85,7 @@ export function SupplierCard({ supplier, productCount }: { supplier: Supplier; p
 
         <div className="min-w-0 flex-1">
           <h3 className="truncate text-lg font-bold leading-tight text-content">
-            <Link href={`/suppliers/${supplier.slug}`} className="transition-colors hover:text-accent">
+            <Link href={supplierPath(supplier.slug)} className="transition-colors hover:text-accent">
               {supplier.name}
             </Link>
           </h3>
@@ -126,7 +127,7 @@ export function SupplierCard({ supplier, productCount }: { supplier: Supplier; p
         <div className="flex shrink-0 items-center gap-0.5">
           <ShareButton
             title={supplier.name}
-            url={`https://${site.domain}/suppliers/${supplier.slug}`}
+            url={`https://${site.domain}${supplierPath(supplier.slug)}`}
             className="h-8 w-8 border-0 bg-transparent text-muted hover:text-accent"
           />
           <FavoriteButton slug={supplier.slug} name={supplier.name} className="h-8 w-8" />
@@ -240,7 +241,7 @@ export function SupplierCard({ supplier, productCount }: { supplier: Supplier; p
       <div className="mt-auto space-y-2 pt-4">
         <div className="grid grid-cols-2 gap-2">
           <Link
-            href={`/suppliers/${supplier.slug}`}
+            href={supplierPath(supplier.slug)}
             className="group/profile inline-flex items-center justify-center gap-1 rounded-chip border border-line bg-surface px-3 py-2.5 text-sm font-bold text-content transition-colors hover:border-accent hover:text-accent-strong"
           >
             View Profile

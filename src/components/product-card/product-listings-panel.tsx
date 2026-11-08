@@ -1,5 +1,6 @@
 'use client';
 
+import { supplierPath } from '@/lib/supplier-path';
 import { useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { toListing } from '@/lib/listing';
@@ -588,7 +589,7 @@ function PriceRow({
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <Link
-              href={`/suppliers/${supplier.slug}`}
+              href={supplierPath(supplier.slug)}
               className="truncate font-bold text-content transition-colors hover:text-accent"
             >
               {supplier.name}
@@ -805,7 +806,7 @@ function ReportCard({
             initialClassName="text-xs"
           />
           <Link
-            href={`/suppliers/${supplier.slug}`}
+            href={supplierPath(supplier.slug)}
             className="truncate font-bold text-content transition-colors hover:text-accent"
           >
             {supplier.name}

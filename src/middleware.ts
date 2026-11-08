@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { ADMIN_SESSION_COOKIE, verifyAdminSessionToken } from '@/lib/admin-auth';
 import { getRedirectTarget } from '@/lib/seo-redirects';
+import { publicPath } from '@/lib/supplier-path';
 
 async function handleAdminRoute(request: NextRequest): Promise<NextResponse> {
   const { pathname } = request.nextUrl;
@@ -24,7 +25,8 @@ async function handleAdminRoute(request: NextRequest): Promise<NextResponse> {
 async function handlePublicRoute(request: NextRequest): Promise<NextResponse> {
   const target = await getRedirectTarget(request.nextUrl.pathname);
   if (!target) return NextResponse.next();
-  const redirectUrl = new URL(target, request.url);
+  // publicPath: a supplier whose profile has moved is sent to where it lives now, not to the address that redirects again.
+  const redirectUrl = new URL(publicPath(target), request.url);
   redirectUrl.search = request.nextUrl.search;
   // Permanent: this is a page that moved for good, not a temporary detour.
   // 301 rather than a 308: search engines treat the two alike, but SEO audit

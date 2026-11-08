@@ -1,3 +1,4 @@
+import { supplierPath } from '@/lib/supplier-path';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import {
@@ -338,7 +339,7 @@ export default async function VendorReviewsPage({ params }: { params: Promise<{ 
         {/* ------------------------------------------- Where to go next */}
         <nav aria-label={`More about ${supplier.name}`} className="mt-12 flex flex-wrap items-center gap-3">
           <Link
-            href={`/suppliers/${supplier.slug}`}
+            href={supplierPath(supplier.slug)}
             className="group/profile inline-flex items-center gap-2 rounded-pill border border-line bg-surface-raised px-4 py-2.5 text-sm font-bold text-content transition-colors hover:border-accent hover:text-accent-strong"
           >
             {isContentV2() ? `See ${supplier.name} prices and products` : `See all ${supplier.name} products and prices`}

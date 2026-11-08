@@ -32,7 +32,7 @@ describe('SupplierSpotlight', () => {
     const score = screen.getByRole('link', { name: '4.1 · 54 reviews on Trustpilot' });
     expect(score.getAttribute('title')).toBe('Rating on Trustpilot');
     expect(score.getAttribute('href')).toBe(supplier.rating?.url);
-    expect(screen.getByRole('link', { name: 'American Peptides' }).getAttribute('href')).toBe('/suppliers/american-peptides');
+    expect(screen.getByRole('link', { name: 'American Peptides' }).getAttribute('href')).toBe('/supplier/american-peptides');
     const shop = screen.getByRole('link', { name: /Shop American Peptides/ });
     expect(shop.getAttribute('href')).toBe(supplier.shopUrl);
     expect(shop.getAttribute('rel')).toContain('sponsored');

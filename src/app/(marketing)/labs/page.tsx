@@ -1,3 +1,4 @@
+import { supplierPath } from '@/lib/supplier-path';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { site } from '@/config/site';
@@ -47,7 +48,7 @@ export default async function LabsPage() {
   const publishingSuppliers = suppliers
     .filter((s) => slugsWithCoa.has(s.slug))
     .sort((a, b) => a.name.localeCompare(b.name));
-  const labItems = publishingSuppliers.map((supplier) => ({ name: supplier.name, url: `/suppliers/${supplier.slug}` }));
+  const labItems = publishingSuppliers.map((supplier) => ({ name: supplier.name, url: supplierPath(supplier.slug) }));
   const coaListings = offers.filter((o) => o.coaUrl || o.labReport?.reportUrl || o.labReport?.labUrl).length;
 
   const stats = [
@@ -116,7 +117,7 @@ export default async function LabsPage() {
               {publishingSuppliers.map((supplier) => (
                 <li key={supplier.slug}>
                   <Link
-                    href={`/suppliers/${supplier.slug}`}
+                    href={supplierPath(supplier.slug)}
                     className="inline-flex items-center rounded-pill border border-line bg-surface px-3.5 py-2 text-sm font-bold text-content transition-colors hover:border-brand hover:bg-brand hover:text-surface"
                   >
                     {supplier.name}
