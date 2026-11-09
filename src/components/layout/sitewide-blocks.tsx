@@ -10,7 +10,7 @@ import { buildSupplierSpotlight } from '@/lib/supplier-spotlight';
 /**
  * The blocks that used to sit on every public page, now rendered only by the
  * pages that own them (B5): the directory and the community promo on / and
- * /suppliers, the featured partner and the spotlight popup on / alone.
+ * /supplier, the featured partner and the spotlight popup on / alone.
  * Rendered by the page rather than switched by path in the layout, so other
  * pages don't carry them in their HTML or their RSC payload either.
  */

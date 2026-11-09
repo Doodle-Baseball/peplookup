@@ -1,4 +1,4 @@
-import { supplierPath } from '@/lib/supplier-path';
+import { supplierPath } from '@/lib/site-paths';
 import type { Metadata } from 'next';
 import {
   getSuppliers,
@@ -26,7 +26,7 @@ import { SupplierEvaluationGuide } from '@/components/suppliers/supplier-evaluat
 import { PageSeo } from '@/components/seo/page-seo';
 import { SitewideBlocks } from '@/components/layout/sitewide-blocks';
 
-const PAGE = staticSeoPage('/suppliers');
+const PAGE = staticSeoPage('/supplier');
 
 export async function generateMetadata(): Promise<Metadata> {
   return withSeo(PAGE.path, pageMetadata(PAGE));
@@ -202,7 +202,7 @@ export default async function SuppliersPage({
       <SupplierEvaluationGuide vendorCount={suppliers.length} />
 
       <section className="mx-auto max-w-shell px-4 pb-12">
-        <PageFaqSection path="/suppliers" />
+        <PageFaqSection path="/supplier" />
       </section>
 
       <SitewideBlocks featuredPartner={false} />

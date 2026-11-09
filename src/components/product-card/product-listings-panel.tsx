@@ -1,6 +1,6 @@
 'use client';
 
-import { supplierPath } from '@/lib/supplier-path';
+import { supplierPath } from '@/lib/site-paths';
 import { useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { toListing } from '@/lib/listing';

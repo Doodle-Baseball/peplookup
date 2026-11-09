@@ -3,7 +3,6 @@ import { site } from '@/config/site';
 import { guideHasContent, type Guide } from '@/data/guides';
 import { couponPagePath } from '@/lib/coupon-pages';
 import { reviewsPagePath } from '@/lib/review-pages';
-import { publicPath, supplierPath } from '@/lib/supplier-path';
 
 /** The part of an /admin/seo override the sitemap still reads itself: the canonical. */
 export interface SitemapSeoFields {
@@ -51,8 +50,7 @@ function normalisedPath(url: string): string {
 
 /** A page whose canonical names another URL is a duplicate; only the canonical belongs in the sitemap. */
 function isOwnCanonical(path: string, seo: SitemapSeoFields | undefined): boolean {
-  // publicPath: a saved canonical naming a moved supplier profile's old path means its new address, as on the page itself.
-  return !seo?.canonicalUrl || publicPath(normalisedPath(seo.canonicalUrl)) === path;
+  return !seo?.canonicalUrl || normalisedPath(seo.canonicalUrl) === path;
 }
 
 function latest(dates: readonly (string | null)[]): Date | undefined {
@@ -69,9 +67,7 @@ function latest(dates: readonly (string | null)[]): Date | undefined {
  */
 export function buildSitemapEntries(input: SitemapInput): MetadataRoute.Sitemap {
   const { seoByPath } = input;
-  // `path` is the page's key (where its override and indexing decision are stored); `servedAt` is the address
-  // it answers at, which only differs for a supplier profile that has moved.
-  const listable = (path: string, servedAt = path) => input.isIndexable(path) && isOwnCanonical(servedAt, seoByPath.get(path));
+  const listable = (path: string) => input.isIndexable(path) && isOwnCanonical(path, seoByPath.get(path));
 
   const offerDates = (match: (offer: SitemapInput['offers'][number]) => boolean) =>
     input.offers.filter(match).map((offer) => offer.scrapedAt);
@@ -79,14 +75,14 @@ export function buildSitemapEntries(input: SitemapInput): MetadataRoute.Sitemap 
   // Drafts never reach here through getGuides(), but the check keeps a draft out even if a caller passes one.
   const publishedGuides = input.guides.filter((guide) => guide.isPublished !== false && guideHasContent(guide));
   const staticPaths = input.staticPaths.filter(
-    (path) => !UNLISTED_STATIC_PATHS.has(path) && (path !== '/guides' || publishedGuides.length > 0),
+    (path) => !UNLISTED_STATIC_PATHS.has(path) && (path !== '/guide' || publishedGuides.length > 0),
   );
 
   const entries: { path: string; lastModified?: Date }[] = [
     ...staticPaths.filter((path) => listable(path)).map((path) => ({ path })),
     ...input.productSlugs
       .map((slug) => ({
-        path: `/products/${slug}`,
+        path: `/product/${slug}`,
         lastModified: latest(offerDates((offer) => offer.productSlug === slug)),
       }))
       .filter((entry) => listable(entry.path)),
@@ -95,19 +91,18 @@ export function buildSitemapEntries(input: SitemapInput): MetadataRoute.Sitemap 
         supplier.inventoryRefreshedAt,
         ...offerDates((offer) => offer.supplierSlug === supplier.slug),
       ]);
-      const profile = `/suppliers/${supplier.slug}`;
-      const profileServedAt = supplierPath(supplier.slug);
+      const profile = `/supplier/${supplier.slug}`;
       const coupon = couponPagePath(supplier.slug);
       const reviews = reviewsPagePath(supplier.slug);
       return [
-        ...(listable(profile, profileServedAt) ? [{ path: profileServedAt, lastModified }] : []),
+        ...(listable(profile) ? [{ path: profile, lastModified }] : []),
         ...(supplier.hasCoupon && listable(coupon) ? [{ path: coupon, lastModified }] : []),
         ...(supplier.hasReviews && listable(reviews) ? [{ path: reviews, lastModified }] : []),
       ];
     }),
     ...publishedGuides
       .map((guide) => ({
-        path: `/guides/${guide.slug}`,
+        path: `/guide/${guide.slug}`,
         // updated_at moves on every admin save; the publish date covers guides that ship in the repository.
         lastModified: latest([guide.updatedAt ?? null, guide.publishedAt]),
       }))

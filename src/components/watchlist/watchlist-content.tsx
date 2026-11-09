@@ -129,7 +129,7 @@ export function WatchlistContent() {
           this device only.
         </p>
         <Link
-          href="/suppliers"
+          href="/supplier"
           className="btn-3d mt-5 inline-flex items-center gap-2 rounded-chip bg-brand px-5 py-3 text-sm font-bold text-white"
         >
           Browse suppliers

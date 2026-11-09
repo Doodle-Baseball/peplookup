@@ -44,7 +44,7 @@ function titleText(title: Metadata['title'], fallback: string): string {
 
 /** A category has no page of its own, so its crumb points at the guides index, where every category is listed. */
 function categoryCrumb(category: string) {
-  return { name: category, path: '/guides' };
+  return { name: category, path: '/guide' };
 }
 
 /** Same-category guides first, newest first, topped up from the rest so the rail is never needlessly short. */
@@ -74,7 +74,7 @@ export async function generateMetadata({
   const { slug } = await params;
   const guide = await getGuideBySlug(slug);
   if (!guide) return {};
-  const metadata = await withSeo(`/guides/${guide.slug}`, pageMetadata(guideSeoDefaults(guide)));
+  const metadata = await withSeo(`/guide/${guide.slug}`, pageMetadata(guideSeoDefaults(guide)));
   // An image, title or URL set in /admin/seo still wins over the guide's own.
   const override = metadata.openGraph;
   const coverImages = guide.coverImageUrl
@@ -88,7 +88,7 @@ export async function generateMetadata({
       type: 'article',
       title: override?.title ?? titleText(metadata.title, guide.title),
       description: override?.description ?? metadata.description ?? guide.excerpt,
-      url: override?.url ?? `/guides/${guide.slug}`,
+      url: override?.url ?? `/guide/${guide.slug}`,
       publishedTime: guide.publishedAt,
       ...(guide.updatedAt ? { modifiedTime: guide.updatedAt } : {}),
       ...((override?.images ?? coverImages) ? { images: override?.images ?? coverImages } : {}),
@@ -132,7 +132,7 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
   const guide = await getGuideBySlug(slug);
   if (!guide) notFound();
   const [seo, allGuides, linkHosts, promo] = await Promise.all([
-    getSeoOverride(`/guides/${guide.slug}`),
+    getSeoOverride(`/guide/${guide.slug}`),
     getGuides(),
     sponsoredHosts(),
     sidebarPromo(),
@@ -175,7 +175,7 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
               </li>
               <li aria-hidden="true">/</li>
               <li>
-                <Link href="/guides" className="font-semibold text-brand hover:underline">
+                <Link href="/guide" className="font-semibold text-brand hover:underline">
                   Guides
                 </Link>
               </li>
@@ -187,7 +187,7 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
           </nav>
         ) : (
         <Link
-          href="/guides"
+          href="/guide"
           className="group/back inline-flex items-center gap-2 rounded-pill border border-line border-b-2 bg-surface-raised py-1.5 pl-1.5 pr-4 text-sm font-bold text-content shadow-card transition-all duration-200 hover:-translate-y-0.5 hover:border-accent/40 hover:text-accent-strong hover:shadow-lift active:translate-y-0"
         >
           <span className="flex h-7 w-7 items-center justify-center rounded-pill bg-accent-soft text-accent-strong transition-colors duration-200 group-hover/back:bg-accent group-hover/back:text-white">
@@ -337,7 +337,7 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
 
       {standalone ? null : (
         <div className="mx-auto max-w-shell px-4">
-          <PageFaqSection path={`/guides/${guide.slug}`} className="mt-8 sm:mt-10" />
+          <PageFaqSection path={`/guide/${guide.slug}`} className="mt-8 sm:mt-10" />
         </div>
       )}
 

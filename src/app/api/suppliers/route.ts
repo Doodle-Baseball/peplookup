@@ -4,7 +4,7 @@ import { MAX_SLUGS, parseSlugsParam, publicJson } from '@/lib/api/public-read';
 
 /**
  * Public, read-only supplier listing with per-supplier product counts.
- * No secrets involved, this only exposes what the /suppliers page already
+ * No secrets involved, this only exposes what the /supplier page already
  * renders, so it is safe to call from client components like the watchlist.
  *
  * `?slugs=a,b,c` is required. The watchlist is the only caller and always

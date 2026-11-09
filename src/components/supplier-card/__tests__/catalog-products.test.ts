@@ -131,7 +131,7 @@ describe('supplier catalogue overrides', () => {
     expect(new Set(cards.map((card) => card.key)).size).toBe(5);
     expect(cards.every((card) => card.name === 'Hospira Bacteriostatic Water' && card.variants.length === 1)).toBe(true);
     expect(cards.map((card) => card.variants[0]!.optionLabel)).toEqual(['30mg', '30mg × 5', '30mg × 10', '30mg × 25', '30mg × 100']);
-    expect(cards[0]!.compareHref).toBe('/products/bacteriostatic-water');
+    expect(cards[0]!.compareHref).toBe('/product/bacteriostatic-water');
   });
 
   it('gives every other supplier one card with every pack size, under the product name', () => {

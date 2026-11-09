@@ -32,7 +32,7 @@ export const STATIC_SEO_PAGES = [
     h1: 'Price Checker.',
   },
   {
-    path: '/suppliers',
+    path: '/supplier',
     name: 'Suppliers directory',
     group: 'Main pages',
     title: `Peptide Suppliers Directory | Verified & Compared | ${site.name}`,
@@ -50,7 +50,7 @@ export const STATIC_SEO_PAGES = [
     h1: 'COA Test Reports Scored',
   },
   {
-    path: '/guides',
+    path: '/guide',
     name: 'Research guides',
     group: 'Main pages',
     title: `Research Guides | ${site.name}`,
@@ -69,9 +69,9 @@ export const STATIC_SEO_PAGES = [
     path: '/tools',
     name: 'All tools',
     group: 'Tools',
-    title: `Peptide Pricing Tools | Free Research Calculators | ${site.name}`,
+    title: `Free Peptide Calculators & Research Tools | ${site.name}`,
     description:
-      'Free calculators and verification tools for peptide research: compare prices, compute cost per mg, reconstitute vials, dose intranasal sprays, and read COAs.',
+      'Free tools for peptide research: compare prices, work out cost per mg, reconstitute a vial, set up a nasal spray and read a certificate of analysis.',
     h1: 'Peptide Pricing Tools.',
   },
   {
@@ -167,7 +167,7 @@ export const STATIC_SEO_PAGES = [
     h1: 'Verified Labs',
   },
   {
-    path: '/coupons',
+    path: '/coupon',
     name: 'Coupons',
     group: 'Main pages',
     title: `Peptide Coupon Codes | ${site.name}`,
@@ -175,7 +175,7 @@ export const STATIC_SEO_PAGES = [
     h1: 'Supplier coupon codes.',
   },
   {
-    path: '/reviews',
+    path: '/review',
     name: 'Reviews',
     group: 'Main pages',
     title: `Peptide Supplier Reviews & Ratings | ${site.name}`,
@@ -194,8 +194,8 @@ export const STATIC_SEO_PAGES = [
     path: '/community',
     name: 'Community',
     group: 'Company',
-    title: `Peptides Lookup Community | Free Peptide Research Group | ${site.name}`,
-    description: `Join the free Peptides Lookup community on Skool: plain-language peptide education, COA reading, study breakdowns and supplier comparisons. Research use only.`,
+    title: `Peptides Lookup Community: Free Research Group | ${site.name}`,
+    description: `A free Skool community for plain-language peptide education, learning to read a COA, study breakdowns and supplier comparisons. Research use only.`,
     h1: 'Peptides Skool Community.',
   },
   {
@@ -203,7 +203,7 @@ export const STATIC_SEO_PAGES = [
     name: 'Chrome extension',
     group: 'Main pages',
     title: `Free Chrome Extension for Peptide Coupon Codes | ${site.name}`,
-    description: `The free ${site.name} Chrome extension shows verified coupon codes on supported peptide supplier sites. Copy or fill a code in one click.`,
+    description: `The free ${site.name} Chrome extension shows a supplier's current coupon code while you shop on its site, so you can copy or fill it in one click.`,
     h1: `${site.name} Coupon Codes: Free Chrome Extension`,
   },
   {

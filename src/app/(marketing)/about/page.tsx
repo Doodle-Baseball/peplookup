@@ -73,13 +73,13 @@ const SITE_AREAS: { title: string; body: string; href: string; icon: React.React
   {
     title: 'Browse suppliers',
     body: 'Each supplier\'s products, prices, shipping, payment options and COAs.',
-    href: '/suppliers',
+    href: '/supplier',
     icon: <StoreIcon className="h-5 w-5" />,
   },
   {
     title: 'Find coupon codes',
     body: 'The current discount code for every supplier we track, ready to copy.',
-    href: '/coupons',
+    href: '/coupon',
     icon: <TagIcon className="h-5 w-5" />,
   },
   {
@@ -220,7 +220,7 @@ export default async function AboutPage() {
           </ol>
           <p className="mx-auto mt-6 max-w-3xl text-center text-sm leading-7 text-muted sm:text-base">
             Supplier pages on {site.name} are checked by {SUPPLIER_PAGE_AUTHOR.name}. Browse the{' '}
-            <Link href="/suppliers" className="font-semibold text-brand hover:underline">
+            <Link href="/supplier" className="font-semibold text-brand hover:underline">
               supplier directory
             </Link>
             , compare{' '}
@@ -316,7 +316,7 @@ export default async function AboutPage() {
 
         <p className="mx-auto mt-8 max-w-4xl text-center text-sm text-muted sm:text-base">
           New here? Read{' '}
-          <Link href="/guides/what-is-peplookup" className="font-semibold text-brand hover:underline">
+          <Link href="/guide/what-is-peplookup" className="font-semibold text-brand hover:underline">
             What is PepLookup?
           </Link>
         </p>

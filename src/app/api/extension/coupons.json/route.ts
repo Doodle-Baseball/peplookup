@@ -36,7 +36,7 @@ function matchesEtag(ifNoneMatch: string | null, etag: string): boolean {
 
 /**
  * Public coupon feed for the PepLookup Chrome extension. Read-only, no login,
- * and holds nothing that /coupons doesn't already show (see buildExtensionFeed).
+ * and holds nothing that /coupon doesn't already show (see buildExtensionFeed).
  */
 export async function GET(request: NextRequest) {
   let body: string;

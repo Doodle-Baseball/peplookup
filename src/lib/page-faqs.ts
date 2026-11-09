@@ -56,7 +56,7 @@ async function defaultFaqsFor(path: string): Promise<readonly FaqItem[]> {
   const stat = DEFAULT_PAGE_FAQS[path];
   if (stat) return stat;
 
-  const supplierSlug = path.startsWith('/suppliers/') ? path.slice('/suppliers/'.length) : null;
+  const supplierSlug = path.startsWith('/supplier/') ? path.slice('/supplier/'.length) : null;
   if (supplierSlug) {
     const supplier = await getSupplier(supplierSlug);
     if (supplier) return defaultSupplierFaqs(supplier);
@@ -81,7 +81,7 @@ async function defaultFaqsFor(path: string): Promise<readonly FaqItem[]> {
     }
   }
 
-  const guideSlug = path.startsWith('/guides/') ? path.slice('/guides/'.length) : null;
+  const guideSlug = path.startsWith('/guide/') ? path.slice('/guide/'.length) : null;
   if (guideSlug) {
     const guide = await getGuideBySlug(guideSlug);
     if (guide) return defaultGuideFaqs(guide);
@@ -102,7 +102,7 @@ export async function getFaqsForPath(path: string): Promise<readonly FaqItem[]> 
 
   // Supplier pages keep their researched FAQ wording exactly as saved; the
   // coupon and reviews pages get the purity and same-day wording rules.
-  if (path.startsWith('/suppliers/')) return faqs;
+  if (path.startsWith('/supplier/')) return faqs;
   const context = await getSupplierTextContext(path);
   if (!context) return faqs;
   return faqs.map((faq) => ({ question: qualifyClaims(faq.question, context), answer: qualifyClaims(faq.answer, context) }));

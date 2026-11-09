@@ -1,4 +1,4 @@
-import { supplierPath } from '@/lib/supplier-path';
+import { supplierPath } from '@/lib/site-paths';
 import Link from 'next/link';
 import { getAllOffers, getOffersForSupplier, getProducts, getSupplier } from '@/lib/repository';
 import { groupCatalogProducts } from '@/components/supplier-card/catalog-products';

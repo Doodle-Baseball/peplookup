@@ -7,9 +7,9 @@ const redirect = (fromPath: string, toPath: string) => ({ fromPath, toPath, crea
 describe('supplierSlugAliases', () => {
   it('maps a renamed supplier to every slug it has had', () => {
     const aliases = supplierSlugAliases([
-      redirect('/suppliers/amino-club-2', '/suppliers/amino-club'),
-      redirect('/suppliers/amino-club-old', '/suppliers/amino-club-2'),
-      redirect('/products/bpc', '/products/bpc-157'),
+      redirect('/supplier/amino-club-2', '/supplier/amino-club'),
+      redirect('/supplier/amino-club-old', '/supplier/amino-club-2'),
+      redirect('/product/bpc', '/product/bpc-157'),
     ]);
     expect(aliases.get('amino-club')?.sort()).toEqual(['amino-club-2', 'amino-club-old']);
     expect(aliases.has('bpc-157')).toBe(false);

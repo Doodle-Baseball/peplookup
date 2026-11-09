@@ -49,7 +49,7 @@ export async function generateMetadata({
   const { slug } = await params;
   const product = await getProduct(slug);
   if (!product) return { title: 'Product not found' };
-  return withSeo(`/products/${product.slug}`, pageMetadata(compoundSeoDefaults(product)));
+  return withSeo(`/product/${product.slug}`, pageMetadata(compoundSeoDefaults(product)));
 }
 
 type SearchParams = {
@@ -84,7 +84,7 @@ export default async function ProductPage({
   const { slug } = await params;
   const product = await getProduct(slug);
   if (!product) notFound();
-  const seo = await getSeoOverride(`/products/${product.slug}`);
+  const seo = await getSeoOverride(`/product/${product.slug}`);
 
   const sp = await searchParams;
 
@@ -145,26 +145,40 @@ export default async function ProductPage({
 
   const research = product.research;
 
+  // Built from this compound's own listings, so a page without written FAQs still
+  // answers with facts about it rather than wording every compound would share.
+  const singleVialSizes = [...new Set(resolvedOffers.filter((o) => o.vialCount === 1).map((o) => o.vialSize / 1000))].sort(
+    (a, b) => a - b,
+  );
+  const kitCount = resolvedOffers.filter((o) => o.vialCount > 1).length;
+  const aliases = product.aliases.slice(0, 2);
   const genericFaqs = [
     {
       q: `What is ${product.name}?`,
-      a: `${product.name} is a peptide compound used in research settings. It is commonly studied for its role in ${product.category?.toLowerCase() ?? 'research and formulation work'}, and many researchers compare supplier quality, purity, and testing data before purchasing.`,
+      a: `${product.name}${aliases.length > 0 ? ` (also listed as ${aliases.join(' or ')})` : ''} is a research compound${product.category ? ` that ${site.name} files under ${product.category}` : ''}. It is not approved for human use, and every listing on this page is sold for laboratory research only.`,
     },
     {
-      q: `What are the research benefits of ${product.name}?`,
-      a: `${product.name} is often evaluated for its potential influence on signaling pathways, recovery support, and targeted research applications. Research interest varies by peptide, formulation, and study design, so buyers typically review purity, dose, and independent lab verification before choosing a source.`,
+      q: `How many suppliers sell ${product.name}?`,
+      a: hasOffers
+        ? `We track ${resolvedOffers.length} ${product.name} ${resolvedOffers.length === 1 ? 'listing' : 'listings'} from ${vendorCount} ${vendorCount === 1 ? 'supplier' : 'suppliers'}, and ${inStockCount} ${inStockCount === 1 ? 'was' : 'were'} in stock at our last check.`
+        : `None of the suppliers we track lists ${product.name} right now.`,
     },
     {
-      q: `How does ${product.name} work?`,
-      a: `Like other research peptides, ${product.name} is typically studied for how it interacts with specific biological pathways and receptor systems. In practice, the way it is formulated, dosed, and tested matters as much as the compound itself, which is why verified suppliers and transparent COAs are important.`,
+      q: `What sizes does ${product.name} come in?`,
+      a:
+        singleVialSizes.length > 0
+          ? `Single vials on this page run ${singleVialSizes.length === 1 ? `at ${singleVialSizes[0]} mg` : `from ${singleVialSizes[0]} mg to ${singleVialSizes.at(-1)} mg`}${kitCount > 0 ? `, and ${kitCount} ${kitCount === 1 ? 'listing is a kit' : 'listings are kits'} of several vials` : ''}. Price per mg puts every size on the same scale, so a larger vial isn't automatically the better deal.`
+          : `Sizes vary by supplier; each listing above shows its own amount, and price per mg puts them on the same scale.`,
     },
     {
-      q: `Is ${product.name} for research use only?`,
-      a: `Yes, products like ${product.name} are generally intended for research, laboratory, or educational use and are not marketed as approved human therapeutics. Always follow local laws, lab safety practices, and institutional requirements before handling or studying any peptide.`,
+      q: `Do ${product.name} listings come with COAs?`,
+      a: `${offersWithReports.length} of the ${resolvedOffers.length} listings link a certificate of analysis. A COA covers one batch, so check that its lot number matches the vial you receive.`,
     },
     {
-      q: `What should I look for before buying ${product.name}?`,
-      a: `Key checks include verified COA data, peptide form and concentration, supplier reputation, stock status, and cost per mg. Comparing pricing and testing records side-by-side helps reduce the risk of buying an under-tested or misrepresented product.`,
+      q: `Where is ${product.name} cheapest?`,
+      a: bestOverallSupplier
+        ? `At our last check the lowest in-stock price per mg was at ${bestOverallSupplier.name}. Prices change often, so the table above, sorted by price per mg, shows the current order.`
+        : `No supplier has ${product.name} in stock right now, so there is no lowest price to show.`,
     },
   ];
   // Admin-written FAQs replace the generic set entirely; the generic questions
@@ -219,7 +233,7 @@ export default async function ProductPage({
           <div className="flex shrink-0 items-center gap-2">
             <ShareButton
               title={product.name}
-              url={`https://${site.domain}/products/${product.slug}`}
+              url={`https://${site.domain}/product/${product.slug}`}
               className="h-10 w-10"
             />
             <FavoriteButton

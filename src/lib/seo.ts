@@ -21,7 +21,6 @@ import {
 } from '@/lib/seo/indexing';
 import { cleanSeoText, qualifyClaims, qualifyTitleClaims } from '@/lib/seo/text';
 import { isContentV2 } from '@/lib/seo/protected';
-import { publicCanonical } from '@/lib/supplier-path';
 
 export {
   clearRedirectCache,
@@ -258,18 +257,26 @@ export async function getIndexDecisions(paths: readonly string[]): Promise<Map<s
 /**
  * The decision for one path from facts and an override the caller already
  * holds; the admin passes the rows it has just read, so a save shows at once.
+ * It is the decision the production site makes: an admin opened on a local or
+ * preview build would otherwise mark every page "preview deployment", which
+ * says nothing about how the live page is indexed.
  */
 export function indexDecisionFor(
   path: string,
   facts: PageQualityFacts | undefined,
   override: SeoOverride | null,
 ): IndexDecision {
-  return decide(path, facts, override);
+  return decide(path, facts, override, true);
 }
 
-function decide(path: string, facts: PageQualityFacts | undefined, override: SeoOverride | null): IndexDecision {
+function decide(
+  path: string,
+  facts: PageQualityFacts | undefined,
+  override: SeoOverride | null,
+  isProduction = isProductionDeployment(),
+): IndexDecision {
   const context = {
-    isProduction: isProductionDeployment(),
+    isProduction,
     adminRobotsIndex: override ? override.robotsIndex : null,
     readyToIndex: override ? override.readyToIndex : null,
     now: new Date(),
@@ -320,7 +327,7 @@ export async function cleanPageText(
 }
 
 /** A page's meta keywords carry only its first few, most relevant terms, in the order they were saved. */
-const MAX_META_KEYWORDS = 3;
+const MAX_META_KEYWORDS = 2;
 
 function pageKeywords(keywords: Metadata['keywords']): Metadata['keywords'] {
   if (!keywords) return keywords;
@@ -343,10 +350,7 @@ export async function withSeo(path: string, base: Metadata): Promise<Metadata> {
   const cleaned = await cleanPageText(path, { title: rawTitle ?? '', description: rawDescription ?? '' });
   const title = rawTitle ? { absolute: cleaned.title } : base.title;
   const description = rawDescription ? cleaned.description : base.description;
-  // publicCanonical: a saved canonical is keyed by the page's /suppliers/<slug> path, so it is turned into the served address here;
-  // a moved supplier profile therefore can't be pointed back at its old URL by saving it in /admin/seo.
-  const savedCanonical = seo?.canonicalUrl ?? base.alternates?.canonical;
-  const canonical = typeof savedCanonical === 'string' ? publicCanonical(savedCanonical) : savedCanonical;
+  const canonical = seo?.canonicalUrl ?? base.alternates?.canonical;
   const follow = seo?.robotsFollow ?? true;
   const robots = !decision.indexable ? { index: false, follow } : follow ? base.robots : { index: true, follow: false };
 

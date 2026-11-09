@@ -13,7 +13,7 @@ import { couponPagePath } from '@/lib/coupon-pages';
 import { getExtensionFeed } from '@/lib/extension/store';
 import { ExtensionPromoPill, ExtensionPromoSection, previewSupplierFrom } from '@/components/extension/extension-promo';
 
-const PAGE = staticSeoPage('/coupons');
+const PAGE = staticSeoPage('/coupon');
 
 export async function generateMetadata(): Promise<Metadata> {
   return withSeo(PAGE.path, pageMetadata(PAGE));
@@ -22,10 +22,17 @@ export async function generateMetadata(): Promise<Metadata> {
 // Codes are edited in the admin, so this must not be a build-time snapshot.
 // Rendering per request was the costly way to get that: the page reads the
 // whole offer catalogue, and every visitor and crawler paid for a fresh scan.
-// The vendor actions already revalidatePath('/coupons') on every edit, so a
+// The vendor actions already revalidatePath('/coupon') on every edit, so a
 // cached render is corrected the moment a code changes; the window only
 // applies to edits made outside those actions.
 export const revalidate = 1800;
+
+/** The value that occurs most often; the lower one wins a tie. */
+function mostCommon(values: readonly number[]): number {
+  const counts = new Map<number, number>();
+  for (const value of values) counts.set(value, (counts.get(value) ?? 0) + 1);
+  return [...counts].sort((a, b) => b[1] - a[1] || a[0] - b[0])[0]![0];
+}
 
 export default async function CouponsPage() {
   const [seo, suppliers, offers, extensionFeed] = await Promise.all([
@@ -52,6 +59,12 @@ export default async function CouponsPage() {
       coupon: supplier.coupon!,
       listingCount: listingCounts.get(supplier.slug) ?? 0,
     }));
+  // Worked out from the live codes, so the sentence never quotes a range that no longer exists.
+  const percents = vendors.map((vendor) => vendor.coupon.percentOff);
+  const discountSummary =
+    percents.length > 1
+      ? `The codes on this page run from ${Math.min(...percents)}% to ${Math.max(...percents)}% off, and ${mostCommon(percents)}% is the most common. `
+      : '';
   const couponItems = [...vendors].sort(compareCouponVendors(DEFAULT_COUPON_SORT)).map((vendor) => ({
     name: vendor.name,
     url: couponPagePath(vendor.slug),
@@ -74,11 +87,11 @@ export default async function CouponsPage() {
           {seo?.h1 ? seo.h1 : <>Supplier <span className="italic text-brand">coupon codes.</span></>}
         </h1>
         <p className="mt-5 text-base leading-relaxed text-muted sm:text-lg">
-          Every active peptide coupon code we track, with the supplier it belongs to, its discount and its rating.
-          Tap a code
+          The discount codes we list for {vendors.length} peptide suppliers, each with its percentage and the supplier
+          it works at. Copy a code
           {/* Laptop widths and up break here, so the two sentences split evenly over two lines. */}
-          <br className="hidden xl:inline" /> to copy it, then apply it at checkout on the supplier&rsquo;s own site.{' '}
-          {site.name} never handles the order.
+          <br className="hidden xl:inline" /> here and enter it when you check out on the supplier&rsquo;s site.{' '}
+          {site.name} never takes the order or the payment.
         </p>
 
         <ExtensionPromoPill className="mt-6" />
@@ -109,11 +122,10 @@ export default async function CouponsPage() {
             </h2>
           </div>
           <p className="mt-4 text-base leading-7 text-muted sm:text-lg sm:leading-8">
-            Active peptide discount codes from verified suppliers, collected and tracked by {site.name}.
-            Every code is checked against the supplier&rsquo;s own checkout, and prices on the site already
-            reflect the discount where a sitewide code applies. Most codes work sitewide, so they apply to
-            popular compounds like BPC-157, TB-500, Retatrutide and Semaglutide. Tap any code to copy it,
-            then paste it at the supplier&rsquo;s checkout.
+            {discountSummary}Most of these codes are sitewide, so they come off the whole basket rather than
+            one product. Where a listing has no sale price of its own, the prices across {site.name} already
+            have the code taken off, with the original price shown next to it. That way a price per mg
+            comparison reflects what you would pay at checkout, not the sticker price.
           </p>
         </section>
 
@@ -123,28 +135,28 @@ export default async function CouponsPage() {
               <ShieldCheckIcon className="h-5 w-5" />
             </span>
             <h2 className="text-2xl font-black leading-tight text-content sm:text-3xl">
-              How We Verify Peptide <span className="italic text-accent">Coupon Codes</span>
+              How We List Peptide <span className="italic text-accent">Coupon Codes</span>
             </h2>
           </div>
           <p className="mt-4 text-base leading-7 text-muted sm:text-lg sm:leading-8">
-            {site.name} monitors supplier sites for published discount codes and verifies each one at
-            checkout before listing it here. When a supplier runs a sitewide coupon, every listing from
-            that supplier shows the discounted price alongside the original, so price per mg comparisons
-            reflect what you would actually pay.
+            Each code is stored on the supplier&rsquo;s record, and many of them are tied to {site.name}, so we
+            may earn a commission when you use one. That never changes the order suppliers are ranked in.
+            When we test a code, its coupon page shows the date of that check. A code without a date is one we
+            list but haven&rsquo;t tested ourselves yet, so look for the saving in your cart before you pay.
           </p>
           <div className="mt-4 flex items-start gap-3 rounded-card border border-accent/25 bg-accent-tint p-4 sm:p-5">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-chip bg-surface-raised text-accent-strong shadow-card">
               <TagIcon className="h-5 w-5" />
             </span>
             <p className="min-w-0 text-sm leading-7 text-content sm:text-base">
-              Codes are set by the suppliers, not by {site.name}. They can expire, carry conditions such
-              as minimum orders or first-time-customer restrictions, or be withdrawn at any time. If a
-              peptide coupon code stops working, let us know through the contact page and we will recheck it.
+              Suppliers set their own codes and can change or end them without warning. Some come with a
+              minimum order or apply only to new customers. If a code here stops working, tell us through the
+              contact page and we&rsquo;ll check the listing again.
             </p>
           </div>
         </section>
 
-        <PageFaqSection path="/coupons" className="mt-14" />
+        <PageFaqSection path="/coupon" className="mt-14" />
       </div>
     </div>
   );

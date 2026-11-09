@@ -18,7 +18,7 @@ import {
 
 const DESTINATIONS: { href: string; label: string; hint: string; icon: React.ReactNode }[] = [
   {
-    href: '/suppliers',
+    href: '/supplier',
     label: 'Supplier directory',
     hint: 'Compare suppliers, shipping and verification',
     icon: <StoreIcon className="h-5 w-5" />,
@@ -36,7 +36,7 @@ const DESTINATIONS: { href: string; label: string; hint: string; icon: React.Rea
     icon: <FlaskIcon className="h-5 w-5" />,
   },
   {
-    href: '/guides',
+    href: '/guide',
     label: 'Research guides',
     hint: 'How COAs, pricing and handling actually work',
     icon: <DocumentIcon className="h-5 w-5" />,

@@ -54,10 +54,10 @@ describe('buildPageGraph: base graph', () => {
   });
 
   it('ends the breadcrumb on the page with no item URL', () => {
-    const crumbs = node(buildPageGraph(page('/suppliers/licensed-peptides', { heading: 'Licensed Peptides' })), 'BreadcrumbList');
+    const crumbs = node(buildPageGraph(page('/supplier/licensed-peptides', { heading: 'Licensed Peptides' })), 'BreadcrumbList');
     expect(crumbs?.itemListElement).toEqual([
       { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE}/` },
-      { '@type': 'ListItem', position: 2, name: 'Suppliers', item: `${SITE}/suppliers` },
+      { '@type': 'ListItem', position: 2, name: 'Suppliers', item: `${SITE}/supplier` },
       { '@type': 'ListItem', position: 3, name: 'Licensed Peptides' },
     ]);
   });
@@ -73,33 +73,33 @@ describe('buildPageGraph: base graph', () => {
 describe('buildPageGraph: route types', () => {
   it('lists a collection page as an ItemList with a live count', () => {
     const items = [
-      { name: 'A', url: '/suppliers/a' },
-      { name: 'B', url: '/suppliers/b' },
+      { name: 'A', url: '/supplier/a' },
+      { name: 'B', url: '/supplier/b' },
     ];
-    const graph = buildPageGraph(page('/suppliers', { itemList: items }));
-    expect(node(graph, 'CollectionPage')?.mainEntity).toEqual({ '@id': `${SITE}/suppliers#itemlist` });
+    const graph = buildPageGraph(page('/supplier', { itemList: items }));
+    expect(node(graph, 'CollectionPage')?.mainEntity).toEqual({ '@id': `${SITE}/supplier#itemlist` });
     expect(node(graph, 'ItemList')).toMatchObject({
       numberOfItems: 2,
       itemListElement: [
-        { '@type': 'ListItem', position: 1, url: `${SITE}/suppliers/a`, name: 'A' },
-        { '@type': 'ListItem', position: 2, url: `${SITE}/suppliers/b`, name: 'B' },
+        { '@type': 'ListItem', position: 1, url: `${SITE}/supplier/a`, name: 'A' },
+        { '@type': 'ListItem', position: 2, url: `${SITE}/supplier/b`, name: 'B' },
       ],
     });
   });
 
   it('leaves out the ItemList when the collection is empty', () => {
-    const graph = buildPageGraph(page('/guides', { itemList: [] }));
+    const graph = buildPageGraph(page('/guide', { itemList: [] }));
     expect(graphTypes(graph).has('ItemList')).toBe(false);
     expect(node(graph, 'CollectionPage')).not.toHaveProperty('mainEntity');
   });
 
   it('makes a supplier page a ProfilePage about the supplier, using its own site', () => {
-    const graph = buildPageGraph(page('/suppliers/licensed-peptides', { supplier }));
-    expect(node(graph, 'ProfilePage')?.mainEntity).toEqual({ '@id': `${SITE}/suppliers/licensed-peptides#supplier` });
-    const subject = graph['@graph'].find((entry) => entry['@id'] === `${SITE}/suppliers/licensed-peptides#supplier`);
+    const graph = buildPageGraph(page('/supplier/licensed-peptides', { supplier }));
+    expect(node(graph, 'ProfilePage')?.mainEntity).toEqual({ '@id': `${SITE}/supplier/licensed-peptides#supplier` });
+    const subject = graph['@graph'].find((entry) => entry['@id'] === `${SITE}/supplier/licensed-peptides#supplier`);
     expect(subject).toEqual({
       '@type': 'Organization',
-      '@id': `${SITE}/suppliers/licensed-peptides#supplier`,
+      '@id': `${SITE}/supplier/licensed-peptides#supplier`,
       name: 'Licensed Peptides',
       url: 'https://licensedpeptides.com/',
       foundingDate: '2021',
@@ -109,17 +109,17 @@ describe('buildPageGraph: route types', () => {
 
   it('leaves out supplier fields that are not stored, or a country it cannot map', () => {
     const graph = buildPageGraph(
-      page('/suppliers/x', { supplier: { ...supplier, slug: 'x', foundedYear: null, country: 'Atlantis' } }),
+      page('/supplier/x', { supplier: { ...supplier, slug: 'x', foundedYear: null, country: 'Atlantis' } }),
     );
-    const subject = graph['@graph'].find((entry) => entry['@id'] === `${SITE}/suppliers/x#supplier`);
+    const subject = graph['@graph'].find((entry) => entry['@id'] === `${SITE}/supplier/x#supplier`);
     expect(subject).not.toHaveProperty('foundingDate');
     expect(subject).not.toHaveProperty('address');
   });
 
   it('points coupon and review pages at the same supplier node, with no Review or Offer', () => {
-    for (const path of ['/coupons/licensed-peptides-coupon-code', '/reviews/licensed-peptides-reviews']) {
+    for (const path of ['/coupon/licensed-peptides-coupon-code', '/review/licensed-peptides-reviews']) {
       const graph = buildPageGraph(page(path, { supplier }));
-      expect(node(graph, 'WebPage')?.about).toEqual({ '@id': `${SITE}/suppliers/licensed-peptides#supplier` });
+      expect(node(graph, 'WebPage')?.about).toEqual({ '@id': `${SITE}/supplier/licensed-peptides#supplier` });
       expect(graphTypes(graph).has('Review')).toBe(false);
       expect(graphTypes(graph).has('Offer')).toBe(false);
     }
@@ -137,7 +137,7 @@ describe('buildPageGraph: route types', () => {
   });
 
   it('treats the COA reader and guides as articles, not apps', () => {
-    for (const path of ['/tools/coa-reader', '/guides/how-to-read-a-coa']) {
+    for (const path of ['/tools/coa-reader', '/guide/how-to-read-a-coa']) {
       const graph = buildPageGraph(page(path, { article: { datePublished: '2026-01-02' } }));
       expect(graphTypes(graph).has('WebApplication')).toBe(false);
       expect(node(graph, 'Article')).toMatchObject({
@@ -150,10 +150,10 @@ describe('buildPageGraph: route types', () => {
 
   it('gives a guide its cover as the Article image and its category as a breadcrumb', () => {
     const graph = buildPageGraph(
-      page('/guides/hospira-bacteriostatic-water', {
+      page('/guide/hospira-bacteriostatic-water', {
         heading: 'Hospira Bacteriostatic Water',
         article: { datePublished: '2026-10-27', dateModified: '2026-10-28T10:00:00.000Z', image: 'https://cdn.example/cover.webp' },
-        subsection: { name: 'Supplies', path: '/guides' },
+        subsection: { name: 'Supplies', path: '/guide' },
       }),
     );
     expect(node(graph, 'Article')).toMatchObject({
@@ -164,8 +164,8 @@ describe('buildPageGraph: route types', () => {
     expect(node(graph, 'BreadcrumbList')).toMatchObject({
       itemListElement: [
         { position: 1, name: 'Home', item: `${SITE}/` },
-        { position: 2, name: 'Guides', item: `${SITE}/guides` },
-        { position: 3, name: 'Supplies', item: `${SITE}/guides` },
+        { position: 2, name: 'Guides', item: `${SITE}/guide` },
+        { position: 3, name: 'Supplies', item: `${SITE}/guide` },
         { position: 4, name: 'Hospira Bacteriostatic Water' },
       ],
     });
@@ -189,17 +189,17 @@ describe('buildPageGraph: route types', () => {
 
   it('adds a Product only when there is at least one in-stock offer', () => {
     const product = { name: 'BPC-157', description: 'Desc', lowPriceCents: 2999, highPriceCents: 8000, offerCount: 3 };
-    expect(node(buildPageGraph(page('/products/bpc-157', { product })), 'Product')).toMatchObject({
+    expect(node(buildPageGraph(page('/product/bpc-157', { product })), 'Product')).toMatchObject({
       offers: { '@type': 'AggregateOffer', priceCurrency: 'USD', lowPrice: '29.99', highPrice: '80.00', offerCount: 3 },
     });
-    expect(graphTypes(buildPageGraph(page('/products/bpc-157', { product: { ...product, offerCount: 0 } }))).has('Product')).toBe(
+    expect(graphTypes(buildPageGraph(page('/product/bpc-157', { product: { ...product, offerCount: 0 } }))).has('Product')).toBe(
       false,
     );
-    expect(graphTypes(buildPageGraph(page('/products/bpc-157'))).has('Product')).toBe(false);
+    expect(graphTypes(buildPageGraph(page('/product/bpc-157'))).has('Product')).toBe(false);
   });
 
   it('never outputs a type twice or any rating', () => {
-    const paths = ['/', '/suppliers', '/suppliers/licensed-peptides', '/tools/calculator', '/tools/coa-reader', '/about'];
+    const paths = ['/', '/supplier', '/supplier/licensed-peptides', '/tools/calculator', '/tools/coa-reader', '/about'];
     for (const path of paths) {
       const types = buildPageGraph(page(path, { supplier, itemList: [] }))['@graph'].map((entry) => entry['@type']);
       // Supplier pages carry two Organizations by design, PepLookup and the
@@ -214,9 +214,9 @@ describe('buildPageGraph: route types', () => {
 describe('supplier homepage', () => {
   it('keeps only the origin, dropping a stored referral path', () => {
     const graph = buildPageGraph(
-      page('/suppliers/licensed-peptides', { supplier: { ...supplier, homepageUrl: 'https://licensedpeptides.com/ref/peplookup/' } }),
+      page('/supplier/licensed-peptides', { supplier: { ...supplier, homepageUrl: 'https://licensedpeptides.com/ref/peplookup/' } }),
     );
-    const subject = graph['@graph'].find((entry) => entry['@id'] === `${SITE}/suppliers/licensed-peptides#supplier`);
+    const subject = graph['@graph'].find((entry) => entry['@id'] === `${SITE}/supplier/licensed-peptides#supplier`);
     expect(subject?.url).toBe('https://licensedpeptides.com/');
   });
 });
@@ -234,38 +234,37 @@ describe('ownedSchemaTypes', () => {
     expect(ownedSchemaTypes('/tools/intranasal', { productOffers: false })).toEqual(
       new Set(['Organization', 'WebSite', 'WebPage', 'FAQPage', 'BreadcrumbList', 'WebApplication']),
     );
-    expect(ownedSchemaTypes('/products/bpc-157', { productOffers: false }).has('Product')).toBe(false);
-    expect(ownedSchemaTypes('/products/bpc-157', { productOffers: true }).has('Product')).toBe(true);
+    expect(ownedSchemaTypes('/product/bpc-157', { productOffers: false }).has('Product')).toBe(false);
+    expect(ownedSchemaTypes('/product/bpc-157', { productOffers: true }).has('Product')).toBe(true);
   });
 });
 
-describe('buildPageGraph: a supplier profile that has moved', () => {
-  // American Peptides is served at /supplier/american-peptides; the page is still keyed by /suppliers/american-peptides.
-  const moved = buildPageGraph(
-    page('/suppliers/american-peptides', { heading: 'American Peptides', supplier: { ...supplier, slug: 'american-peptides', name: 'American Peptides' } }),
+describe('buildPageGraph: a supplier profile at /supplier/<slug>', () => {
+  const profile = buildPageGraph(
+    page('/supplier/american-peptides', { heading: 'American Peptides', supplier: { ...supplier, slug: 'american-peptides', name: 'American Peptides' } }),
   );
   const NEW = `${SITE}/supplier/american-peptides`;
 
   it('names the new address as the page url, @id and supplier @id', () => {
-    const webPage = node(moved, 'ProfilePage');
+    const webPage = node(profile, 'ProfilePage');
     expect(webPage).toMatchObject({ '@id': `${NEW}#webpage`, url: NEW });
-    expect(JSON.stringify(moved)).toContain(`"${NEW}#supplier"`);
+    expect(JSON.stringify(profile)).toContain(`"${NEW}#supplier"`);
   });
 
   it('keys the BreadcrumbList to the new address, still under Suppliers', () => {
-    const breadcrumbs = node(moved, 'BreadcrumbList') as { '@id': string; itemListElement: { name: string; item?: string }[] };
+    const breadcrumbs = node(profile, 'BreadcrumbList') as { '@id': string; itemListElement: { name: string; item?: string }[] };
     expect(breadcrumbs['@id']).toBe(`${NEW}#breadcrumb`);
     // The current page is the last crumb and, as on every page of the site, carries no item URL.
     expect(breadcrumbs.itemListElement.at(-1)).toMatchObject({ name: 'American Peptides' });
-    expect(breadcrumbs.itemListElement.some((crumb) => crumb.name === 'Suppliers' && crumb.item === `${SITE}/suppliers`)).toBe(true);
+    expect(breadcrumbs.itemListElement.some((crumb) => crumb.name === 'Suppliers' && crumb.item === `${SITE}/supplier`)).toBe(true);
   });
 
-  it('never mentions the old address', () => {
-    expect(serializeGraph(moved)).not.toMatch(/\/suppliers\/american-peptides(?!-)/);
+  it('never mentions the old plural address', () => {
+    expect(serializeGraph(profile)).not.toMatch(/\/suppliers\/american-peptides(?!-)/);
   });
 
-  it('leaves every other supplier profile where it was', () => {
-    const other = buildPageGraph(page('/suppliers/licensed-peptides', { supplier }));
-    expect(node(other, 'ProfilePage')).toMatchObject({ url: `${SITE}/suppliers/licensed-peptides` });
+  it('names every supplier profile at its own /supplier/<slug>', () => {
+    const other = buildPageGraph(page('/supplier/licensed-peptides', { supplier }));
+    expect(node(other, 'ProfilePage')).toMatchObject({ url: `${SITE}/supplier/licensed-peptides` });
   });
 });

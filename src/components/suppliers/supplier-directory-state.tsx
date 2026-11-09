@@ -13,7 +13,7 @@ interface SupplierDirectoryState {
 const SupplierDirectoryContext = createContext<SupplierDirectoryState | null>(null);
 
 /**
- * The /suppliers search text and page number, shared by the search box, the
+ * The /supplier search text and page number, shared by the search box, the
  * popular-supplier chips and the results below. Kept in state rather than the
  * URL so searching and paging leave the address bar alone; an old `?q=` or
  * `?page=` link still opens on the view it points to.

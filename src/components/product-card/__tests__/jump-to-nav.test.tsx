@@ -16,7 +16,7 @@ describe('JumpToNav', () => {
       },
     );
     Element.prototype.scrollIntoView = scrollIntoView;
-    window.history.replaceState(null, '', '/products/glow');
+    window.history.replaceState(null, '', '/product/glow');
   });
 
   afterEach(() => {
@@ -39,7 +39,7 @@ describe('JumpToNav', () => {
     fireEvent.click(link);
 
     expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' });
-    expect(window.location.pathname).toBe('/products/glow');
+    expect(window.location.pathname).toBe('/product/glow');
     expect(window.location.hash).toBe('');
   });
 });

@@ -33,10 +33,10 @@ export default async function EditVendorPage({
     // A slug renamed in /admin/seo leaves bookmarks and open tabs on the old
     // edit URL; follow the same redirect the public page uses so they land on
     // the same vendor instead of a 404.
-    const renamedTo = await getRedirectTarget(`/suppliers/${slug}`);
-    if (renamedTo?.startsWith('/suppliers/')) {
+    const renamedTo = await getRedirectTarget(`/supplier/${slug}`);
+    if (renamedTo?.startsWith('/supplier/')) {
       const query = step ? `?step=${encodeURIComponent(step)}` : '';
-      redirect(`/admin/vendors/${renamedTo.slice('/suppliers/'.length)}/edit${query}`);
+      redirect(`/admin/vendors/${renamedTo.slice('/supplier/'.length)}/edit${query}`);
     }
     notFound();
   }

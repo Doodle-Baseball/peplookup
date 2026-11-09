@@ -202,11 +202,11 @@ export function isIndexable(facts: PageQualityFacts, context: IndexContext): boo
 
 /** Page type from a site path, matching the routes under src/app/(marketing). */
 export function pageTypeForPath(path: string): PageType {
-  if (/^\/suppliers\/[^/]+$/.test(path)) return 'supplier';
-  if (/^\/coupons\/[^/]+-coupon-code$/.test(path)) return 'coupon';
-  if (/^\/reviews\/[^/]+-reviews$/.test(path)) return 'review';
-  if (/^\/products\/[^/]+$/.test(path)) return 'product';
-  if (/^\/guides\/[^/]+$/.test(path)) return 'guide';
+  if (/^\/supplier\/[^/]+$/.test(path)) return 'supplier';
+  if (/^\/coupon\/[^/]+-coupon-code$/.test(path)) return 'coupon';
+  if (/^\/review\/[^/]+-reviews$/.test(path)) return 'review';
+  if (/^\/product\/[^/]+$/.test(path)) return 'product';
+  if (/^\/guide\/[^/]+$/.test(path)) return 'guide';
   return 'static';
 }
 

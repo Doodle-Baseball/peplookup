@@ -61,7 +61,7 @@ describe('buildExtensionFeed', () => {
           discount: '15% Off Sitewide',
           code: 'PEPLOOKUP',
           offerUrl: 'https://www.peplookup.com/go?to=purgo-labs&src=extension',
-          profileUrl: 'https://www.peplookup.com/suppliers/purgo-labs',
+          profileUrl: 'https://www.peplookup.com/supplier/purgo-labs',
           logoUrl: 'https://cdn.example.com/purgo.png',
           trustpilot: { rating: 4.7, reviews: 120 },
         },
@@ -198,7 +198,7 @@ describe('buildExtensionFeed', () => {
 });
 
 describe('couponDiscountText', () => {
-  it('matches the /coupons badge', () => {
+  it('matches the /coupon badge', () => {
     expect(couponDiscountText(15)).toBe('15% Off Sitewide');
   });
 

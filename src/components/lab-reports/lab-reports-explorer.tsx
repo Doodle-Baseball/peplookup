@@ -368,7 +368,7 @@ const COA_BUTTON_CLASS =
   'inline-flex w-full items-center justify-center gap-2 rounded-pill bg-brand px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-brand-strong';
 
 function ReportCard({ card }: { card: ReportCardGroup }) {
-  const productHref = `/products/${card.productSlug}`;
+  const productHref = `/product/${card.productSlug}`;
   const hasReport = card.documents.length > 0;
 
   return (

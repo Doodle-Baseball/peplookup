@@ -8,7 +8,7 @@ export const contentType = 'image/png';
 export const runtime = 'edge';
 
 /**
- * The image shown when /reviews is shared on X, Skool and the like. Text only,
+ * The image shown when /review is shared on X, Skool and the like. Text only,
  * in the site's colours, and no figures that could go stale between deploys.
  */
 export default function ReviewsOpenGraphImage() {
@@ -58,7 +58,7 @@ export default function ReviewsOpenGraphImage() {
           <div style={{ display: 'flex', fontSize: 40, fontWeight: 900 }}>
             Pep<span style={{ color: 'rgb(45 106 79)' }}>Lookup</span>
           </div>
-          <div style={{ display: 'flex', fontSize: 28, color: 'rgb(106 106 100)' }}>{`${site.domain}/reviews`}</div>
+          <div style={{ display: 'flex', fontSize: 28, color: 'rgb(106 106 100)' }}>{`${site.domain}/review`}</div>
         </div>
       </div>
     ),

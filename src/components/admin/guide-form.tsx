@@ -140,13 +140,13 @@ export function GuideForm({
               placeholder={guide ? guide.slug : slugify(title) || 'hospira-bacteriostatic-water'}
               hint={
                 guide
-                  ? `URL: /guides/${effectiveSlug || guide.slug}. Lowercase letters, numbers and hyphens.`
-                  : `URL: /guides/${effectiveSlug || '…'}. Leave empty to generate it from the heading.`
+                  ? `URL: /guide/${effectiveSlug || guide.slug}. Lowercase letters, numbers and hyphens.`
+                  : `URL: /guide/${effectiveSlug || '…'}. Leave empty to generate it from the heading.`
               }
             />
             {slugChanged ? (
               <p className="mt-1.5 rounded-chip border border-warn/30 bg-warn/10 px-3 py-2 text-xs font-semibold text-content">
-                Saving moves this guide to /guides/{slug.trim()} and adds a 301 redirect from /guides/{guide?.slug}.
+                Saving moves this guide to /guide/{slug.trim()} and adds a 301 redirect from /guide/{guide?.slug}.
               </p>
             ) : null}
           </div>
@@ -209,7 +209,7 @@ export function GuideForm({
                 defaultChecked={guide?.isPublished ?? true}
                 className="h-4 w-4 rounded border-line accent-brand"
               />
-              Visible on /guides
+              Visible on /guide
             </label>
           </div>
 

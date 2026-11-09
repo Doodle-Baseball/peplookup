@@ -120,7 +120,7 @@ async function fetchRedirectsUncached(): Promise<SeoRedirect[]> {
  * the vendor's earlier slugs or a rename silently disconnects it.
  */
 export function supplierSlugAliases(redirects: readonly SeoRedirect[]): Map<string, string[]> {
-  const prefix = '/suppliers/';
+  const prefix = '/supplier/';
   const aliases = new Map<string, string[]>();
   for (const { fromPath } of redirects) {
     if (!fromPath.startsWith(prefix)) continue;

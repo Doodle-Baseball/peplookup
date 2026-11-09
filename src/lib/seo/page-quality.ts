@@ -76,7 +76,7 @@ const getPageQualityIndexCached = unstable_cache(
         hasLinkedCoa: withCoa.has(supplier.slug),
         shippingSpeed: supplier.shippingSpeed,
       };
-      const profile = `/suppliers/${supplier.slug}`;
+      const profile = `/supplier/${supplier.slug}`;
       const coupon = couponPagePath(supplier.slug);
       const reviews = reviewsPagePath(supplier.slug);
       facts[profile] = {
@@ -101,7 +101,7 @@ const getPageQualityIndexCached = unstable_cache(
       textContext[reviews] = context;
     }
     for (const product of products) {
-      facts[`/products/${product.slug}`] = { type: 'product', activeSupplierCount: sellers.get(product.slug)?.size ?? 0 };
+      facts[`/product/${product.slug}`] = { type: 'product', activeSupplierCount: sellers.get(product.slug)?.size ?? 0 };
     }
     return { facts, textContext };
   },
@@ -120,7 +120,7 @@ const getPageQualityIndexCached = unstable_cache(
 async function withGuideFacts(index: PageQualityIndex): Promise<PageQualityIndex> {
   const facts = { ...index.facts };
   for (const guide of await getGuides()) {
-    facts[`/guides/${guide.slug}`] = {
+    facts[`/guide/${guide.slug}`] = {
       type: 'guide',
       reviewedByMe: guide.reviewedByMe === true,
       hasContent: guideHasContent(guide),
@@ -154,7 +154,7 @@ export const getPageQualityIndex = cache(async (): Promise<PageQualityIndex> => 
 
 /** The supplier behind a supplier, coupon or reviews page path, or null for any other page. */
 function supplierSlugOf(path: string): string | null {
-  if (/^\/suppliers\/[^/]+$/.test(path)) return path.slice('/suppliers/'.length);
+  if (/^\/supplier\/[^/]+$/.test(path)) return path.slice('/supplier/'.length);
   return supplierSlugFromCouponPath(path) ?? supplierSlugFromReviewsPath(path);
 }
 

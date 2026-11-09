@@ -12,7 +12,7 @@ export function GuideCard({ guide }: { guide: Guide }) {
     // cover art once it scales on hover, so it bled past the rounded corners.
     <li className="card-3d h-full overflow-hidden rounded-card">
       <Link
-        href={`/guides/${guide.slug}`}
+        href={`/guide/${guide.slug}`}
         className="flex h-full flex-col overflow-hidden rounded-card border border-line bg-surface-raised"
       >
         <GuideCover

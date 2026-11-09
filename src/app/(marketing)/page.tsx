@@ -89,7 +89,7 @@ export default async function HomePage() {
               {featured.map(({ product, caption }) => (
                 <Link
                   key={product.slug}
-                  href={`/products/${product.slug}`}
+                  href={`/product/${product.slug}`}
                   className={`${product.slug === 'retatrutide' ? 'hidden sm:flex' : 'flex'} group w-[calc(50%-0.375rem)] min-w-0 flex-col items-center gap-1.5 transition-transform duration-200 hover:-translate-y-0.5 sm:w-auto`}
                 >
                   <span className="inline-flex w-full min-w-0 items-center justify-center gap-1.5 rounded-chip border border-line bg-surface-raised px-2 py-2 text-center text-sm font-bold text-content shadow-sm transition-colors group-hover:border-brand group-hover:bg-brand group-hover:text-white sm:w-auto sm:px-4">

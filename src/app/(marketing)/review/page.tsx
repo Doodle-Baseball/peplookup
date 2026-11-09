@@ -16,7 +16,7 @@ import Link from 'next/link';
 import { getExtensionFeed } from '@/lib/extension/store';
 import { ExtensionPromoPill, ExtensionPromoSection, previewSupplierFrom } from '@/components/extension/extension-promo';
 
-const PAGE = staticSeoPage('/reviews');
+const PAGE = staticSeoPage('/review');
 
 export async function generateMetadata(): Promise<Metadata> {
   return withSeo(PAGE.path, pageMetadata(PAGE));
@@ -96,9 +96,9 @@ export default async function ReviewsPage() {
           {seo?.h1 ? seo.h1 : <>Supplier <span className="italic text-accent">reviews.</span></>}
         </h1>
         <p className="mt-5 max-w-2xl text-base leading-relaxed text-muted sm:text-lg">
-          Honest, independent reviews of every supplier we track, with the overall rating and a full reviews page for
-          each. Ratings come from the public review source linked on each page, and {site.name} never writes or edits
-          them.
+          What customers say about the peptide suppliers we track, gathered in one place. Each rating comes from a public
+          review site such as Trustpilot and is linked to its source, and every supplier with reviews has its own page of
+          excerpts. {site.name} doesn&rsquo;t write, edit or score these reviews.
         </p>
 
         <ExtensionPromoPill variant="reviews" className="mt-6" />
@@ -127,12 +127,12 @@ export default async function ReviewsPage() {
           className="mt-12"
         />
 
-        <PageFaqSection path="/reviews" className="mt-14" />
+        <PageFaqSection path="/review" className="mt-14" />
 
         {/* The supplier directory lists all of them, rated or not. */}
         <p className="mt-10 text-sm text-muted">
           Not every supplier has a public review source yet. See the full list in the{' '}
-          <Link href="/suppliers" className="font-semibold text-brand hover:underline">
+          <Link href="/supplier" className="font-semibold text-brand hover:underline">
             supplier directory
           </Link>
           .

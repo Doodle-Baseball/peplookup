@@ -40,7 +40,7 @@ const SECTIONS: LegalSection[] = [
         </p>
         <p>
           The list itself is public: it is the same set of codes shown on our{' '}
-          <Link href="/coupons" className={LINK_CLASS}>
+          <Link href="/coupon" className={LINK_CLASS}>
             coupons page
           </Link>
           . Downloading it sends nothing about you beyond what any request to a website carries, such as your IP

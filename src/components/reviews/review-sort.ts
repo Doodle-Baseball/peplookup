@@ -25,7 +25,7 @@ function compareCoaShare(a: SortableReviewVendor, b: SortableReviewVendor): numb
 }
 
 /**
- * Card order on /reviews. Shared by the client browser and the server page,
+ * Card order on /review. Shared by the client browser and the server page,
  * so the page's ItemList lists vendors in the order a visitor first sees.
  */
 export function compareReviewVendors(sort: ReviewSortKey) {

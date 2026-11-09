@@ -181,7 +181,7 @@ export default async function PriceCheckerPage() {
               The same compound can vary widely in price per mg. Common reasons include vial size (larger vials are
               often cheaper per mg), whether the supplier publishes a COA, shipping cost, stock status and active
               coupon codes. A low price per mg is a starting point, not a verdict. Compare shipping and the{' '}
-              <Link href="/suppliers" className="font-bold text-brand hover:underline">
+              <Link href="/supplier" className="font-bold text-brand hover:underline">
                 supplier
               </Link>
               &rsquo;s published{' '}

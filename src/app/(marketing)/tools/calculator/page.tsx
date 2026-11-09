@@ -166,7 +166,7 @@ export default async function ReconstitutionToolPage() {
                 {compoundLinks.map((compound) => (
                   <li key={compound.slug}>
                     <Link
-                      href={`/products/${compound.slug}`}
+                      href={`/product/${compound.slug}`}
                       className="tilt-card group flex items-center gap-3 rounded-card border border-line bg-surface p-4 hover:border-accent/40"
                     >
                       <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-chip bg-accent-tint text-accent-strong shadow-sm">

@@ -251,7 +251,7 @@ describe('datasetToCsv', () => {
   it('formats one full row', () => {
     const csv = datasetToCsv(build([offer({ listPrice: 3333, coaUrl: 'https://lab.example/coa.pdf' })]));
     expect(csvLines(csv)[1]).toBe(
-      'BPC-157,Acme Peptides,10,1,10,vial,33.33,3.3330,true,true,https://www.peplookup.com/suppliers/acme,2026-10-20',
+      'BPC-157,Acme Peptides,10,1,10,vial,33.33,3.3330,true,true,https://www.peplookup.com/supplier/acme,2026-10-20',
     );
   });
 

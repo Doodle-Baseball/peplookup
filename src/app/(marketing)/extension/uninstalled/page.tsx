@@ -28,7 +28,7 @@ export default function ExtensionUninstalledPage() {
         <h1 className="text-4xl font-black leading-tight tracking-tight text-content sm:text-5xl">{PAGE.h1}</h1>
         <p className="mt-3 text-base text-muted">
           {chromeExtension.name} has been removed. Every code is still on our{' '}
-          <Link href="/coupons" className="font-bold text-brand-strong hover:underline">
+          <Link href="/coupon" className="font-bold text-brand-strong hover:underline">
             coupons page
           </Link>
           .

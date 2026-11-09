@@ -52,10 +52,10 @@ describe('coupon page defaults', () => {
     expect(couponPageSeoDefaults({ slug: 'x', name: 'Amino Club' }, null).title).toBe('Amino Club Coupon Code & Discounts');
   });
 
-  it('carry seven distinct keywords, the primary one first', () => {
+  it('carry two distinct keywords, the primary one first', () => {
     const { keywords } = couponPageSeoDefaults({ slug: 'amino-club', name: 'Amino Club' }, { percentOff: 20 });
-    expect(keywords).toHaveLength(7);
-    expect(new Set(keywords).size).toBe(7);
+    expect(keywords).toHaveLength(2);
+    expect(new Set(keywords).size).toBe(2);
     expect(keywords?.[0]).toBe('Amino Club coupon code');
   });
 });
@@ -95,10 +95,10 @@ describe('review page defaults', () => {
     expect(characterCount(defaults.description)).toBeLessThanOrEqual(160);
   });
 
-  it('carry seven distinct keywords, the primary one first', () => {
+  it('carry two distinct keywords, the primary one first', () => {
     const { keywords } = reviewsPageSeoDefaults({ slug: 'x', name: 'Pure Amino' });
-    expect(keywords).toHaveLength(7);
-    expect(new Set(keywords).size).toBe(7);
+    expect(keywords).toHaveLength(2);
+    expect(new Set(keywords).size).toBe(2);
     expect(keywords?.[0]).toBe('Pure Amino reviews');
   });
 });

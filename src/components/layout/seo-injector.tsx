@@ -3,7 +3,6 @@
 import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import type { SeoInjection } from '@/lib/seo';
-import { keyedPath } from '@/lib/supplier-path';
 
 /** Appends an HTML snippet to `target` and returns the nodes it added, for cleanup. */
 function appendHtml(html: string, target: HTMLElement, skipNamedMeta: boolean): Node[] {
@@ -37,8 +36,7 @@ function appendHtml(html: string, target: HTMLElement, skipNamedMeta: boolean): 
  */
 export function SeoInjector({ injections }: { injections: Record<string, SeoInjection> }) {
   const pathname = usePathname();
-  // Injections are keyed by the page's /suppliers/<slug> path, which a moved supplier profile is no longer served at.
-  const injection = injections[keyedPath(pathname)];
+  const injection = injections[pathname];
 
   useEffect(() => {
     if (!injection) return;

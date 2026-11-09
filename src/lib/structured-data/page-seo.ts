@@ -3,7 +3,6 @@ import type { SeoDefaults } from '@/lib/seo-defaults';
 import { cleanPageText, getIndexDecision, getSeoOverride } from '@/lib/seo';
 import { absoluteUrl, SITE_URL } from '@/lib/structured-data/graph';
 import { cleanPath } from '@/lib/structured-data/page-routes';
-import { publicCanonical } from '@/lib/supplier-path';
 
 /** A page's SEO as actually rendered: its defaults with any /admin/seo override applied. */
 export interface ResolvedPageSeo {
@@ -20,7 +19,7 @@ export interface ResolvedPageSeo {
 function canonicalFor(path: string, override: string | null): string {
   if (!override) return absoluteUrl(path);
   if (override.startsWith('/')) return absoluteUrl(override);
-  return override.startsWith(SITE_URL) ? publicCanonical(override.split(/[?#]/)[0]!) : absoluteUrl(path);
+  return override.startsWith(SITE_URL) ? override.split(/[?#]/)[0]! : absoluteUrl(path);
 }
 
 /**

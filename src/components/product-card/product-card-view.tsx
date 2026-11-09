@@ -1,6 +1,6 @@
 'use client';
 
-import { supplierPath } from '@/lib/supplier-path';
+import { supplierPath } from '@/lib/site-paths';
 import { useMemo, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -120,14 +120,14 @@ export function ProductCardView({ data, view = 'total' }: { data: ProductCardDat
   // clean URL rather than a ?form= duplicate of it.
   const moreHref =
     selectedForm && selectedForm !== availableForms[0]
-      ? `/products/${data.slug}?form=${selectedForm}`
-      : `/products/${data.slug}`;
+      ? `/product/${data.slug}?form=${selectedForm}`
+      : `/product/${data.slug}`;
 
   return (
     <article className="card-3d flex h-full flex-col gap-4 rounded-card border border-line bg-surface-raised p-5">
       <header className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <Link href={`/products/${data.slug}`} className="text-lg font-black text-content hover:text-brand">
+          <Link href={`/product/${data.slug}`} className="text-lg font-black text-content hover:text-brand">
             {data.name}
           </Link>
           {data.category ? (
@@ -147,7 +147,7 @@ export function ProductCardView({ data, view = 'total' }: { data: ProductCardDat
           <ProductInfoModal slug={data.slug} name={data.name} category={data.category} summary={data.summary} />
           <ShareButton
             title={data.name}
-            url={`https://${site.domain}/products/${data.slug}`}
+            url={`https://${site.domain}/product/${data.slug}`}
             className="h-8 w-8 border-0 bg-transparent text-muted hover:text-brand"
           />
           <FavoriteButton slug={data.slug} name={data.name} kind="product" className="h-8 w-8" />

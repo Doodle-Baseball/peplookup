@@ -20,7 +20,7 @@ const GUIDE_TEXT_CLASS = 'text-sm leading-7 text-muted sm:text-base';
 const SPLIT_HEADING_CLASS = 'mt-3 text-2xl font-black leading-tight text-content sm:text-3xl';
 
 const COMPARE_LINKS: { href: string; label: string; title: string; icon: React.ReactNode }[] = [
-  { href: '/suppliers', label: 'Browse all suppliers', title: 'Every listed supplier', icon: <ListIcon className="h-5 w-5" /> },
+  { href: '/supplier', label: 'Browse all suppliers', title: 'Every listed supplier', icon: <ListIcon className="h-5 w-5" /> },
   { href: '/price-checker', label: 'Compare by compound', title: 'Side-by-side pricing', icon: <TagIcon className="h-5 w-5" /> },
   { href: '/coas', label: 'Listings with lab reports', title: 'COA test reports', icon: <DocumentIcon className="h-5 w-5" /> },
 ];
@@ -154,7 +154,7 @@ export default async function PricePerMgToolPage() {
               Price per mg compares quantity for money. It does not show purity, testing or whether the product is in
               stock, and it only includes shipping if you add it. A low price per mg only matters if the product is
               what the{' '}
-              <Link href="/suppliers" className="font-bold text-brand hover:underline">
+              <Link href="/supplier" className="font-bold text-brand hover:underline">
                 supplier
               </Link>{' '}
               says it is, so check for a batch-specific COA in the supplier&rsquo;s published{' '}

@@ -3,7 +3,7 @@ import { effectiveSeo, seoChecks, seoStatus } from '../seo-status';
 import type { SeoDefaults } from '../seo-defaults';
 
 const DEFAULTS: SeoDefaults = {
-  path: '/products/bpc-157',
+  path: '/product/bpc-157',
   title: 'BPC-157 | Compare Prices, Vendors & COA | PepLookup',
   description: 'Compare BPC-157 prices per mg across verified suppliers, with stock status, shipping and lab-verification data.',
   h1: 'BPC-157',

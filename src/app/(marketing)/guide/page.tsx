@@ -9,7 +9,7 @@ import { pageMetadata } from '@/lib/seo-defaults';
 import { getSeoOverride, withSeo } from '@/lib/seo';
 import { PageSeo } from '@/components/seo/page-seo';
 
-const PAGE = staticSeoPage('/guides');
+const PAGE = staticSeoPage('/guide');
 
 export async function generateMetadata(): Promise<Metadata> {
   return withSeo(PAGE.path, pageMetadata(PAGE));
@@ -19,7 +19,7 @@ export default async function GuidesPage() {
   const [seo, allGuides] = await Promise.all([getSeoOverride(PAGE.path), getGuides()]);
   // Placeholder guides (no body yet) are noindex, so nothing links to them either.
   const guides = allGuides.filter(guideHasContent);
-  const guideItems = guides.map((guide) => ({ name: guide.title, url: `/guides/${guide.slug}` }));
+  const guideItems = guides.map((guide) => ({ name: guide.title, url: `/guide/${guide.slug}` }));
   const categories = [...new Set(guides.map((guide) => guide.category))];
   const totalMinutes = guides.reduce((sum, guide) => sum + guide.readMinutes, 0);
 
@@ -72,7 +72,7 @@ export default async function GuidesPage() {
               {guides.map((guide) => (
                 <Link
                   key={guide.slug}
-                  href={`/guides/${guide.slug}`}
+                  href={`/guide/${guide.slug}`}
                   className="group flex min-w-0 flex-col items-center gap-1.5 transition-transform duration-200 hover:-translate-y-0.5"
                 >
                   <span className="inline-flex min-w-0 items-center justify-center gap-1.5 rounded-chip border border-line bg-surface-raised px-4 py-2 text-center text-sm font-bold text-content shadow-sm transition-colors group-hover:border-brand group-hover:bg-brand group-hover:text-white">

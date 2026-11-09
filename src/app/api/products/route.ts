@@ -4,7 +4,7 @@ import { MAX_SLUGS, parseSlugsParam, publicJson } from '@/lib/api/public-read';
 
 /**
  * Public, read-only product listing. No secrets involved, this only exposes
- * what /products pages already render, so it is safe to call from client
+ * what /product pages already render, so it is safe to call from client
  * components like the watchlist.
  *
  * `?slugs=a,b,c` is required. The watchlist is the only caller and always
