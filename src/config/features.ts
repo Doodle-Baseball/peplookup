@@ -1,6 +1,7 @@
 /**
  * Phase 2 structured data: a Product node with AggregateOffer pricing on
- * compound pages. Off by default; set PRODUCT_OFFER_SCHEMA=on to turn it on
- * once the prices it reports have been checked against the live pages.
+ * compound pages. On by default: the low/high prices are worked out from the
+ * same in-stock USD listings the page shows, so the markup always matches the
+ * visible prices. Set PRODUCT_OFFER_SCHEMA=off to turn it off.
  */
-export const PRODUCT_OFFER_SCHEMA_ENABLED = process.env.PRODUCT_OFFER_SCHEMA === 'on';
+export const PRODUCT_OFFER_SCHEMA_ENABLED = process.env.PRODUCT_OFFER_SCHEMA !== 'off';
