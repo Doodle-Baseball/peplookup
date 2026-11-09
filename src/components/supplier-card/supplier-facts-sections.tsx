@@ -101,7 +101,6 @@ export function SupplierPriceComparison({
   return (
     <section aria-labelledby="vendor-compare-heading" className={cn(PANEL_CLASS, 'reveal overflow-hidden', className)}>
       <div className="px-5 pt-5 sm:px-8 sm:pt-8">
-        <p className="eyebrow">Comparison</p>
         <h2 id="vendor-compare-heading" className="mt-3 text-2xl font-black leading-tight text-content break-words sm:text-3xl">
           {title}
         </h2>

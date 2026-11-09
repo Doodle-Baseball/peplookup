@@ -47,7 +47,6 @@ export function SupplierCatalogSection({
 
   const heading = (
     <div>
-      <p className="eyebrow">Product catalog</p>
       <h2 id="catalog-heading" className="mt-2 text-2xl font-black text-content sm:text-3xl">
         Products from <span className="text-accent">{supplier.name}.</span>
       </h2>
