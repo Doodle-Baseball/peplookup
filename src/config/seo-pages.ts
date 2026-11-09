@@ -105,7 +105,7 @@ export const STATIC_SEO_PAGES = [
     path: '/tools/coa-reader',
     name: 'COA reader',
     group: 'Tools',
-    title: `COA Reader | How to Read a Certificate of Analysis | ${site.name}`,
+    title: `COA Reader: How to Read a Peptide COA | ${site.name}`,
     description:
       'A field guide to reading a peptide certificate of analysis: what every field means, what the numbers mean, and the red flags that signal a fake.',
     h1: 'How to Read a Peptide COA',
