@@ -29,7 +29,7 @@ export const VENDOR_LISTING_PLANS: readonly VendorListingPlan[] = [
       'Upload COA / lab reports so buyers can trust you',
       'Brand profile with logo and short description',
       'Direct link from your listing to your store',
-      '"Verified Listing" badge to stand out instantly',
+      '"Verified Listing" badge so buyers spot you quickly',
       'Standard email support',
       'Live within 24 hours',
     ],
