@@ -132,11 +132,11 @@ export default async function IntranasalToolPage() {
                 reconstitution calculator
               </Link>{' '}
               for vial concentration math, compare{' '}
-              <Link href="/products/semax" className={INLINE_LINK_CLASS}>
+              <Link href="/product/semax" className={INLINE_LINK_CLASS}>
                 Semax
               </Link>{' '}
               and{' '}
-              <Link href="/products/selank" className={INLINE_LINK_CLASS}>
+              <Link href="/product/selank" className={INLINE_LINK_CLASS}>
                 Selank
               </Link>{' '}
               prices across suppliers, and check batch{' '}

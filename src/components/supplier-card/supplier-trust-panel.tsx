@@ -65,7 +65,7 @@ export function SupplierTrustPanel({
   reviewsUrl: string | null;
   reviewRating: number | null;
   reviewCount: ReviewCount | null;
-  /** This supplier's /reviews page, when it has one. */
+  /** This supplier's /review page, when it has one. */
   reviewsPagePath: string | null;
   labName: string | null;
   coaReports: readonly SupplierCoaReport[];

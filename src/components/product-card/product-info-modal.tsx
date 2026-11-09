@@ -22,7 +22,7 @@ export function ProductInfoModal({
       ) : null}
       {summary ? <p className="mt-4 text-sm text-muted">{summary}</p> : null}
       <Link
-        href={`/products/${slug}`}
+        href={`/product/${slug}`}
         className="mt-5 flex items-center justify-center gap-2 rounded-chip bg-brand px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-brand-strong"
       >
         View All Suppliers

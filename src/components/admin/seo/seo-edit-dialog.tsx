@@ -1,6 +1,5 @@
 'use client';
 
-import { publicCanonical, publicPath } from '@/lib/supplier-path';
 import {
   startTransition,
   useActionState,
@@ -122,9 +121,9 @@ function TaskStatusDropdown({ path, kind, initial }: { path: string; kind: strin
 
 // Duplicated from lib/admin/seo (server-only) so this client component never imports it at runtime.
 const SLUG_PREFIX: Record<RenamableKind, string> = {
-  compound: '/products/',
-  supplier: '/suppliers/',
-  guide: '/guides/',
+  compound: '/product/',
+  supplier: '/supplier/',
+  guide: '/guide/',
 };
 
 const inputClass =
@@ -237,7 +236,7 @@ export function SeoEditDialog({ entry, onClose }: { entry: SeoEntry; onClose: ()
               <h2 id="seo-edit-title" className="truncate text-xl font-black text-content">
                 {entry.name}
               </h2>
-              <p className="truncate font-mono text-xs text-muted">{publicPath(entry.path)}</p>
+              <p className="truncate font-mono text-xs text-muted">{entry.path}</p>
             </div>
             <button
               type="button"
@@ -409,8 +408,8 @@ export function SeoEditDialog({ entry, onClose }: { entry: SeoEntry; onClose: ()
                   <input
                     id="seo-canonical"
                     name="canonicalUrl"
-                    defaultValue={override?.canonicalUrl ? publicCanonical(override.canonicalUrl) : ''}
-                    placeholder={publicPath(entry.defaults.path)}
+                    defaultValue={override?.canonicalUrl ?? ''}
+                    placeholder={entry.defaults.path}
                     className={cn(inputClass, errors.canonicalUrl ? 'border-danger' : 'border-line')}
                   />
                   <FieldError message={errors.canonicalUrl} />

@@ -1,4 +1,4 @@
-import { supplierPath } from '@/lib/supplier-path';
+import { supplierPath } from '@/lib/site-paths';
 import type { Offer, Product, ProductForm, Supplier } from './schema';
 
 /**

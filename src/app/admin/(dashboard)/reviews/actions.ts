@@ -33,10 +33,10 @@ function revalidateReviewSurfaces(slug?: string) {
   revalidateTag('suppliers');
   revalidatePath('/admin/reviews');
   revalidatePath('/admin/reviews/add');
-  revalidatePath('/suppliers');
+  revalidatePath('/supplier');
   if (slug) {
     revalidatePath(reviewsPagePath(slug));
-    revalidatePath(`/suppliers/${slug}`);
+    revalidatePath(`/supplier/${slug}`);
     revalidatePath(`/admin/vendors/${slug}/edit`);
   }
 }
@@ -112,7 +112,7 @@ export async function importReviewsCsvAction(
 
     revalidateReviewSurfaces();
     for (const outcome of outcomes) {
-      if (outcome.matchedSlug) revalidatePath(`/suppliers/${outcome.matchedSlug}`);
+      if (outcome.matchedSlug) revalidatePath(`/supplier/${outcome.matchedSlug}`);
     }
 
     return {

@@ -1,4 +1,4 @@
-import { supplierPath } from '@/lib/supplier-path';
+import { supplierPath } from '@/lib/site-paths';
 import Link from 'next/link';
 import { cn } from '@/lib/cn';
 import { supplierGoPath } from '@/lib/go-links';

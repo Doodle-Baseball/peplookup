@@ -1,4 +1,4 @@
-import { supplierPath } from '@/lib/supplier-path';
+import { supplierPath } from '@/lib/site-paths';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import {
@@ -43,7 +43,7 @@ import { isContentV2 } from '@/lib/seo/protected';
 import { qualifyClaims } from '@/lib/seo/text';
 
 /**
- * The public address is /reviews/<vendor-slug>-reviews, so the route's `slug`
+ * The public address is /review/<vendor-slug>-reviews, so the route's `slug`
  * is that whole last segment, suffix included.
  */
 export async function generateStaticParams() {
@@ -109,7 +109,7 @@ export default async function VendorReviewsPage({ params }: { params: Promise<{ 
         />
 
         <Link
-          href="/reviews"
+          href="/review"
           className="group animate-fade-up mb-6 inline-flex items-center gap-1.5 text-sm font-semibold text-muted transition-colors hover:text-accent"
         >
           <ArrowLeftIcon className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />

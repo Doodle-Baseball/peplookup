@@ -9,11 +9,16 @@ Disallow: /go?
 # JSON endpoints (the watchlist lookups and the Chrome extension coupon feed) are
 # read by browsers and the extension, never needed to render a page, so crawlers skip them.
 Disallow: /api/
+
+# The admin area sits behind a login and is never indexed, so crawlers don't need to request it.
+Disallow: /admin
  
 # Supplier catalog searches and lab-report searches repeat the page itself (its
 # canonical is the clean URL) and each one costs a full server render, so crawlers
-# skip them. Product filter URLs (/products/<slug>?form=...) are left crawlable so
+# skip them. Product filter URLs (/product/<slug>?form=...) are left crawlable so
 # search engines can read their canonical, which points at the clean product page.
+Disallow: /supplier/*pq=
+# The old plural address of the same searches, which now only redirects.
 Disallow: /suppliers/*pq=
 Disallow: /coas?
  

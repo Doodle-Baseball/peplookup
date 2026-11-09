@@ -222,7 +222,7 @@ export async function saveSeoPageAction(_prevState: SeoSaveState, formData: Form
     else await saveSeoPage(path, input);
     seoSaved = true;
     if (supplierContent) {
-      const slug = path.slice('/suppliers/'.length);
+      const slug = path.slice('/supplier/'.length);
       const generated = await getGeneratedSupplierContent(slug);
       if (!generated) throw new Error(`No supplier exists at ${path}.`);
       const override = toSupplierContentOverride(supplierContent.content, generated);

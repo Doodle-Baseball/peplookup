@@ -11,7 +11,7 @@ const REFRESH_DEBOUNCE_MS = 500;
  * Renders nothing. Refreshes this page's server data live whenever a vendor
  * row changes in Supabase, in particular the drag-and-drop reorder on
  * /admin/vendors, which writes one row per moved slug and would otherwise
- * only reach an already-open /suppliers tab on its next visit.
+ * only reach an already-open /supplier tab on its next visit.
  *
  * `router.refresh()` re-runs this route's server components against the
  * current URL and patches the result in, not a full page reload: scroll

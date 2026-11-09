@@ -170,7 +170,7 @@ export function groupCatalogProducts(
     const card = {
       slug: product.slug,
       name: override?.productNames?.[product.slug] ?? product.name,
-      compareHref: `/products/${product.slug}`,
+      compareHref: `/product/${product.slug}`,
     };
     const variants = [...cardOffers].sort(byFormThenSize).map((offer) => toVariant(offer, supplier, now));
     if (override?.separateCards) {

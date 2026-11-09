@@ -10,7 +10,7 @@ export interface CatalogueStats {
 
 /**
  * Headline counts for the whole catalogue. Counted the same way as the
- * /suppliers hero stats: a delisted vendor's leftover offers don't count, so
+ * /supplier hero stats: a delisted vendor's leftover offers don't count, so
  * every page quotes the same numbers.
  */
 export function catalogueStats(

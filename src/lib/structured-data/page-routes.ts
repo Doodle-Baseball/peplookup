@@ -23,14 +23,14 @@ const EXCLUDED_PATHS = new Set(['/watchlist', '/go']);
 
 const EXACT_KINDS: Readonly<Record<string, PageKind>> = {
   '/': 'home',
-  '/suppliers': 'collection',
-  '/coupons': 'collection',
-  '/reviews': 'collection',
-  '/products': 'collection',
+  '/supplier': 'collection',
+  '/coupon': 'collection',
+  '/review': 'collection',
+  '/product': 'collection',
   '/coas': 'collection',
   '/labs': 'collection',
   '/tools': 'collection',
-  '/guides': 'collection',
+  '/guide': 'collection',
   // An explainer, not a calculator, so it is an article despite living under /tools/.
   '/tools/coa-reader': 'article',
   '/about': 'about',
@@ -39,12 +39,12 @@ const EXACT_KINDS: Readonly<Record<string, PageKind>> = {
 
 /** New routes under these sections inherit the section's type automatically. */
 const PREFIX_KINDS: readonly (readonly [string, PageKind])[] = [
-  ['/products/', 'compound'],
-  ['/suppliers/', 'supplier'],
-  ['/coupons/', 'coupon'],
-  ['/reviews/', 'review'],
+  ['/product/', 'compound'],
+  ['/supplier/', 'supplier'],
+  ['/coupon/', 'coupon'],
+  ['/review/', 'review'],
   ['/tools/', 'tool'],
-  ['/guides/', 'article'],
+  ['/guide/', 'article'],
   ['/blog/', 'article'],
 ];
 
@@ -67,12 +67,12 @@ const WEB_PAGE_TYPES: Readonly<Record<PageKind, WebPageType>> = {
  * the price checker, which is the site's index of compounds.
  */
 const SECTIONS: readonly { prefix: string; name: string; path: string }[] = [
-  { prefix: '/products/', name: 'Price Checker', path: '/price-checker' },
-  { prefix: '/suppliers/', name: 'Suppliers', path: '/suppliers' },
-  { prefix: '/coupons/', name: 'Coupons', path: '/coupons' },
-  { prefix: '/reviews/', name: 'Reviews', path: '/reviews' },
+  { prefix: '/product/', name: 'Price Checker', path: '/price-checker' },
+  { prefix: '/supplier/', name: 'Suppliers', path: '/supplier' },
+  { prefix: '/coupon/', name: 'Coupons', path: '/coupon' },
+  { prefix: '/review/', name: 'Reviews', path: '/review' },
   { prefix: '/tools/', name: 'Tools', path: '/tools' },
-  { prefix: '/guides/', name: 'Guides', path: '/guides' },
+  { prefix: '/guide/', name: 'Guides', path: '/guide' },
 ];
 
 /** Strips the query, hash and any trailing slash, so one page has one canonical path. */

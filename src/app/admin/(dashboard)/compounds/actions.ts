@@ -35,7 +35,7 @@ function revalidatePublicProductPages(slugs: readonly string[] = []) {
   revalidatePath('/admin/compounds');
   revalidatePath('/admin');
   revalidatePath('/');
-  for (const slug of slugs) revalidatePath(`/products/${slug}`);
+  for (const slug of slugs) revalidatePath(`/product/${slug}`);
 }
 
 function textOf(formData: FormData, name: string): string {
@@ -212,7 +212,7 @@ export async function saveCompoundOrderAction(slugs: string[]): Promise<{ error?
   }
   revalidateTag('products');
   revalidatePath('/admin/compounds');
-  revalidatePath('/products');
+  revalidatePath('/product');
   revalidatePath('/');
   return {};
 }

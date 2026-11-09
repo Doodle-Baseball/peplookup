@@ -6,7 +6,7 @@ const suppliers = hostsFromUrls(['https://www.primepepsolutions.com/?ref=PEPLOOK
 describe('classifyGuideLink', () => {
   it('keeps site paths in the same tab', () => {
     expect(classifyGuideLink('/tools/calculator', suppliers)).toBe('internal');
-    expect(classifyGuideLink('/suppliers/hospira-bacteriostatic-water', suppliers)).toBe('internal');
+    expect(classifyGuideLink('/supplier/hospira-bacteriostatic-water', suppliers)).toBe('internal');
   });
 
   it('treats /go affiliate redirects and supplier sites as sponsored', () => {

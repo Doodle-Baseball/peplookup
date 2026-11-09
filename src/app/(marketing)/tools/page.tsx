@@ -184,7 +184,7 @@ export default async function ToolsHubPage() {
           <p className="text-sm text-muted sm:text-base">
             Every calculation runs entirely in your browser with no data stored. The same per-milligram
             normalization used across the{' '}
-            <Link href="/suppliers" className="font-bold text-brand hover:underline">
+            <Link href="/supplier" className="font-bold text-brand hover:underline">
               supplier directory
             </Link>{' '}
             and{' '}

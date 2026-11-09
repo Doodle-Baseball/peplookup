@@ -1,4 +1,4 @@
-import { supplierPath } from '@/lib/supplier-path';
+import { supplierPath } from '@/lib/site-paths';
 import Image from 'next/image';
 import Link from 'next/link';
 import type { Offer, Product, Supplier } from '@/lib/schema';
@@ -73,7 +73,7 @@ export function OfferCard({
 
   const buyHref = `/go?to=${encodeURIComponent(offer.productUrl)}`;
   const coaHref = offer.labReport?.reportUrl ?? offer.labReport?.labUrl ?? offer.coaUrl ?? null;
-  const compareHref = `/products/${product.slug}`;
+  const compareHref = `/product/${product.slug}`;
 
   // What stands in for the picture when the offer has none, or when its picture fails to load.
   const imagePlaceholder = (

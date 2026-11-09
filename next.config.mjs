@@ -1,9 +1,3 @@
-/**
- * Supplier profiles that have moved from /suppliers/<slug> to /supplier/<slug>. Keep in step with
- * MOVED_SUPPLIER_SLUGS in src/lib/supplier-path.ts (a test checks they match); this file cannot import it.
- */
-const MOVED_SUPPLIER_SLUGS = ['american-peptides'];
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -20,17 +14,12 @@ const nextConfig = {
     // Optimised images are re-checked after 60s by default; these files change rarely, so keep them for 30 days.
     minimumCacheTTL: 60 * 60 * 24 * 30,
   },
-  async rewrites() {
-    // The moved profile is still the /suppliers/[slug] route; only its address changed. Only the listed slugs
-    // are rewritten, so any other /supplier/<slug> finds no route and answers 404.
-    return MOVED_SUPPLIER_SLUGS.map((slug) => ({ source: `/supplier/${slug}`, destination: `/suppliers/${slug}` }));
-  },
   async redirects() {
     // 301 rather than `permanent: true` (a 308): search engines treat the two
     // alike, but SEO audit tools expect a 301 for a page that moved for good.
     return [
-      // A moved supplier profile: one hop, and Next carries the query string across.
-      ...MOVED_SUPPLIER_SLUGS.map((slug) => ({ source: `/suppliers/${slug}`, destination: `/supplier/${slug}`, statusCode: 301 })),
+      // The plural section roots (/suppliers, /products, /coupons, /reviews, /guides) redirect to the singular
+      // ones in src/middleware.ts, which also resolves a renamed slug in the same single hop.
       // Common misspelling of the community page's address.
       { source: '/comunity', destination: '/community', statusCode: 301 },
       // The payment thanks page lives at /thanks; /tanks is a likely typo for it.
@@ -39,9 +28,9 @@ const nextConfig = {
       // The supplier listing page used to live at /partners and at /vendor-listing.
       { source: '/partners', destination: '/supplier-listing', statusCode: 301 },
       { source: '/vendor-listing', destination: '/supplier-listing', statusCode: 301 },
-      // Vendor coupon and reviews pages live under /coupons and /reviews; these were their addresses at the site root first.
-      { source: '/:slug-coupon-code', destination: '/coupons/:slug-coupon-code', statusCode: 301 },
-      { source: '/:slug-reviews', destination: '/reviews/:slug-reviews', statusCode: 301 },
+      // Vendor coupon and reviews pages live under /coupon and /review; these were their addresses at the site root first.
+      { source: '/:slug-coupon-code', destination: '/coupon/:slug-coupon-code', statusCode: 301 },
+      { source: '/:slug-reviews', destination: '/review/:slug-reviews', statusCode: 301 },
       // The COA directory lived at /lab-reports until November 2026.
       { source: '/lab-reports', destination: '/coas', statusCode: 301 },
     ];
@@ -63,14 +52,12 @@ const nextConfig = {
     // Files served straight from /public are revalidated on every request by default; these change rarely.
     const staticAssetCache = [{ key: 'Cache-Control', value: 'public, max-age=2592000, stale-while-revalidate=86400' }];
     return [
-      { source: '/products/:slug', headers: sharedPageCache },
-      { source: '/suppliers', headers: sharedPageCache },
-      { source: '/suppliers/:slug', headers: sharedPageCache },
-      // Headers match the address the visitor asked for, so a moved profile needs its own entry to be cached the same way.
-      ...MOVED_SUPPLIER_SLUGS.map((slug) => ({ source: `/supplier/${slug}`, headers: sharedPageCache })),
+      { source: '/product/:slug', headers: sharedPageCache },
+      { source: '/supplier', headers: sharedPageCache },
+      { source: '/supplier/:slug', headers: sharedPageCache },
       { source: '/coas', headers: sharedPageCache },
-      { source: '/coupons/:slug', headers: sharedPageCache },
-      { source: '/reviews/:slug', headers: sharedPageCache },
+      { source: '/coupon/:slug', headers: sharedPageCache },
+      { source: '/review/:slug', headers: sharedPageCache },
       { source: '/compounds-images/:path*', headers: staticAssetCache },
       { source: '/favicon.png', headers: staticAssetCache },
     ];

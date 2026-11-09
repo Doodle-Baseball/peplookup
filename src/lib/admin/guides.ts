@@ -49,7 +49,7 @@ export function slugifyGuideTitle(title: string): string {
 }
 
 export function guidePath(slug: string): string {
-  return `/guides/${slug}`;
+  return `/guide/${slug}`;
 }
 
 export interface AdminGuide extends Guide {

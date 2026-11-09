@@ -75,43 +75,43 @@ describe('buildSitemapEntries', () => {
       }),
     );
     expect(entries).toEqual([
-      { url: `${ORIGIN}/products/compound-a`, lastModified: new Date('2026-10-03T00:00:00.000Z') },
+      { url: `${ORIGIN}/product/compound-a`, lastModified: new Date('2026-10-03T00:00:00.000Z') },
     ]);
   });
 
   it('gives a product with no listings no date rather than an invented one', () => {
     expect(buildSitemapEntries(input({ staticPaths: [], productSlugs: ['compound-a'] }))).toEqual([
-      { url: `${ORIGIN}/products/compound-a` },
+      { url: `${ORIGIN}/product/compound-a` },
     ]);
   });
 
   it('lists coupon and reviews pages by the same indexing decision as every other page', () => {
     const supplier = { slug: 'supplier-a', hasCoupon: true, hasReviews: true, inventoryRefreshedAt: null };
-    const onlyProfile = (path: string) => path.startsWith('/suppliers/');
+    const onlyProfile = (path: string) => path.startsWith('/supplier/');
     expect(urls(input({ staticPaths: [], suppliers: [supplier], isIndexable: onlyProfile }))).toEqual([
-      `${ORIGIN}/suppliers/supplier-a`,
+      `${ORIGIN}/supplier/supplier-a`,
     ]);
 
     expect(urls(input({ staticPaths: [], suppliers: [supplier] }))).toEqual([
-      `${ORIGIN}/suppliers/supplier-a`,
-      `${ORIGIN}/coupons/supplier-a-coupon-code`,
-      `${ORIGIN}/reviews/supplier-a-reviews`,
+      `${ORIGIN}/supplier/supplier-a`,
+      `${ORIGIN}/coupon/supplier-a-coupon-code`,
+      `${ORIGIN}/review/supplier-a-reviews`,
     ]);
   });
 
   it('never lists a coupon or reviews page for a supplier that has no coupon or reviews', () => {
     const supplier = { slug: 'supplier-a', hasCoupon: false, hasReviews: false, inventoryRefreshedAt: null };
-    expect(urls(input({ staticPaths: [], suppliers: [supplier] }))).toEqual([`${ORIGIN}/suppliers/supplier-a`]);
+    expect(urls(input({ staticPaths: [], suppliers: [supplier] }))).toEqual([`${ORIGIN}/supplier/supplier-a`]);
   });
 
   it('leaves out placeholder guides, and the guides index while there are none with content', () => {
     const placeholder = guide('placeholder', ['   ']);
-    expect(urls(input({ staticPaths: ['/guides'], guides: [placeholder] }))).toEqual([]);
+    expect(urls(input({ staticPaths: ['/guide'], guides: [placeholder] }))).toEqual([]);
 
     const written = guide('written', ['Real text.']);
-    expect(urls(input({ staticPaths: ['/guides'], guides: [placeholder, written] }))).toEqual([
-      `${ORIGIN}/guides`,
-      `${ORIGIN}/guides/written`,
+    expect(urls(input({ staticPaths: ['/guide'], guides: [placeholder, written] }))).toEqual([
+      `${ORIGIN}/guide`,
+      `${ORIGIN}/guide/written`,
     ]);
   });
 
@@ -119,39 +119,31 @@ describe('buildSitemapEntries', () => {
     const saved = { ...guide('saved', ['Text.']), updatedAt: '2026-10-27T09:30:00.000Z' };
     const draft = { ...guide('draft', ['Text.']), isPublished: false };
     const entries = buildSitemapEntries(input({ staticPaths: [], guides: [saved, draft] }));
-    expect(entries).toEqual([{ url: `${ORIGIN}/guides/saved`, lastModified: new Date('2026-10-27T09:30:00.000Z') }]);
+    expect(entries).toEqual([{ url: `${ORIGIN}/guide/saved`, lastModified: new Date('2026-10-27T09:30:00.000Z') }]);
   });
 });
 
-describe('buildSitemapEntries: a supplier profile that has moved', () => {
+describe('buildSitemapEntries: supplier, coupon and reviews pages use the singular section roots', () => {
   const suppliers = ['american-peptides', 'kylo-peptides'].map((slug) => ({ slug, hasCoupon: true, hasReviews: true, inventoryRefreshedAt: null }));
-  // As stored live: the override is keyed by the old path and its canonical names the new address.
-  const seoByPath = new Map([['/suppliers/american-peptides', { canonicalUrl: '/supplier/american-peptides' }]]);
-  const listed = urls(input({ staticPaths: [], suppliers, seoByPath }));
 
-  it('lists the new address and not the old one', () => {
-    expect(listed).toContain('https://www.peplookup.com/supplier/american-peptides');
-    expect(listed).not.toContain('https://www.peplookup.com/suppliers/american-peptides');
-  });
-
-  it("leaves every other entry, including the same supplier's coupon and reviews pages, as it was", () => {
+  it('lists /supplier, /coupon and /review for each supplier, and none of the old plural paths', () => {
+    const listed = urls(input({ staticPaths: [], suppliers }));
     expect(listed).toEqual([
       'https://www.peplookup.com/supplier/american-peptides',
-      'https://www.peplookup.com/coupons/american-peptides-coupon-code',
-      'https://www.peplookup.com/reviews/american-peptides-reviews',
-      'https://www.peplookup.com/suppliers/kylo-peptides',
-      'https://www.peplookup.com/coupons/kylo-peptides-coupon-code',
-      'https://www.peplookup.com/reviews/kylo-peptides-reviews',
+      'https://www.peplookup.com/coupon/american-peptides-coupon-code',
+      'https://www.peplookup.com/review/american-peptides-reviews',
+      'https://www.peplookup.com/supplier/kylo-peptides',
+      'https://www.peplookup.com/coupon/kylo-peptides-coupon-code',
+      'https://www.peplookup.com/review/kylo-peptides-reviews',
     ]);
+    expect(listed.some((url) => /\/(suppliers|products|coupons|reviews|guides)(\/|$)/.test(url))).toBe(false);
   });
 
-  it('lists the new address whether the saved canonical names the old path or the new one', () => {
-    const oldCanonical = new Map([['/suppliers/american-peptides', { canonicalUrl: '/suppliers/american-peptides' }]]);
-    expect(urls(input({ staticPaths: [], suppliers, seoByPath: oldCanonical }))).toEqual(listed);
-  });
-
-  it('still drops the profile when its own page is noindex', () => {
-    const noindex = urls(input({ staticPaths: [], suppliers, seoByPath, isIndexable: (path) => path !== '/suppliers/american-peptides' }));
-    expect(noindex.some((url) => url.includes('/american-peptides') && url.includes('/supplier'))).toBe(false);
+  it('drops a profile whose own page is noindex, or whose saved canonical names another page', () => {
+    expect(urls(input({ staticPaths: [], suppliers, isIndexable: (path) => path !== '/supplier/american-peptides' }))).not.toContain(
+      'https://www.peplookup.com/supplier/american-peptides',
+    );
+    const elsewhere = new Map([['/supplier/american-peptides', { canonicalUrl: '/supplier/kylo-peptides' }]]);
+    expect(urls(input({ staticPaths: [], suppliers, seoByPath: elsewhere }))).not.toContain('https://www.peplookup.com/supplier/american-peptides');
   });
 });

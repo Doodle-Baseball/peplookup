@@ -4,7 +4,6 @@ import { couponPagePath } from '@/lib/coupon-pages';
 import { ratingSourceLabel, reviewsPagePath } from '@/lib/review-pages';
 import { characterCount } from '@/lib/seo-status';
 import { formatReviewCount } from '@/lib/format';
-import { publicPath } from '@/lib/supplier-path';
 import type { ReviewCount } from '@/lib/schema';
 
 /**
@@ -27,8 +26,7 @@ export function pageMetadata(defaults: SeoDefaults): Metadata {
     title: { absolute: defaults.title },
     description: defaults.description,
     ...(defaults.keywords?.length ? { keywords: [...defaults.keywords] } : {}),
-    // publicPath: the path is the page's key; the canonical is where it is served (they differ for a moved supplier profile).
-    alternates: { canonical: publicPath(defaults.path) },
+    alternates: { canonical: defaults.path },
   };
 }
 
@@ -67,7 +65,7 @@ function distinctKeywords(keywords: readonly string[]): string[] {
 
 export function compoundSeoDefaults(compound: { slug: string; name: string }): SeoDefaults {
   return {
-    path: `/products/${compound.slug}`,
+    path: `/product/${compound.slug}`,
     title: `${compound.name} | Compare Prices, Suppliers & COA | ${site.name}`,
     description: `Compare ${compound.name} prices per mg across verified suppliers, with stock status, shipping and lab-verification data.`,
     h1: compound.name,
@@ -100,7 +98,7 @@ export function supplierSeoDefaults(
   ];
   const sentence = clauses.length > 1 ? `${clauses.slice(0, -1).join(', ')} and ${clauses.at(-1)}.` : `${clauses[0]}.`;
   return {
-    path: `/suppliers/${supplier.slug}`,
+    path: `/supplier/${supplier.slug}`,
     title: firstWithin(MAX_TITLE_CHARACTERS, [
       `${name}: ${joined} | ${site.name}`,
       `${name}: Prices per mg${hasCoas ? ' & COAs' : ''} | ${site.name}`,
@@ -117,7 +115,7 @@ export function supplierSeoDefaults(
 
 export function guideSeoDefaults(guide: { slug: string; title: string; excerpt: string; seoTitle?: string }): SeoDefaults {
   return {
-    path: `/guides/${guide.slug}`,
+    path: `/guide/${guide.slug}`,
     // The guide's H1 is written as its search title already, e.g. "… Sizes, Price & Facts (2026)",
     // unless the guide gives a separate search title.
     title: guide.seoTitle ?? guide.title,
@@ -163,15 +161,7 @@ export function couponPageSeoDefaults(
       `${percentOff}% off at ${name}. How to apply the code at checkout.`,
     ]),
     h1: `${name} Coupon Code`,
-    keywords: distinctKeywords([
-      `${name} coupon code`,
-      `${name} discount code`,
-      `${name} ${percentOff}% off`,
-      `${name} code not working`,
-      `${name} promo code`,
-      `how to use ${name} coupon`,
-      `${name} supplier`,
-    ]),
+    keywords: distinctKeywords([`${name} coupon code`, `${name} discount code`]),
   };
 }
 
@@ -209,14 +199,6 @@ export function reviewsPageSeoDefaults(supplier: {
           ],
     ),
     h1: `${name} Reviews`,
-    keywords: distinctKeywords([
-      `${name} reviews`,
-      `${name} rating`,
-      `${name} ${source} reviews`,
-      `${name} customer reviews`,
-      `is ${name} legit`,
-      `${name} feedback`,
-      `${name} supplier`,
-    ]),
+    keywords: distinctKeywords([`${name} reviews`, `${name} rating`]),
   };
 }

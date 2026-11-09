@@ -9,12 +9,12 @@ import {
 
 describe('review page paths', () => {
   it('builds the page path from a vendor slug', () => {
-    expect(reviewsPagePath('amino-club')).toBe('/reviews/amino-club-reviews');
+    expect(reviewsPagePath('amino-club')).toBe('/review/amino-club-reviews');
   });
 
   it('recovers the vendor slug from a segment or path', () => {
     expect(supplierSlugFromReviewsSegment('amino-club-reviews')).toBe('amino-club');
-    expect(supplierSlugFromReviewsPath('/reviews/amino-club-reviews')).toBe('amino-club');
+    expect(supplierSlugFromReviewsPath('/review/amino-club-reviews')).toBe('amino-club');
   });
 
   it('rejects anything that is not a reviews page', () => {

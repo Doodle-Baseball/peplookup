@@ -39,7 +39,7 @@ export const DEFAULT_PAGE_FAQS: Readonly<Record<string, readonly FaqItem[]>> = {
     },
   ],
 
-  '/suppliers': [
+  '/supplier': [
     {
       question: 'How are suppliers chosen for this directory?',
       answer: `Most suppliers here have no relationship with us at all. We list them because they publish prices we can compare. A supplier does not have to pay, partner or ask to be included, and being listed is not an endorsement.`,
@@ -62,7 +62,7 @@ export const DEFAULT_PAGE_FAQS: Readonly<Record<string, readonly FaqItem[]>> = {
     },
   ],
 
-  '/reviews': [
+  '/review': [
     {
       question: 'Where do the ratings on this page come from?',
       answer: `Each rating is the supplier's aggregate score from the public review source linked on its reviews page, shown only where we hold one. ${site.name} does not collect or verify reviews itself, so a supplier without a rating shows "not rated yet" rather than a made-up score.`,
@@ -85,7 +85,7 @@ export const DEFAULT_PAGE_FAQS: Readonly<Record<string, readonly FaqItem[]>> = {
     },
   ],
 
-  '/coupons': [
+  '/coupon': [
     {
       question: 'How do I use a coupon code from this page?',
       answer: `Tap the code to copy it, then paste it into the discount or promo field at checkout on the supplier's own site. Codes are applied by the supplier, not by ${site.name}, so the discount appears in their checkout rather than here.`,

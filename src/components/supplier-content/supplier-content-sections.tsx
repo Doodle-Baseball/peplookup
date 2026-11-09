@@ -5,12 +5,6 @@ import type { SupplierContent, SupplierContentKey } from '@/lib/supplier-content
 /** Same panel as the compound page's Overview / Dosage boxes. */
 const PANEL_CLASS = 'rounded-panel border border-line bg-surface-raised shadow-card';
 
-const EYEBROW: Record<SupplierContentKey, string> = {
-  about: 'Overview',
-  why: 'Highlights',
-  compare: 'Comparison',
-};
-
 /**
  * Accents the vendor's name inside a heading, the way "What is BPC-157?"
  * accents the compound. A title edited in the admin that doesn't mention the
@@ -38,13 +32,11 @@ function accentedTitle(title: string, vendorName: string): ReactNode {
 
 function ContentBox({
   id,
-  eyebrow,
   title,
   body,
   className,
 }: {
   id: string;
-  eyebrow: string;
   title: ReactNode;
   body: string;
   className?: string;
@@ -55,7 +47,6 @@ function ContentBox({
       aria-labelledby={`${id}-heading`}
       className={cn(PANEL_CLASS, 'reveal min-w-0 scroll-mt-24 p-5 sm:p-8 lg:p-10', className)}
     >
-      <p className="eyebrow">{eyebrow}</p>
       {/* break-words: a long vendor name must wrap on a 320px phone rather than overflow the card. */}
       <h2
         id={`${id}-heading`}
@@ -89,7 +80,6 @@ export function SupplierContentSections({
         <ContentBox
           key={key}
           id={`vendor-${key}`}
-          eyebrow={EYEBROW[key]}
           title={accentedTitle(content[key].title, vendorName)}
           body={content[key].body}
         />

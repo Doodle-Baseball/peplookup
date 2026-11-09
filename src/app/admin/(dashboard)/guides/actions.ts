@@ -47,11 +47,11 @@ function revalidateGuideSurfaces(...slugs: string[]) {
   // The tag is the part that actually matters: getGuides() is cached under it
   // for 5 minutes, independently of the route caches revalidatePath clears.
   // Without this an edited title, link or slug kept serving stale everywhere
-  // guides are read, /guides, each guide page, the "More guides" rail and
+  // guides are read, /guide, each guide page, the "More guides" rail and
   // the SEO dashboard, until that window expired.
   revalidateTag('guides');
   revalidatePath('/admin/guides');
-  revalidatePath('/guides');
+  revalidatePath('/guide');
   revalidatePath('/sitemap.xml');
   for (const slug of slugs) revalidatePath(guidePath(slug));
 }

@@ -17,7 +17,7 @@ export function ProductPreviewCard({ product }: { product: Product }) {
     <article className="card-3d flex h-full flex-col gap-3 rounded-card border border-line bg-surface-raised p-5">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <Link href={`/products/${product.slug}`} className="text-lg font-black text-content hover:text-brand">
+          <Link href={`/product/${product.slug}`} className="text-lg font-black text-content hover:text-brand">
             {product.name}
           </Link>
           {product.category ? (
@@ -39,7 +39,7 @@ export function ProductPreviewCard({ product }: { product: Product }) {
       {blurb ? <p className="line-clamp-2 text-sm text-muted">{blurb}</p> : null}
 
       <Link
-        href={`/products/${product.slug}`}
+        href={`/product/${product.slug}`}
         className="mt-auto inline-flex items-center gap-1.5 text-sm font-bold text-brand hover:text-brand-strong"
       >
         View prices

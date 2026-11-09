@@ -9,7 +9,7 @@ export type JumpToItem = { id: string; label: string };
  * is currently in view (IntersectionObserver) so the active pill tracks
  * scroll position instead of always pointing at the first item.
  *
- * A click scrolls without touching the URL, so /products/glow never picks up
+ * A click scrolls without touching the URL, so /product/glow never picks up
  * a #vendor-listings it doesn't need. The pills stay real `#id` links, and
  * the sections keep their ids, so a shared or copied #section link still
  * lands on that section.

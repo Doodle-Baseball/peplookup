@@ -61,9 +61,9 @@ export type SeoPageKind = 'static' | 'compound' | 'supplier' | 'guide' | 'coupon
 export type RenamableKind = Extract<SeoPageKind, 'compound' | 'supplier' | 'guide'>;
 
 export const SLUG_PREFIX: Record<RenamableKind, string> = {
-  compound: '/products/',
-  supplier: '/suppliers/',
-  guide: '/guides/',
+  compound: '/product/',
+  supplier: '/supplier/',
+  guide: '/guide/',
 };
 
 export interface SeoEntry {
@@ -186,12 +186,12 @@ export async function getSeoDashboardData(): Promise<SeoDashboardData> {
   // Compound pages keep their own FAQ field on the compound record, so that's
   // the one kind with no built-in set generated here.
   const supplierBySlug = new Map(suppliers.map((supplier) => [supplier.slug, supplier]));
-  const guideByPath = new Map(guides.map((guide) => [`/guides/${guide.slug}`, guide]));
+  const guideByPath = new Map(guides.map((guide) => [`/guide/${guide.slug}`, guide]));
   const defaultFaqsFor = (path: string): FaqItem[] => {
     const stat = DEFAULT_PAGE_FAQS[path];
     if (stat) return [...stat];
-    if (path.startsWith('/suppliers/')) {
-      const supplier = supplierBySlug.get(path.slice('/suppliers/'.length));
+    if (path.startsWith('/supplier/')) {
+      const supplier = supplierBySlug.get(path.slice('/supplier/'.length));
       if (supplier) return defaultSupplierFaqs(supplier);
     }
     const couponSlug = supplierSlugFromCouponPath(path);
@@ -370,7 +370,7 @@ export async function findMostSimilarSupplierText(
 export async function assertSeoPageExists(kind: SeoPageKind, path: string): Promise<void> {
   const exists = await (async () => {
     if (kind === 'static') return STATIC_SEO_PAGES.some((page) => page.path === path);
-    if (kind === 'guide') return (await getGuides()).some((guide) => `/guides/${guide.slug}` === path);
+    if (kind === 'guide') return (await getGuides()).some((guide) => `/guide/${guide.slug}` === path);
     if (kind === 'coupon') {
       const supplierSlug = supplierSlugFromCouponPath(path);
       return supplierSlug !== null && Boolean((await getSupplier(supplierSlug))?.coupon);

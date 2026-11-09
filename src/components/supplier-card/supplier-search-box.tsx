@@ -1,6 +1,6 @@
 'use client';
 
-import { supplierPath } from '@/lib/supplier-path';
+import { supplierPath } from '@/lib/site-paths';
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { SupplierLogo } from '@/components/ui/supplier-logo';

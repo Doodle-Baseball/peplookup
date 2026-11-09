@@ -208,7 +208,7 @@ export default async function AdminGuidesPage({
                       <tr key={guide.slug} className="border-b border-line align-top last:border-0">
                         <th scope="row" className="px-5 py-4 text-left font-normal">
                           <p className="font-bold text-content">{guide.title}</p>
-                          <p className="mt-0.5 font-mono text-xs text-faint">/guides/{guide.slug}</p>
+                          <p className="mt-0.5 font-mono text-xs text-faint">/guide/{guide.slug}</p>
                         </th>
                         <td className="px-5 py-4 text-content">{guide.category}</td>
                         <td className="px-5 py-4">
@@ -248,7 +248,7 @@ export default async function AdminGuidesPage({
                             ) : null}
                             {live ? (
                               <a
-                                href={`/guides/${guide.slug}`}
+                                href={`/guide/${guide.slug}`}
                                 target="_blank"
                                 rel="noopener"
                                 aria-label={`View ${guide.title} live (opens in a new tab)`}

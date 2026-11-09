@@ -32,7 +32,7 @@ const getExtensionSettingsCached = unstable_cache(
 /**
  * The feed the Chrome extension reads. Supplier names, codes and ratings come
  * from the same getSuppliers() the public pages render, so the extension
- * always shows what /coupons shows.
+ * always shows what /coupon shows.
  */
 export async function getExtensionFeed(): Promise<ExtensionFeed> {
   const [suppliers, settings] = await Promise.all([getSuppliers(), getExtensionSettingsCached()]);

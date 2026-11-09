@@ -2,11 +2,11 @@ import type { Supplier } from '@/lib/schema';
 import { formatReviewCount } from '@/lib/format';
 
 /**
- * Every vendor gets a reviews page at `/reviews/<vendor-slug>-reviews`, so each
+ * Every vendor gets a reviews page at `/review/<vendor-slug>-reviews`, so each
  * vendor's rating can be found by the phrase people actually search.
  */
 const REVIEWS_SUFFIX = '-reviews';
-const REVIEWS_PREFIX = '/reviews/';
+const REVIEWS_PREFIX = '/review/';
 
 export function reviewsPagePath(supplierSlug: string): string {
   return `${REVIEWS_PREFIX}${supplierSlug}${REVIEWS_SUFFIX}`;
@@ -19,7 +19,7 @@ export function supplierSlugFromReviewsSegment(segment: string): string | null {
   return slug.length > 0 ? slug : null;
 }
 
-/** Same as {@link supplierSlugFromReviewsSegment}, for a full path such as "/reviews/amino-club-reviews". */
+/** Same as {@link supplierSlugFromReviewsSegment}, for a full path such as "/review/amino-club-reviews". */
 export function supplierSlugFromReviewsPath(path: string): string | null {
   if (!path.startsWith(REVIEWS_PREFIX)) return null;
   const segment = path.slice(REVIEWS_PREFIX.length);

@@ -28,9 +28,9 @@ function redirectWithoutIndexing(target: URL, status: 302 | 307 = 307): NextResp
 async function supplierForSlug(slug: string): Promise<Supplier | null> {
   const supplier = await getSupplier(slug);
   if (supplier) return supplier;
-  const renamedTo = await getRedirectTarget(`/suppliers/${slug}`);
-  if (!renamedTo?.startsWith('/suppliers/')) return null;
-  return getSupplier(renamedTo.slice('/suppliers/'.length));
+  const renamedTo = await getRedirectTarget(`/supplier/${slug}`);
+  if (!renamedTo?.startsWith('/supplier/')) return null;
+  return getSupplier(renamedTo.slice('/supplier/'.length));
 }
 
 /** Sites the site links out to through /go besides suppliers' own. */

@@ -94,7 +94,7 @@ export function PricingComparisonExplainer({
             .
           </p>
           <p className="font-semibold text-content">
-            Explore the price comparison pages below for BPC-157, Retatrutide, Tirzepatide and more.
+            See the price comparison pages below for BPC-157, Retatrutide, Tirzepatide and more.
           </p>
         </div>
       </div>
@@ -114,7 +114,7 @@ export function PricingComparisonExplainer({
               >
                 <span className="min-w-0">
                   <Link
-                    href={`/products/${slug}`}
+                    href={`/product/${slug}`}
                     className="block font-bold text-content outline-none transition-colors after:absolute after:inset-0 after:rounded-card group-hover:text-accent-strong focus-visible:after:ring-2 focus-visible:after:ring-accent"
                   >
                     {name} Price Comparison

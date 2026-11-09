@@ -1,4 +1,4 @@
-import { supplierPath } from '@/lib/supplier-path';
+import { supplierPath } from '@/lib/site-paths';
 import { site } from '@/config/site';
 import { getSuppliers } from '@/lib/repository';
 import { cronAuthError, isTestRun } from '@/lib/monitoring/cron-auth';

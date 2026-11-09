@@ -65,7 +65,7 @@ const STEPS: { title: string; body: string }[] = [
 
 const TOOL_LINKS: { label: string; href: string; hint: string }[] = [
   { label: 'Price Checker', href: '/price-checker', hint: 'Cost per mg across suppliers' },
-  { label: 'Supplier directory', href: '/suppliers', hint: 'Profiles, shipping and coupons' },
+  { label: 'Supplier directory', href: '/supplier', hint: 'Profiles, shipping and coupons' },
   { label: 'COA Reader', href: '/tools/coa-reader', hint: 'How to read a certificate' },
 ];
 
@@ -113,7 +113,7 @@ export default async function CommunityPage() {
             <ExternalIcon className="h-4 w-4 transition-transform group-hover/cta:-translate-y-0.5 group-hover/cta:translate-x-0.5" />
           </a>
           <Link
-            href="/suppliers"
+            href="/supplier"
             className="inline-flex w-full items-center justify-center gap-2 rounded-pill border border-line bg-surface-raised px-7 py-3.5 text-sm font-bold text-content shadow-card transition-all hover:-translate-y-0.5 hover:border-accent hover:text-accent-strong sm:w-auto"
           >
             Compare suppliers

@@ -22,7 +22,7 @@ export function isDesktopChrome(userAgent: string, userAgentData: UserAgentData 
 }
 
 /**
- * "Get these codes automatically" banner above the /coupons list. Rendered
+ * "Get these codes automatically" banner above the /coupon list. Rendered
  * only after hydration, once the browser is known, so Safari, Firefox and
  * phones never see an install prompt they can't use.
  */

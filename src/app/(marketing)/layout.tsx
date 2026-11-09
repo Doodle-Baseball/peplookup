@@ -12,7 +12,7 @@ import { PROMOTED_SUPPLIER } from '@/config/highlights-bar';
 import { HideOnPaths } from '@/components/layout/hide-on-paths';
 
 /** Pages that carry no supplier promotion at all, the top bar's featured partner and rating included. */
-const PATHS_WITHOUT_PROMOTION = ['/guides/what-is-peplookup'];
+const PATHS_WITHOUT_PROMOTION = ['/guide/what-is-peplookup'];
 
 /**
  * The frame every public page shares: header, notices and footer only.

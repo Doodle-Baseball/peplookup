@@ -1,4 +1,4 @@
-import { supplierPath } from '@/lib/supplier-path';
+import { supplierPath } from '@/lib/site-paths';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
@@ -55,23 +55,12 @@ import { getSupplierContent } from '@/lib/supplier-content-store';
 import { SUPPLIER_PAGE_AUTHOR } from '@/config/site';
 import {
   isRewrittenSupplierPage,
-  rewriteAbout,
-  rewriteComparisonIntro,
-  rewriteCouponText,
   rewriteFaqs,
-  rewriteGlance,
   rewriteSeoDescription,
   rewriteSeoTitle,
   rewriteSummary,
 } from '@/lib/supplier-page-rewrite';
 import { getRewriteFacts } from '@/lib/supplier-page-rewrite-store';
-import {
-  ComparisonFooter,
-  ComparisonIntro,
-  SupplierAbout,
-  SupplierCouponSection,
-  SupplierGlance,
-} from '@/components/supplier-rewrite/supplier-rewrite-sections';
 
 /** How many other vendors show in "Explore more vendors". */
 const EXPLORE_VENDOR_COUNT = 6;
@@ -108,12 +97,12 @@ export async function generateMetadata({
   if (!supplier) return { title: 'Supplier not found' };
   const [offers, products] = await Promise.all([getOffersForSupplier(supplier.slug), getProducts()]);
   const facts = supplierSeoFacts(offers, new Map(products.map((product) => [product.slug, product])));
-  const metadata = await withSeo(`/suppliers/${supplier.slug}`, pageMetadata(supplierSeoDefaults(supplier, facts)));
+  const metadata = await withSeo(`/supplier/${supplier.slug}`, pageMetadata(supplierSeoDefaults(supplier, facts)));
   if (isRewrittenSupplierPage(supplier.slug)) {
     // A rewritten page writes its own title and description from live numbers and outputs no meta keywords.
     const resolved = offers.filter((offer) => products.some((product) => product.slug === offer.productSlug));
     const { rewrite } = await getRewriteFacts(supplier, resolved);
-    const text = await cleanPageText(`/suppliers/${supplier.slug}`, {
+    const text = await cleanPageText(`/supplier/${supplier.slug}`, {
       title: rewriteSeoTitle(rewrite),
       description: rewriteSeoDescription(rewrite),
     });
@@ -161,7 +150,7 @@ export default async function SupplierPage({
   const { slug } = await params;
   // The SEO override is keyed by path, so it needs only the slug, fetching it
   // alongside the supplier saves a whole sequential round trip to the database.
-  const [supplier, seo] = await Promise.all([getSupplier(slug), getSeoOverride(`/suppliers/${slug}`)]);
+  const [supplier, seo] = await Promise.all([getSupplier(slug), getSeoOverride(`/supplier/${slug}`)]);
   if (!supplier) notFound();
 
   const { pq, page: pageParam, form: formParam, size: sizeParam } = await searchParams;
@@ -185,7 +174,7 @@ export default async function SupplierPage({
   const v2Summary = v2 ? supplierSummary(v2.facts) : '';
   // The "comparison tool" answer moves from the FAQ to the bottom of the page, word for word.
   const comparisonToolNote = contentV2
-    ? ((await getFaqsForPath(`/suppliers/${supplier.slug}`)).find((faq) => isComparisonToolAnswer(faq.answer))?.answer ?? null)
+    ? ((await getFaqsForPath(`/supplier/${supplier.slug}`)).find((faq) => isComparisonToolAnswer(faq.answer))?.answer ?? null)
     : null;
   const productsBySlug = new Map(allProducts.map((p) => [p.slug, p]));
   // Offers whose product no longer resolves are dropped rather than shown
@@ -256,7 +245,7 @@ export default async function SupplierPage({
         />
 
         <Link
-          href="/suppliers"
+          href="/supplier"
           className="group animate-fade-up mb-6 inline-flex items-center gap-1.5 text-sm font-semibold text-muted transition-colors hover:text-accent"
         >
           <ArrowLeftIcon className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
@@ -427,9 +416,6 @@ export default async function SupplierPage({
           className="mt-12"
         />
 
-        {/* A rewritten page shows its facts table straight after the catalogue. */}
-        {rewrite ? <SupplierGlance name={supplier.name} rows={rewriteGlance(rewrite)} className="mt-12" /> : null}
-
         {/* Reviews appear only when this vendor has some; the COA box always shows. */}
         <SupplierTrustPanel
           supplierName={supplier.name}
@@ -441,34 +427,11 @@ export default async function SupplierPage({
           reviewsPagePath={reviewsPage}
           labName={supplier.coaLabName}
           coaReports={coaReports}
-          // A rewritten page leaves its reviews to the supplier's reviews page.
-          showReviews={rewrite === null}
         />
 
         {/* About / Why researchers choose / vs other suppliers, editable per
             vendor from the supplier's popup in /admin/seo. */}
-        {rewritten && rewrite ? (
-          <>
-            <SupplierAbout name={supplier.name} paragraphs={rewriteAbout(rewrite)} className="mt-12" />
-            <SupplierPriceComparison
-              facts={rewritten.facts}
-              title={`How ${supplier.name} prices compare`}
-              intro={<ComparisonIntro text={rewriteComparisonIntro(rewrite)} />}
-              ownLabel="Their"
-              footer={<ComparisonFooter />}
-              className="mt-4 sm:mt-6"
-            />
-            {rewriteCouponText(rewrite) ? (
-              <SupplierCouponSection
-                name={supplier.name}
-                text={rewriteCouponText(rewrite)!}
-                couponPath={couponPagePath(supplier.slug)}
-                reviewsPath={reviewsPage}
-                className="mt-4 sm:mt-6"
-              />
-            ) : null}
-          </>
-        ) : v2 ? (
+        {v2 ? (
           <>
             {/* Content v2: the About box stays; "Why researchers choose" is hidden and
                 "vs other suppliers" becomes a price table. */}
@@ -482,7 +445,7 @@ export default async function SupplierPage({
         {/* FAQs for this vendor, generated from their own record until a set is
             saved for this path in /admin/seo. */}
         <PageFaqSection
-          path={`/suppliers/${supplier.slug}`}
+          path={`/supplier/${supplier.slug}`}
           className="mt-14"
           items={rewrite ? rewriteFaqs(rewrite) : undefined}
           pick={
@@ -509,7 +472,7 @@ export default async function SupplierPage({
                 </h2>
               </div>
               <Link
-                href="/suppliers"
+                href="/supplier"
                 className="btn-3d group/all inline-flex items-center gap-2 rounded-pill bg-brand px-5 py-2.5 text-sm font-bold text-surface transition-colors hover:bg-brand-strong"
               >
                 View all suppliers

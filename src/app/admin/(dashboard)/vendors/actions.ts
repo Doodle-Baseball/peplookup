@@ -54,7 +54,7 @@ export interface BulkVendorImportState {
  * window, independent of the route-level cache `revalidatePath` clears, so
  * without it a vendor's affiliate link, policy URLs or coupon code could
  * still read stale on every page that reads supplier data (lab reports,
- * coupons, price checker, the supplier's own page, not just /suppliers
+ * coupons, price checker, the supplier's own page, not just /supplier
  * itself) for up to 5 minutes after a save.
  */
 function revalidatePublicSupplierPages(slug?: string) {
@@ -65,14 +65,14 @@ function revalidatePublicSupplierPages(slug?: string) {
   revalidateTag('supplier-reviews');
   revalidatePath('/admin/vendors');
   revalidatePath('/admin');
-  revalidatePath('/suppliers');
-  revalidatePath('/suppliers/[slug]', 'page');
-  revalidatePath('/products/[slug]', 'page');
+  revalidatePath('/supplier');
+  revalidatePath('/supplier/[slug]', 'page');
+  revalidatePath('/product/[slug]', 'page');
   revalidatePath('/coas');
   revalidatePath('/price-checker');
-  revalidatePath('/coupons');
+  revalidatePath('/coupon');
   revalidatePath('/');
-  if (slug) revalidatePath(`/suppliers/${slug}`);
+  if (slug) revalidatePath(`/supplier/${slug}`);
 }
 
 type PendingVendorProduct = VendorProductEntry;
@@ -338,8 +338,8 @@ function readVendorExtensionSubmission(
 async function currentVendor(slug: string): Promise<Supplier> {
   const vendor = await getVendor(slug);
   if (vendor) return vendor;
-  const renamedTo = await getRedirectTarget(`/suppliers/${slug}`);
-  const renamed = renamedTo?.startsWith('/suppliers/') ? await getVendor(renamedTo.slice('/suppliers/'.length)) : null;
+  const renamedTo = await getRedirectTarget(`/supplier/${slug}`);
+  const renamed = renamedTo?.startsWith('/supplier/') ? await getVendor(renamedTo.slice('/supplier/'.length)) : null;
   if (!renamed) throw new AdminDbError('Supplier not found.');
   return renamed;
 }
@@ -579,7 +579,7 @@ export async function saveVendorOrderAction(slugs: string[]): Promise<{ error?: 
   }
   revalidateTag('suppliers');
   revalidatePath('/admin/vendors');
-  revalidatePath('/suppliers');
+  revalidatePath('/supplier');
   revalidatePath('/');
   return {};
 }

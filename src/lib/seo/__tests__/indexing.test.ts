@@ -110,12 +110,12 @@ describe('indexDecision (B1)', () => {
 
 describe('pageTypeForPath', () => {
   it.each([
-    ['/suppliers/purgo-labs', 'supplier'],
-    ['/coupons/purgo-labs-coupon-code', 'coupon'],
-    ['/reviews/purgo-labs-reviews', 'review'],
-    ['/products/bpc-157', 'product'],
-    ['/guides/how-to-read-a-coa', 'guide'],
-    ['/suppliers', 'static'],
+    ['/supplier/purgo-labs', 'supplier'],
+    ['/coupon/purgo-labs-coupon-code', 'coupon'],
+    ['/review/purgo-labs-reviews', 'review'],
+    ['/product/bpc-157', 'product'],
+    ['/guide/how-to-read-a-coa', 'guide'],
+    ['/supplier', 'static'],
     ['/', 'static'],
   ])('%s is a %s page', (path, type) => {
     expect(pageTypeForPath(path)).toBe(type);

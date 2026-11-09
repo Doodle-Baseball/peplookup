@@ -1,9 +1,9 @@
 /**
- * Every vendor with a coupon gets its own page at `/coupons/<vendor-slug>-coupon-code`,
+ * Every vendor with a coupon gets its own page at `/coupon/<vendor-slug>-coupon-code`,
  * so each vendor's code can be found by the phrase people actually search.
  */
 const COUPON_SUFFIX = '-coupon-code';
-const COUPON_PREFIX = '/coupons/';
+const COUPON_PREFIX = '/coupon/';
 
 export function couponPagePath(supplierSlug: string): string {
   return `${COUPON_PREFIX}${supplierSlug}${COUPON_SUFFIX}`;
@@ -16,7 +16,7 @@ export function supplierSlugFromCouponSegment(segment: string): string | null {
   return slug.length > 0 ? slug : null;
 }
 
-/** Same as {@link supplierSlugFromCouponSegment}, for a full path such as "/coupons/amino-club-coupon-code". */
+/** Same as {@link supplierSlugFromCouponSegment}, for a full path such as "/coupon/amino-club-coupon-code". */
 export function supplierSlugFromCouponPath(path: string): string | null {
   if (!path.startsWith(COUPON_PREFIX)) return null;
   const segment = path.slice(COUPON_PREFIX.length);

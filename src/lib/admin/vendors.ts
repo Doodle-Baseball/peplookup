@@ -43,7 +43,7 @@ function slugify(name: string): string {
 }
 
 /**
- * Same order as the public /suppliers directory (see `orderSuppliersForDisplay`):
+ * Same order as the public /supplier directory (see `orderSuppliersForDisplay`):
  * a dragged position wins outright, Featured and the reviews/coupon score
  * only rank the rest. Vendors here include inactive ones (the admin needs to
  * see and reactivate them), so this can't just call the public

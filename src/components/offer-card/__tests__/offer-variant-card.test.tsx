@@ -32,7 +32,7 @@ const PRODUCT: CatalogProduct = {
   key: 'bpc-157',
   slug: 'bpc-157',
   name: 'BPC-157',
-  compareHref: '/products/bpc-157',
+  compareHref: '/product/bpc-157',
   variants: [
     variant({ key: 'a', optionLabel: '5mg' }),
     variant({

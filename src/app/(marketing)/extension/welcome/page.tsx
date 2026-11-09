@@ -79,7 +79,7 @@ export default function ExtensionWelcomePage() {
 
         <div className="mt-10 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
           <Link
-            href="/coupons"
+            href="/coupon"
             className="btn-3d inline-flex items-center justify-center gap-2 rounded-chip bg-brand px-7 py-3.5 text-sm font-bold text-white"
           >
             <TagIcon className="h-4 w-4" />

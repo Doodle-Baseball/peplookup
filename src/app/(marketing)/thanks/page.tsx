@@ -212,7 +212,7 @@ export default function VendorListingThanksPage({
             <ArrowRightIcon className="h-4 w-4" />
           </Link>
           <Link
-            href="/suppliers"
+            href="/supplier"
             className="inline-flex items-center justify-center gap-2 rounded-chip border border-line bg-surface-raised px-7 py-3.5 text-sm font-bold text-content shadow-card transition-colors hover:border-brand"
           >
             <StoreIcon className="h-4 w-4" />

@@ -232,7 +232,7 @@ export function supplierHasReviews(supplier: Supplier, storedSlugs: ReadonlySet<
  * Featured pins to the top only among vendors nobody has ever dragged, and
  * the reviews/coupon score breaks ties within that.
  *
- * Both /admin/vendors and the public /suppliers directory used to compute
+ * Both /admin/vendors and the public /supplier directory used to compute
  * this independently, each re-sorting an already position-sorted list by
  * Featured-then-score as if that were the primary key, which discarded a
  * dragged position for any pair that differed on either of those, and let

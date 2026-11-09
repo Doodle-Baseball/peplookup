@@ -25,13 +25,13 @@ export async function listSitePages(): Promise<SitePage[]> {
   ]);
   const paths = [
     ...STATIC_SEO_PAGES.map((page) => page.path),
-    ...products.map((product) => `/products/${product.slug}`),
+    ...products.map((product) => `/product/${product.slug}`),
     ...suppliers.flatMap((supplier) => [
-      `/suppliers/${supplier.slug}`,
+      `/supplier/${supplier.slug}`,
       ...(supplier.coupon ? [couponPagePath(supplier.slug)] : []),
       ...(supplierHasReviews(supplier, slugsWithReviews) ? [reviewsPagePath(supplier.slug)] : []),
     ]),
-    ...guides.map((guide) => `/guides/${guide.slug}`),
+    ...guides.map((guide) => `/guide/${guide.slug}`),
   ];
   return [...new Set(paths)].map((path) => ({ path, type: pageTypeForPath(path) }));
 }

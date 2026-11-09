@@ -135,7 +135,7 @@ export function ProductBrowser({ products, facets }: { products: ProductCardData
                     {suggestions.map((item) => (
                       <li key={item.slug}>
                         <Link
-                          href={`/products/${item.slug}`}
+                          href={`/product/${item.slug}`}
                           onClick={() => setSuggestOpen(false)}
                           className="flex items-center gap-3 border-b border-line px-4 py-3 transition-colors last:border-0 hover:bg-brand-tint"
                         >
@@ -189,7 +189,7 @@ export function ProductBrowser({ products, facets }: { products: ProductCardData
             {products.map((product) => (
               <Link
                 key={product.slug}
-                href={`/products/${product.slug}`}
+                href={`/product/${product.slug}`}
                 className="shrink-0 rounded-pill border border-line bg-surface px-3 py-1.5 text-xs font-semibold text-content transition-colors hover:border-brand hover:bg-brand hover:text-surface"
               >
                 {product.name}

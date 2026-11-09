@@ -1,4 +1,4 @@
-import { supplierPath } from '@/lib/supplier-path';
+import { supplierPath } from '@/lib/site-paths';
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -57,7 +57,7 @@ function SupportedSuppliers({ suppliers }: { suppliers: ExtensionFeedEntry[] | n
     return (
       <p className="mt-6 rounded-card border border-dashed border-line p-10 text-center text-sm text-muted">
         The supported supplier list couldn&rsquo;t be loaded right now. Every code is also on the{' '}
-        <Link href="/coupons" className="font-bold text-brand-strong hover:underline">
+        <Link href="/coupon" className="font-bold text-brand-strong hover:underline">
           coupons page
         </Link>
         .

@@ -469,7 +469,7 @@ export function CompoundCsvImport({ identities }: { identities: CompoundIdentity
                           <Link href={`/admin/compounds/${outcome.slug}/edit`} className="text-brand hover:underline">
                             Edit
                           </Link>
-                          <Link href={`/products/${outcome.slug}`} target="_blank" className="text-brand hover:underline">
+                          <Link href={`/product/${outcome.slug}`} target="_blank" className="text-brand hover:underline">
                             View page
                           </Link>
                         </span>

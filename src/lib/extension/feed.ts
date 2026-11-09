@@ -31,7 +31,7 @@ export interface ExtensionFeedEntry {
 }
 
 /**
- * Public by design: everything here is already shown on /coupons and the
+ * Public by design: everything here is already shown on /coupon and the
  * supplier pages. It is built field by field from an allow-list, never by
  * spreading a supplier record, so a private column added later can't leak.
  */
@@ -42,7 +42,7 @@ export interface ExtensionFeed {
   suppliers: ExtensionFeedEntry[];
 }
 
-/** The badge text /coupons shows on each card, so the extension reads exactly the same offer. */
+/** The badge text /coupon shows on each card, so the extension reads exactly the same offer. */
 export function couponDiscountText(percentOff: number): string {
   return `${percentOff}% Off Sitewide`;
 }
@@ -86,7 +86,7 @@ function latest(dates: readonly string[]): string | null {
 
 /**
  * Suppliers the extension shows: active, with a coupon code and percentage
- * (what /coupons lists), switched on for the extension, and with at least one
+ * (what /coupon lists), switched on for the extension, and with at least one
  * store domain to match against. Biggest discount first, then by name.
  */
 export function buildExtensionFeed(
@@ -115,7 +115,7 @@ export function buildExtensionFeed(
     discount: couponDiscountText(coupon.percentOff),
     code,
     offerUrl: `${origin}${extensionOfferPath(supplier.slug)}`,
-    profileUrl: `${origin}/suppliers/${supplier.slug}`,
+    profileUrl: `${origin}/supplier/${supplier.slug}`,
     logoUrl: absoluteUrl(origin, supplier.logoUrl) ?? absoluteUrl(origin, supplier.faviconUrl),
     trustpilot: trustpilotFor(supplier),
   }));
