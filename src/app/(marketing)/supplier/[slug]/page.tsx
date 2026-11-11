@@ -9,11 +9,9 @@ import {
   getOffersForSupplier,
   getProducts,
   getSupplierReviews,
-  getSupplierSlugsWithReviews,
-  supplierHasReviews,
 } from '@/lib/repository';
 import { couponPagePath } from '@/lib/coupon-pages';
-import { reviewsPagePath } from '@/lib/review-pages';
+import { featuredReviews } from '@/lib/featured-reviews';
 import { formatDate } from '@/lib/format';
 import type { Offer, Product } from '@/lib/schema';
 import { cn } from '@/lib/cn';
@@ -42,6 +40,10 @@ import {
 import { PageFaqSection } from '@/components/faq/page-faq-section';
 import { SupplierContentSections } from '@/components/supplier-content/supplier-content-sections';
 import { SupplierGlanceTable, SupplierPriceComparison } from '@/components/supplier-card/supplier-facts-sections';
+import { SupplierMarketSection } from '@/components/supplier-card/supplier-market-section';
+import { SupplierLegitSection } from '@/components/supplier-card/supplier-legit-section';
+import { supplierFaqs, supplierLegitSummary } from '@/lib/supplier-legit';
+import { supplierMarketRows } from '@/lib/supplier-market-rows';
 import { supplierPageUsesContentV2 } from '@/lib/seo/protected';
 import { getSupplierFacts } from '@/lib/supplier-facts-store';
 import {
@@ -65,9 +67,51 @@ import { getRewriteFacts } from '@/lib/supplier-page-rewrite-store';
 /** How many other vendors show in "Explore more vendors". */
 const EXPLORE_VENDOR_COUNT = 6;
 
+/**
+ * Suppliers whose reviews + COA panel sits after "vs other suppliers" (just
+ * before the FAQ), whose "Why researchers choose" box is dropped, whose
+ * "vs other suppliers" text is replaced by the live price table and whose
+ * COA cards leave out the size chips, at the site owner's request. Every
+ * other supplier keeps the default layout.
+ */
+const TRUST_PANEL_AFTER_COMPARE: ReadonlySet<string> = new Set(['nura-peptide']);
+
+/** Reviews the compact panel on those pages shows: the best few, as short excerpts. */
+const FEATURED_REVIEW_COUNT = 3;
+
 /** The COA link a listing carries, with the same precedence /coas uses. */
 function coaUrlOf(offer: Offer): string | null {
   return offer.labReport?.reportUrl ?? offer.labReport?.labUrl ?? offer.coaUrl ?? null;
+}
+
+/**
+ * One COA per product. A link several different products share is the
+ * vendor's general COA page, not a report on any one compound, so a product's
+ * own report is preferred; among its own reports, the one covering the most
+ * listed sizes. A product with only the general page keeps that link, as it
+ * is still the only COA we hold for that compound.
+ */
+function oneCoaPerProduct<T extends { productName: string; url: string; sizes: readonly string[] }>(
+  reports: readonly T[],
+): T[] {
+  const productsByUrl = new Map<string, Set<string>>();
+  for (const report of reports) {
+    const products = productsByUrl.get(report.url) ?? new Set<string>();
+    products.add(report.productName);
+    productsByUrl.set(report.url, products);
+  }
+  const isGeneralPage = (url: string) => (productsByUrl.get(url)?.size ?? 0) > 1;
+  const chosen = new Map<string, T>();
+  for (const report of reports) {
+    const current = chosen.get(report.productName);
+    const isBetter =
+      current === undefined ||
+      (isGeneralPage(current.url) && !isGeneralPage(report.url)) ||
+      (isGeneralPage(current.url) === isGeneralPage(report.url) && report.sizes.length > current.sizes.length);
+    if (isBetter) chosen.set(report.productName, report);
+  }
+  // Kept in the incoming (alphabetical) order.
+  return reports.filter((report) => chosen.get(report.productName) === report);
 }
 
 /** What the supplier's title and description may state: how many products it prices and how many COAs we link. */
@@ -145,7 +189,7 @@ export default async function SupplierPage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ pq?: string; page?: string; form?: string; size?: string }>;
+  searchParams: Promise<{ pq?: string; page?: string; form?: string; size?: string; msort?: string }>;
 }) {
   const { slug } = await params;
   // The SEO override is keyed by path, so it needs only the slug, fetching it
@@ -153,18 +197,17 @@ export default async function SupplierPage({
   const [supplier, seo] = await Promise.all([getSupplier(slug), getSeoOverride(`/supplier/${slug}`)]);
   if (!supplier) notFound();
 
-  const { pq, page: pageParam, form: formParam, size: sizeParam } = await searchParams;
+  const { pq, page: pageParam, form: formParam, size: sizeParam, msort } = await searchParams;
   const catalogueQuery = (pq ?? '').trim();
 
   // One query for every compound up front instead of one round trip per
   // distinct product among this vendor's offers.
-  const [offers, allProducts, reviews, allSuppliers, marketOffers, slugsWithReviews] = await Promise.all([
+  const [offers, allProducts, reviews, allSuppliers, marketOffers] = await Promise.all([
     getOffersForSupplier(supplier.slug),
     getProducts(),
     getSupplierReviews(supplier),
     getSuppliers(),
     getAllOffers(),
-    getSupplierSlugsWithReviews(),
   ]);
   const supplierContent = await getSupplierContent(supplier, marketOffers);
   // Content v2 (CONTENT_V2=true, never on the hand-written protected pages):
@@ -222,7 +265,6 @@ export default async function SupplierPage({
   const seoDefaults = rewrite
     ? { ...baseSeoDefaults, title: rewriteSeoTitle(rewrite), description: rewriteSeoDescription(rewrite) }
     : baseSeoDefaults;
-  const reviewsPage = supplierHasReviews(supplier, slugsWithReviews) ? reviewsPagePath(supplier.slug) : null;
 
   // Only facts we actually hold for this vendor, no placeholder scores.
   const glance: { label: string; value: string; hint?: string }[] = [
@@ -230,6 +272,34 @@ export default async function SupplierPage({
     ...(supplier.labScore !== null ? [{ label: 'Lab score', value: `${supplier.labScore.toFixed(1)}/10` }] : []),
     ...(supplier.foundedYear !== null ? [{ label: 'Established', value: String(supplier.foundedYear) }] : []),
   ];
+
+  const trustPanelAfterCompare = TRUST_PANEL_AFTER_COMPARE.has(supplier.slug);
+  // The "vs other suppliers" text becomes a live single-vial price table on these pages.
+  const marketRows = trustPanelAfterCompare
+    ? supplierMarketRows({
+        supplierSlug: supplier.slug,
+        marketOffers,
+        activeSupplierSlugs: new Set(allSuppliers.filter((entry) => entry.isActive).map((entry) => entry.slug)),
+        productNames: new Map(allProducts.map((product) => [product.slug, product.name])),
+      })
+    : [];
+  // Without size chips, several cards with one product name read as duplicates, so these pages show one COA per product.
+  const shownCoaReports = trustPanelAfterCompare ? oneCoaPerProduct(coaReports) : coaReports;
+  // Reviews appear only when this vendor has some; the COA box always shows.
+  const trustPanel = (
+    <SupplierTrustPanel
+      supplierName={supplier.name}
+      supplierSlug={supplier.slug}
+      reviews={trustPanelAfterCompare ? featuredReviews(reviews, FEATURED_REVIEW_COUNT) : reviews}
+      reviewsUrl={supplier.reviewsUrl}
+      reviewRating={supplier.reviewRating}
+      reviewCount={supplier.reviewCount}
+      labName={supplier.coaLabName}
+      coaReports={shownCoaReports}
+      showCoaSizes={!trustPanelAfterCompare}
+      compact={trustPanelAfterCompare}
+    />
+  );
 
   return (
     <div className="relative isolate overflow-hidden">
@@ -416,22 +486,28 @@ export default async function SupplierPage({
           className="mt-12"
         />
 
-        {/* Reviews appear only when this vendor has some; the COA box always shows. */}
-        <SupplierTrustPanel
-          supplierName={supplier.name}
-          supplierSlug={supplier.slug}
-          reviews={reviews}
-          reviewsUrl={supplier.reviewsUrl}
-          reviewRating={supplier.reviewRating}
-          reviewCount={supplier.reviewCount}
-          reviewsPagePath={reviewsPage}
-          labName={supplier.coaLabName}
-          coaReports={coaReports}
-        />
+        {trustPanelAfterCompare ? null : trustPanel}
 
         {/* About / Why researchers choose / vs other suppliers, editable per
             vendor from the supplier's popup in /admin/seo. */}
-        {v2 ? (
+        {trustPanelAfterCompare ? (
+          <>
+            <SupplierContentSections vendorName={supplier.name} content={supplierContent} keys={['about']} className="mt-12" />
+            <SupplierLegitSection
+              supplierName={supplier.name}
+              summary={supplierLegitSummary(supplier, shownCoaReports.length)}
+              className="mt-4 sm:mt-6"
+            />
+            <SupplierMarketSection
+              title={supplierContent.compare.title}
+              supplierName={supplier.name}
+              rows={marketRows}
+              couponCode={supplier.coupon?.code ?? null}
+              sortParam={msort}
+              className="mt-4 sm:mt-6"
+            />
+          </>
+        ) : v2 ? (
           <>
             {/* Content v2: the About box stays; "Why researchers choose" is hidden and
                 "vs other suppliers" becomes a price table. */}
@@ -442,12 +518,14 @@ export default async function SupplierPage({
           <SupplierContentSections vendorName={supplier.name} content={supplierContent} className="mt-12" />
         )}
 
+        {trustPanelAfterCompare ? trustPanel : null}
+
         {/* FAQs for this vendor, generated from their own record until a set is
             saved for this path in /admin/seo. */}
         <PageFaqSection
           path={`/supplier/${supplier.slug}`}
           className="mt-14"
-          items={rewrite ? rewriteFaqs(rewrite) : undefined}
+          items={rewrite ? rewriteFaqs(rewrite) : trustPanelAfterCompare ? supplierFaqs(supplier, shownCoaReports.length) : undefined}
           pick={
             contentV2
               ? (faqs) => supplierSpecificFaqs(faqs.filter((faq) => !isComparisonToolAnswer(faq.answer)), supplier)

@@ -61,7 +61,7 @@ const BLEND_NAMES: Readonly<Record<string, string>> = {
 };
 
 /** Listed on the site as a reconstitution supply, not a peptide; its size is not in mg. */
-const NON_PEPTIDE_SLUGS: ReadonlySet<string> = new Set(['bacteriostatic-water']);
+export const NON_PEPTIDE_SLUGS: ReadonlySet<string> = new Set(['bacteriostatic-water']);
 
 /**
  * Nasal sprays whose stored mg doesn't fit their price (NAD+ at ~87x and SS-31
