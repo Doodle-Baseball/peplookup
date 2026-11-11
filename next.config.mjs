@@ -28,9 +28,10 @@ const nextConfig = {
       // The supplier listing page used to live at /partners and at /vendor-listing.
       { source: '/partners', destination: '/supplier-listing', statusCode: 301 },
       { source: '/vendor-listing', destination: '/supplier-listing', statusCode: 301 },
-      // Vendor coupon and reviews pages live under /coupon and /review; these were their addresses at the site root first.
+      // Vendor coupon pages live under /coupon; this was their address at the site root first.
       { source: '/:slug-coupon-code', destination: '/coupon/:slug-coupon-code', statusCode: 301 },
-      { source: '/:slug-reviews', destination: '/review/:slug-reviews', statusCode: 301 },
+      // Vendor reviews pages were folded into the supplier profile (see src/middleware.ts); the old root address goes straight there.
+      { source: '/:slug-reviews', destination: '/supplier/:slug', statusCode: 301 },
       // The COA directory lived at /lab-reports until November 2026.
       { source: '/lab-reports', destination: '/coas', statusCode: 301 },
     ];

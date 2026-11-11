@@ -32,3 +32,13 @@ export function singularPath(path: string): string | null {
 export function supplierPath(slug: string): string {
   return `/supplier/${slug}`;
 }
+
+/**
+ * Supplier review pages were folded into the supplier profile, so each old address answers with a
+ * 301 to it: "/review/amino-club-reviews" (and the bare "/review/amino-club") become
+ * "/supplier/amino-club". The /review index itself is not matched; it still lists every supplier.
+ */
+export function reviewPageRedirect(path: string): string | null {
+  const match = /^\/review\/([^/]+?)(?:-reviews)?\/?$/.exec(path);
+  return match ? supplierPath(match[1]!) : null;
+}

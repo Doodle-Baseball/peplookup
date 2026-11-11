@@ -51,7 +51,7 @@ type SupplierRecord = Pick<
   'slug' | 'name' | 'coupon' | 'couponVerifiedAt' | 'foundedYear' | 'country' | 'paymentMethods' | 'coaLabName'
 >;
 
-function toListing(offer: Offer): Listing {
+export function toListing(offer: Offer): Listing {
   return {
     supplierSlug: offer.supplierSlug,
     productSlug: offer.productSlug,

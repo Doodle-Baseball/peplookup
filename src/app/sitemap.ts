@@ -4,9 +4,7 @@ import {
   getAllOffers,
   getGuides,
   getProducts,
-  getSupplierSlugsWithReviews,
   getSuppliers,
-  supplierHasReviews,
 } from '@/lib/repository';
 import { getIndexDecisions, getSeoOverridesByPath } from '@/lib/seo';
 import { listSitePages } from '@/lib/seo/site-pages';
@@ -21,12 +19,11 @@ export const revalidate = 3600;
  * stayed listed). Which URLs qualify is decided in buildSitemapEntries.
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [products, suppliers, offers, guides, slugsWithReviews, seoByPath] = await Promise.all([
+  const [products, suppliers, offers, guides, seoByPath] = await Promise.all([
     getProducts(),
     getSuppliers(),
     getAllOffers(),
     getGuides(),
-    getSupplierSlugsWithReviews(),
     getSeoOverridesByPath(),
   ]);
 
@@ -40,7 +37,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     suppliers: suppliers.map((supplier) => ({
       slug: supplier.slug,
       hasCoupon: supplier.coupon !== null,
-      hasReviews: supplierHasReviews(supplier, slugsWithReviews),
       inventoryRefreshedAt: supplier.inventoryRefreshedAt,
     })),
     guides,

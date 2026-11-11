@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { ADMIN_SESSION_COOKIE, verifyAdminSessionToken } from '@/lib/admin-auth';
 import { getRedirectTarget } from '@/lib/seo-redirects';
-import { singularPath } from '@/lib/site-paths';
+import { reviewPageRedirect, singularPath } from '@/lib/site-paths';
 
 async function handleAdminRoute(request: NextRequest): Promise<NextResponse> {
   const { pathname } = request.nextUrl;
@@ -20,6 +20,7 @@ async function handleAdminRoute(request: NextRequest): Promise<NextResponse> {
  * Sends anyone with an old address to the page's current one, in a single hop:
  *  - the five section roots went from plural to singular (/suppliers/x is now /supplier/x, and
  *    likewise /products, /coupons, /reviews and /guides);
+ *  - supplier review pages (/review/x-reviews) were folded into the supplier profile (/supplier/x);
  *  - a compound, supplier or guide renamed from /admin/seo leaves a row in seo_redirects
  *    (see 0010_seo_management.sql), so a renamed slug is resolved in the same step.
  * A bookmark, an old backlink or a search result that hasn't been recrawled yet lands on the
@@ -28,7 +29,8 @@ async function handleAdminRoute(request: NextRequest): Promise<NextResponse> {
 async function handlePublicRoute(request: NextRequest): Promise<NextResponse> {
   const { pathname, search } = request.nextUrl;
   const singular = singularPath(pathname);
-  const target = (await getRedirectTarget(singular ?? pathname)) ?? singular;
+  const moved = reviewPageRedirect(singular ?? pathname) ?? singular;
+  const target = (await getRedirectTarget(moved ?? pathname)) ?? moved;
   if (!target) return NextResponse.next();
   const redirectUrl = new URL(target, request.url);
   redirectUrl.search = search;
@@ -45,7 +47,7 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   // Only the paths this middleware acts on: the admin guard, the five old section roots (which
-  // redirect to the singular ones), and the three sections whose slugs can be renamed (and so
+  // redirect to the singular ones), the old supplier review pages (which redirect to the profile), and the three sections whose slugs can be renamed (and so
   // have redirect rows). Every other request, including static assets and Next internals,
   // skips it, so a redirect lookup is never spent on a page that cannot have one.
   matcher: [
@@ -55,6 +57,7 @@ export const config = {
     '/coupons/:path*',
     '/reviews/:path*',
     '/guides/:path*',
+    '/review/:path+',
     '/supplier/:path*',
     '/product/:path*',
     '/guide/:path*',

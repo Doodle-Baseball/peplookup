@@ -11,7 +11,8 @@ import { PageFaqSection } from '@/components/faq/page-faq-section';
 import { StarIcon } from '@/components/icons/icons';
 import { PageSeo } from '@/components/seo/page-seo';
 import { compareReviewVendors, DEFAULT_REVIEW_SORT } from '@/components/reviews/review-sort';
-import { ratingSourceLabel, reviewsPagePath } from '@/lib/review-pages';
+import { ratingSourceLabel } from '@/lib/review-pages';
+import { supplierPath } from '@/lib/site-paths';
 import Link from 'next/link';
 import { getExtensionFeed } from '@/lib/extension/store';
 import { ExtensionPromoPill, ExtensionPromoSection, previewSupplierFrom } from '@/components/extension/extension-promo';
@@ -75,7 +76,7 @@ export default async function ReviewsPage() {
 
   const reviewItems = [...vendors].sort(compareReviewVendors(DEFAULT_REVIEW_SORT)).map((vendor) => ({
     name: vendor.name,
-    url: reviewsPagePath(vendor.slug),
+    url: supplierPath(vendor.slug),
   }));
 
   return (

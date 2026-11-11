@@ -16,7 +16,7 @@ import {
   TagIcon,
 } from '@/components/icons/icons';
 import { cn } from '@/lib/cn';
-import { reviewsPagePath } from '@/lib/review-pages';
+import { supplierPath } from '@/lib/site-paths';
 import { compareReviewVendors, DEFAULT_REVIEW_SORT, type ReviewSortKey } from '@/components/reviews/review-sort';
 
 /** What a vendor card needs; plain data so the server page can pass it across. */
@@ -195,7 +195,7 @@ export function ReviewsBrowser({ vendors }: { vendors: ReviewVendor[] }) {
                 />
                 <div className="min-w-0">
                   <h2 className="truncate text-lg font-black leading-tight text-content">
-                    <Link href={reviewsPagePath(vendor.slug)} className="transition-colors hover:text-accent">
+                    <Link href={supplierPath(vendor.slug)} className="transition-colors hover:text-accent">
                       {vendor.name}
                     </Link>
                   </h2>
@@ -240,7 +240,7 @@ export function ReviewsBrowser({ vendors }: { vendors: ReviewVendor[] }) {
                   <ExternalIcon className="h-4 w-4" />
                 </a>
                 <Link
-                  href={reviewsPagePath(vendor.slug)}
+                  href={supplierPath(vendor.slug)}
                   className="group/details inline-flex items-center gap-1 text-sm font-bold text-accent-strong transition-colors hover:text-accent"
                 >
                   Full details
