@@ -4,13 +4,10 @@ import Link from 'next/link';
 import {
   getOffersForSupplier,
   getProducts,
-  getSupplierSlugsWithReviews,
   getSuppliers,
-  supplierHasReviews,
 } from '@/lib/repository';
 import { site } from '@/config/site';
 import { couponPagePath } from '@/lib/coupon-pages';
-import { reviewsPagePath } from '@/lib/review-pages';
 import { formatDate } from '@/lib/format';
 import { loadCouponPageOrExit } from '@/lib/coupon-page-route';
 import { supplierGoPath } from '@/lib/go-links';
@@ -85,12 +82,11 @@ export default async function CouponCodePage({ params }: { params: Promise<{ slu
   const { supplier, coupon } = await loadCouponPageOrExit(slug);
 
   const path = couponPagePath(supplier.slug);
-  const [seo, offers, allProducts, content, slugsWithReviews] = await Promise.all([
+  const [seo, offers, allProducts, content] = await Promise.all([
     getSeoOverride(path),
     getOffersForSupplier(supplier.slug),
     getProducts(),
     getCouponPageContent(supplier, coupon),
-    getSupplierSlugsWithReviews(),
   ]);
 
   const productsBySlug = new Map(allProducts.map((p) => [p.slug, p]));
@@ -106,7 +102,6 @@ export default async function CouponCodePage({ params }: { params: Promise<{ slu
   const productCount = resolvedOffers.length;
   // Shown only when someone has actually tested the code; never "verified" without a date.
   const lastTested = supplier.couponVerifiedAt ?? null;
-  const reviewsPage = supplierHasReviews(supplier, slugsWithReviews) ? reviewsPagePath(supplier.slug) : null;
   // Content v2: what the code does to this supplier's real prices, a table no other page carries.
   const couponRows = isContentV2() ? (await getSupplierFacts(supplier)).couponRows : [];
   // Purity, testing and same-day wording follows the same rules as the supplier page (A7).
@@ -312,15 +307,6 @@ export default async function CouponCodePage({ params }: { params: Promise<{ slu
             See all {supplier.name} products and prices
             <ArrowRightIcon className="h-4 w-4 transition-transform group-hover/profile:translate-x-1" />
           </Link>
-          {reviewsPage ? (
-            <Link
-              href={reviewsPage}
-              className="group/reviews inline-flex items-center gap-2 rounded-pill border border-line bg-surface-raised px-4 py-2.5 text-sm font-bold text-content transition-colors hover:border-accent hover:text-accent-strong"
-            >
-              Read {supplier.name} reviews
-              <ArrowRightIcon className="h-4 w-4 transition-transform group-hover/reviews:translate-x-1" />
-            </Link>
-          ) : null}
         </nav>
 
         <p className="mt-6 text-center text-xs leading-5 text-faint">

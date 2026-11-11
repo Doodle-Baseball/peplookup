@@ -2,7 +2,6 @@ import type { MetadataRoute } from 'next';
 import { site } from '@/config/site';
 import { guideHasContent, type Guide } from '@/data/guides';
 import { couponPagePath } from '@/lib/coupon-pages';
-import { reviewsPagePath } from '@/lib/review-pages';
 
 /** The part of an /admin/seo override the sitemap still reads itself: the canonical. */
 export interface SitemapSeoFields {
@@ -12,7 +11,6 @@ export interface SitemapSeoFields {
 export interface SitemapSupplier {
   slug: string;
   hasCoupon: boolean;
-  hasReviews: boolean;
   inventoryRefreshedAt: string | null;
 }
 
@@ -93,11 +91,9 @@ export function buildSitemapEntries(input: SitemapInput): MetadataRoute.Sitemap 
       ]);
       const profile = `/supplier/${supplier.slug}`;
       const coupon = couponPagePath(supplier.slug);
-      const reviews = reviewsPagePath(supplier.slug);
       return [
         ...(listable(profile) ? [{ path: profile, lastModified }] : []),
         ...(supplier.hasCoupon && listable(coupon) ? [{ path: coupon, lastModified }] : []),
-        ...(supplier.hasReviews && listable(reviews) ? [{ path: reviews, lastModified }] : []),
       ];
     }),
     ...publishedGuides
