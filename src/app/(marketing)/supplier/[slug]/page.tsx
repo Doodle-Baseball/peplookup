@@ -10,7 +10,6 @@ import {
   getProducts,
   getSupplierReviews,
 } from '@/lib/repository';
-import { couponPagePath } from '@/lib/coupon-pages';
 import { featuredReviews } from '@/lib/featured-reviews';
 import { formatDate } from '@/lib/format';
 import type { Offer, Product } from '@/lib/schema';
@@ -54,7 +53,6 @@ import {
 } from '@/lib/supplier-facts';
 import { getFaqsForPath } from '@/lib/page-faqs';
 import { getSupplierContent } from '@/lib/supplier-content-store';
-import { SUPPLIER_PAGE_AUTHOR } from '@/config/site';
 import {
   isRewrittenSupplierPage,
   rewriteFaqs,
@@ -75,6 +73,12 @@ const EXPLORE_VENDOR_COUNT = 6;
  * other supplier keeps the default layout.
  */
 const TRUST_PANEL_AFTER_COMPARE: ReadonlySet<string> = new Set(['nura-peptide']);
+
+/**
+ * Suppliers whose reviews and COA panel only moves below "vs other suppliers",
+ * at the site owner's request; the panel and the rest of the page stay as they are.
+ */
+const TRUST_PANEL_MOVED_ONLY: ReadonlySet<string> = new Set(['pspeptides']);
 
 /** Reviews the compact panel on those pages shows: the best few, as short excerpts. */
 const FEATURED_REVIEW_COUNT = 3;
@@ -274,6 +278,7 @@ export default async function SupplierPage({
   ];
 
   const trustPanelAfterCompare = TRUST_PANEL_AFTER_COMPARE.has(supplier.slug);
+  const trustPanelBelowContent = trustPanelAfterCompare || TRUST_PANEL_MOVED_ONLY.has(supplier.slug);
   // The "vs other suppliers" text becomes a live single-vial price table on these pages.
   const marketRows = trustPanelAfterCompare
     ? supplierMarketRows({
@@ -304,7 +309,7 @@ export default async function SupplierPage({
   return (
     <div className="relative isolate overflow-hidden">
       {/* Supplier profiles keep the soft colour washes but drop the dot grid. */}
-      <PatternBackdrop dots={false} />
+      <PatternBackdrop dots={false} fadeTop />
 
       <div className="mx-auto max-w-shell px-4 py-8 sm:py-10">
         <PageSeo
@@ -368,10 +373,7 @@ export default async function SupplierPage({
 
                 {supplier.updatedAt ? (
                   <p className="mt-2 text-sm text-muted">
-                    Last checked <time dateTime={supplier.updatedAt}>{formatDate(supplier.updatedAt)}</time> by{' '}
-                    <Link href={SUPPLIER_PAGE_AUTHOR.href} className="font-bold text-accent-strong hover:underline">
-                      {SUPPLIER_PAGE_AUTHOR.name}
-                    </Link>
+                    Last checked <time dateTime={supplier.updatedAt}>{formatDate(supplier.updatedAt)}</time>
                   </p>
                 ) : null}
 
@@ -458,12 +460,6 @@ export default async function SupplierPage({
                   offer cards keep their own tighter padding. */}
               <div className="flex flex-col items-start gap-2 sm:items-end">
                 <CopyCode code={supplier.coupon.code} className="px-4 py-2.5" />
-                <Link
-                  href={couponPagePath(supplier.slug)}
-                  className="text-sm font-bold text-coupon-ink underline-offset-2 hover:underline"
-                >
-                  How to use the {supplier.name} coupon code
-                </Link>
               </div>
             </div>
           ) : null}
@@ -473,6 +469,11 @@ export default async function SupplierPage({
 
         {/* ---------------------------------------------------- Store details */}
         <StoreDetailsSection supplier={supplier} className="mt-12" />
+
+        {/* On the simplified pages the About box leads into the catalogue. */}
+        {trustPanelAfterCompare ? (
+          <SupplierContentSections vendorName={supplier.name} content={supplierContent} keys={['about']} className="mt-12" />
+        ) : null}
 
         {/* ---------------------------------------------------------- Catalog */}
         <SupplierCatalogSection
@@ -486,20 +487,24 @@ export default async function SupplierPage({
           className="mt-12"
         />
 
-        {trustPanelAfterCompare ? null : trustPanel}
+        {trustPanelBelowContent ? null : trustPanel}
 
         {/* About / Why researchers choose / vs other suppliers, editable per
             vendor from the supplier's popup in /admin/seo. */}
         {trustPanelAfterCompare ? (
           <>
-            <SupplierContentSections vendorName={supplier.name} content={supplierContent} keys={['about']} className="mt-12" />
             <SupplierLegitSection
               supplierName={supplier.name}
               summary={supplierLegitSummary(supplier, shownCoaReports.length)}
-              className="mt-4 sm:mt-6"
+              className="mt-12"
             />
             <SupplierMarketSection
-              title={supplierContent.compare.title}
+              title={
+                <>
+                  {/* Same accent as the About and "legit?" headings above it. */}
+                  <span className="text-accent">{supplier.name}</span> vs market average prices
+                </>
+              }
               supplierName={supplier.name}
               rows={marketRows}
               couponCode={supplier.coupon?.code ?? null}
@@ -518,14 +523,14 @@ export default async function SupplierPage({
           <SupplierContentSections vendorName={supplier.name} content={supplierContent} className="mt-12" />
         )}
 
-        {trustPanelAfterCompare ? trustPanel : null}
+        {trustPanelBelowContent ? trustPanel : null}
 
         {/* FAQs for this vendor, generated from their own record until a set is
             saved for this path in /admin/seo. */}
         <PageFaqSection
           path={`/supplier/${supplier.slug}`}
           className="mt-14"
-          items={rewrite ? rewriteFaqs(rewrite) : trustPanelAfterCompare ? supplierFaqs(supplier, shownCoaReports.length) : undefined}
+          items={rewrite ? rewriteFaqs(rewrite) : trustPanelAfterCompare ? supplierFaqs(supplier) : undefined}
           pick={
             contentV2
               ? (faqs) => supplierSpecificFaqs(faqs.filter((faq) => !isComparisonToolAnswer(faq.answer)), supplier)

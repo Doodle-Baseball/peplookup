@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { cn } from '@/lib/cn';
 import type { SupplierMarketRow } from '@/lib/supplier-market-rows';
 import { parseMarketSort } from '@/lib/supplier-market-sort';
@@ -12,7 +13,7 @@ export function SupplierMarketSection({
   sortParam,
   className,
 }: {
-  title: string;
+  title: ReactNode;
   supplierName: string;
   rows: readonly SupplierMarketRow[];
   couponCode: string | null;
@@ -34,7 +35,8 @@ export function SupplierMarketSection({
         {title}
       </h2>
       <p className="mt-2 max-w-3xl text-sm leading-6 text-muted sm:text-base">
-        Compare {supplierName}&apos;s prices with other suppliers offering the exact same compound and vial size.
+        See how {supplierName}&apos;s prices compare with the average market price for the exact same compound and vial
+        size.
         {couponCode ? ` Prices are shown before applying the ${couponCode} discount.` : null}
       </p>
       <SupplierMarketTable supplierName={supplierName} rows={rows} initialSort={parseMarketSort(sortParam)} />
