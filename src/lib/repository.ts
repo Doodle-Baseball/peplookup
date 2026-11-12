@@ -17,7 +17,7 @@ import { fetchGuidesFromDb } from './supabase/guides';
 import { findVendorReviewProfile } from '@/data/vendor-reviews';
 import { guides as seedGuides, type Guide } from '@/data/guides';
 import { fetchProductsFromDb, fetchProductFromDb } from './supabase/products';
-import { fetchOffersFromDb } from './supabase/offers';
+import { compareOffersNewestFirst, fetchOffersFromDb, OFFER_SHARD_COUNT } from './supabase/offers';
 import type { Offer, Product, Supplier, SupplierReview } from './schema';
 import { CATALOGUE_REVALIDATE_SECONDS, OFFERS_REVALIDATE_SECONDS } from './cache-ttl';
 
@@ -42,24 +42,30 @@ async function readOr<T>(read: () => Promise<T>, fallback: () => T): Promise<T> 
 const seedOffers = (): readonly Offer[] => [...offers];
 
 /**
+ * One slice of the Supabase `offers` table. Cached per slice because the whole
+ * table is over the 2MB a single data-cache entry may hold (see OFFER_SHARD_COUNT).
+ */
+const getOfferShardCached = unstable_cache(
+  async (shard: number): Promise<readonly Offer[]> => {
+    const client = getSupabaseServerClient();
+    if (!client) return [];
+    const fromDb = await fetchOffersFromDb(client, shard);
+    if (fromDb === null) throw new SourceUnavailableError('offers');
+    return fromDb;
+  },
+  ['offers-shard'],
+  { revalidate: OFFERS_REVALIDATE_SECONDS, tags: ['offers'] },
+);
+
+/**
  * Real crawled offers (currently always empty, see src/data/offers.ts),
  * plus admin-entered listings from the "Add Product" panel (Supabase
  * `offers` table).
  */
-const getAllOffersCached = unstable_cache(
-  async (): Promise<readonly Offer[]> => {
-    const client = getSupabaseServerClient();
-    let dbOffers: readonly Offer[] = [];
-    if (client) {
-      const fromDb = await fetchOffersFromDb(client);
-      if (fromDb === null) throw new SourceUnavailableError('offers');
-      dbOffers = fromDb;
-    }
-    return [...offers, ...dbOffers];
-  },
-  ['all-offers'],
-  { revalidate: OFFERS_REVALIDATE_SECONDS, tags: ['offers'] },
-);
+async function getAllOffersCached(): Promise<readonly Offer[]> {
+  const shards = await Promise.all(Array.from({ length: OFFER_SHARD_COUNT }, (_, shard) => getOfferShardCached(shard)));
+  return [...offers, ...shards.flat().sort(compareOffersNewestFirst)];
+}
 
 /**
  * Memoised for the lifetime of one request. A single page can ask for offers

@@ -38,7 +38,10 @@ vi.mock('../supabase/suppliers', () => ({
   fetchSuppliersFromDb: mocks.fetchSuppliersFromDb,
   fetchSupplierFromDb: mocks.fetchSupplierFromDb,
 }));
-vi.mock('../supabase/offers', () => ({ fetchOffersFromDb: mocks.fetchOffersFromDb }));
+vi.mock('../supabase/offers', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../supabase/offers')>()),
+  fetchOffersFromDb: mocks.fetchOffersFromDb,
+}));
 vi.mock('../supabase/guides', () => ({ fetchGuidesFromDb: mocks.fetchGuidesFromDb }));
 vi.mock('../supabase/supplier-reviews', () => ({ fetchSupplierReviewsFromDb: mocks.fetchSupplierReviewsFromDb }));
 vi.mock('@/lib/seo-redirects', () => ({ getSupplierSlugAliases: async () => new Map<string, string[]>() }));
@@ -60,6 +63,11 @@ const dbOffer: Offer = {
   labReport: null,
   scrapedAt: '2026-09-14T00:00:00.000Z',
 };
+
+/** The database answers each slice of the offers table with these rows, and an empty slice otherwise. */
+function offersInShards(byShard: Record<number, Offer[]>) {
+  mocks.fetchOffersFromDb.mockImplementation(async (_client: unknown, shard: number) => byShard[shard] ?? []);
+}
 
 /** A new copy of the repository, so each case starts with empty caches. */
 async function freshRepository() {
@@ -103,10 +111,10 @@ describe('a Supabase outage while a cache fills', () => {
 
   it('shows no database offers during the outage and picks them up as soon as it ends', async () => {
     const repository = await freshRepository();
-    mocks.fetchOffersFromDb.mockResolvedValueOnce(null);
+    mocks.fetchOffersFromDb.mockResolvedValue(null);
     expect(await repository.getAllOffers()).toEqual([]);
 
-    mocks.fetchOffersFromDb.mockResolvedValueOnce([dbOffer]);
+    offersInShards({ 0: [dbOffer] });
     expect((await repository.getAllOffers()).map((o) => o.productSlug)).toEqual(['db-compound']);
   });
 
@@ -166,17 +174,42 @@ describe('looking up one compound or vendor', () => {
 describe('counting listings per vendor', () => {
   it('groups every offer by vendor in one pass, matching the per-vendor count', async () => {
     const repository = await freshRepository();
-    mocks.fetchOffersFromDb.mockResolvedValue([
-      dbOffer,
-      { ...dbOffer, form: 'capsule' },
-      { ...dbOffer, supplierSlug: 'other-vendor' },
-    ]);
+    offersInShards({
+      0: [dbOffer, { ...dbOffer, form: 'capsule' }],
+      5: [{ ...dbOffer, supplierSlug: 'other-vendor' }],
+    });
 
     const counts = await repository.countProductsBySupplier();
     expect(counts.get('db-vendor')).toBe(await repository.countProductsForSupplier('db-vendor'));
     expect(counts.get('db-vendor')).toBe(2);
     expect(counts.get('other-vendor')).toBe(1);
     expect(counts.get('no-listings')).toBeUndefined();
+  });
+});
+
+describe('reading the offers table in slices', () => {
+  it('reads every slice once and serves them as one list, newest first', async () => {
+    const repository = await freshRepository();
+    offersInShards({
+      1: [{ ...dbOffer, id: '2a', productSlug: 'older', scrapedAt: '2026-09-01T00:00:00.000Z' }],
+      6: [
+        { ...dbOffer, id: 'd1', productSlug: 'newest', scrapedAt: '2026-10-01T00:00:00.000Z' },
+        { ...dbOffer, id: 'd2', productSlug: 'tie-later-id', scrapedAt: '2026-09-01T00:00:00+00:00' },
+      ],
+    });
+
+    expect((await repository.getAllOffers()).map((o) => o.productSlug)).toEqual(['newest', 'older', 'tie-later-id']);
+    await repository.getAllOffers();
+    expect(mocks.fetchOffersFromDb.mock.calls.map(([, shard]) => shard)).toEqual([0, 1, 2, 3, 4, 5, 6, 7]);
+  });
+
+  it('serves no partial list when one slice fails, and stores the slices that worked', async () => {
+    const repository = await freshRepository();
+    mocks.fetchOffersFromDb.mockImplementation(async (_client: unknown, shard: number) => (shard === 3 ? null : [dbOffer]));
+    expect(await repository.getAllOffers()).toEqual([]);
+
+    offersInShards({ 3: [{ ...dbOffer, productSlug: 'back-again' }] });
+    expect((await repository.getAllOffers()).map((o) => o.productSlug)).toContain('back-again');
   });
 });
 

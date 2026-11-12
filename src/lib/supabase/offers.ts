@@ -49,20 +49,49 @@ export function rowToOffer(row: OfferRow): Offer {
 const FETCH_PAGE_SIZE = 1000;
 
 /**
- * One page of the full offer list. `select('*')` rather than an explicit column list
- * because `coa_url` only exists after supabase/migrations/0007_offers_coa_url.sql, and
- * naming a column the table doesn't have yet fails the whole query.
+ * The offer list is read in this many slices of the id range. Next's data cache
+ * refuses any entry over 2MB, and the whole table passed that, so each slice is
+ * cached on its own. A uuid falls in exactly one slice for good, so slices
+ * refreshed at different moments can never repeat or drop a row between them.
  */
-function offersPage(client: SupabaseClient, from: number, withCount: boolean) {
-  return client
+export const OFFER_SHARD_COUNT = 8;
+
+/** Lowest id in a slice. Postgres orders uuids by their bytes, the same order as their lowercase hex. */
+function shardStartId(shard: number): string {
+  const leading = ((shard * 16) / OFFER_SHARD_COUNT).toString(16);
+  return `${leading}0000000-0000-0000-0000-000000000000`;
+}
+
+/**
+ * One page of one slice of the offer list. `select('*')` rather than an explicit column
+ * list because `coa_url` only exists after supabase/migrations/0007_offers_coa_url.sql,
+ * and naming a column the table doesn't have yet fails the whole query.
+ */
+function offersPage(client: SupabaseClient, shard: number, from: number, withCount: boolean) {
+  let query = client
     .from('offers')
     .select('*', withCount ? { count: 'exact' } : undefined)
+    .gte('id', shardStartId(shard));
+  if (shard + 1 < OFFER_SHARD_COUNT) query = query.lt('id', shardStartId(shard + 1));
+  return query
     .order('scraped_at', { ascending: false })
     .order('id', { ascending: true })
     .range(from, from + FETCH_PAGE_SIZE - 1);
 }
 
+/** The order the full list is served in: newest first, ties by id, as one query over the whole table returned it. */
+export function compareOffersNewestFirst(a: Offer, b: Offer): number {
+  const byScraped = Date.parse(b.scrapedAt) - Date.parse(a.scrapedAt);
+  if (byScraped !== 0) return byScraped;
+  const aId = a.id ?? '';
+  const bId = b.id ?? '';
+  return aId < bId ? -1 : aId > bId ? 1 : 0;
+}
+
 /**
+ * Every offer in one slice of the id range (see OFFER_SHARD_COUNT); reading each slice
+ * 0 to OFFER_SHARD_COUNT - 1 covers the table exactly once.
+ *
  * Returns null (not []) on any failure so callers can fall back to the static/demo seed.
  *
  * Paginates in `FETCH_PAGE_SIZE` chunks: a plain unbounded `select` silently truncates to
@@ -74,14 +103,14 @@ function offersPage(client: SupabaseClient, from: number, withCount: boolean) {
  * The first page also asks for the exact row count, so the remaining pages can be fetched
  * in parallel instead of discovering the end one sequential round trip at a time.
  */
-export async function fetchOffersFromDb(client: SupabaseClient): Promise<Offer[] | null> {
-  const first = await offersPage(client, 0, true);
+export async function fetchOffersFromDb(client: SupabaseClient, shard: number): Promise<Offer[] | null> {
+  const first = await offersPage(client, shard, 0, true);
   if (first.error || !first.data) return null;
 
   const total = first.count ?? first.data.length;
   const rest = await Promise.all(
-    Array.from({ length: Math.ceil(total / FETCH_PAGE_SIZE) - 1 }, (_, index) =>
-      offersPage(client, (index + 1) * FETCH_PAGE_SIZE, false),
+    Array.from({ length: Math.max(0, Math.ceil(total / FETCH_PAGE_SIZE) - 1) }, (_, index) =>
+      offersPage(client, shard, (index + 1) * FETCH_PAGE_SIZE, false),
     ),
   );
 
