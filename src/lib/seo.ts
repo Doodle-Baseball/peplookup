@@ -179,7 +179,11 @@ const getSeoDataCached = unstable_cache(
     lastGoodSeoData = data;
     return data;
   },
-  ['seo-data'],
+  // A new key makes the next deploy read fresh settings: Vercel keeps this
+  // cache across deploys, and an "Index" switch saved from a local admin
+  // updates the table without clearing production's copy, which left
+  // /supplier/pspeptides noindex after it was switched on.
+  ['seo-data-v2'],
   // 'suppliers' is revalidated on every vendor save, so a filled-in count follows the directory straight away.
   { revalidate: CATALOGUE_REVALIDATE_SECONDS, tags: [SEO_CACHE_TAG, 'suppliers'] },
 );
