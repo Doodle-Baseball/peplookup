@@ -41,10 +41,10 @@ export default async function MarketingLayout({ children }: { children: React.Re
         <HighlightsBar promo={promotedSupplier} stats={highlightItems(suppliers, offers)} />
       </HideOnPaths>
       <SiteHeader />
-      <ResearchNotice />
       <main id="main" className="flex-1">
         {children}
       </main>
+      <ResearchNotice />
       <SiteFooter />
       {/* Custom head/body code from /admin/seo, per page. */}
       <SeoInjector injections={seoInjections} />

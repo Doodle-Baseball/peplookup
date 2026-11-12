@@ -20,9 +20,9 @@ export interface SupplierMarketRow {
   /** The supplier's cheapest in-stock vial of this size, sale price when it has one. */
   price: Cents;
   currency: Currency;
-  /** Median of each other supplier's cheapest in-stock vial of the same size, cents. */
-  othersMedianPrice: number;
-  /** Other suppliers selling this exact vial, the median's sample size. */
+  /** Mean of each other supplier's cheapest in-stock vial of the same size, cents at full precision. */
+  othersAveragePrice: number;
+  /** Other suppliers selling this exact vial, the average's sample size. */
   othersCount: number;
 }
 
@@ -32,12 +32,6 @@ export interface SupplierMarketRow {
  */
 function isSingleMgVial(offer: Offer): boolean {
   return offer.inStock && offer.form === 'vial' && offer.vialCount === 1 && !NON_PEPTIDE_SLUGS.has(offer.productSlug);
-}
-
-function median(values: readonly number[]): number {
-  const sorted = [...values].sort((a, b) => a - b);
-  const middle = Math.floor(sorted.length / 2);
-  return sorted.length % 2 === 1 ? sorted[middle]! : (sorted[middle - 1]! + sorted[middle]!) / 2;
 }
 
 /** Each supplier's cheapest price among the given listings. */
@@ -101,7 +95,7 @@ export function supplierMarketRows({
         vialMcg: vialSize,
         price: cheapestPerSupplier(ownOfSize).get(supplierSlug)!,
         currency,
-        othersMedianPrice: median([...others.values()]),
+        othersAveragePrice: [...others.values()].reduce((total, price) => total + price, 0) / others.size,
         othersCount: others.size,
       };
       const isBetter =

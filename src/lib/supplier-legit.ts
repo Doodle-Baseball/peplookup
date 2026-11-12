@@ -4,80 +4,79 @@ import { site } from '@/config/site';
 import type { FaqItem } from '@/data/default-page-faqs';
 import type { Supplier } from '@/lib/schema';
 
-type LegitSupplier = Pick<
-  Supplier,
-  'name' | 'domainRegisteredAt' | 'reviewRating' | 'reviewCount' | 'reviewsUrl' | 'coaLabName'
->;
-
-/** A store whose website is younger than this is called new. */
-const NEW_STORE_MONTHS = 24;
-
-function domainDate(supplier: Pick<Supplier, 'domainRegisteredAt'>): Date | null {
-  if (!supplier.domainRegisteredAt) return null;
-  const date = new Date(supplier.domainRegisteredAt);
-  return Number.isNaN(date.getTime()) ? null : date;
-}
-
-/** "a third-party lab" for the generic label, otherwise the lab's own name. */
-function labPhrase(coaLabName: string): string {
-  return coaLabName.toLowerCase().startsWith('third-party') ? 'a third-party lab' : coaLabName;
-}
+type LegitSupplier = Pick<Supplier, 'name' | 'reviewRating' | 'reviewCount' | 'reviewsUrl' | 'coaLabName'>;
 
 /**
  * "Is {Name} legit?" in plain words, from the supplier's own record and the
  * COAs the page shows. States only what we hold: a fact we lack gets no
  * sentence, never a placeholder, and the text never passes a verdict.
  */
-export function supplierLegitSummary(supplier: LegitSupplier, coaCount: number, now: Date = new Date()): string {
+export function supplierLegitSummary(supplier: LegitSupplier, coaCount: number): string {
   const sentences: string[] = [];
-  const registered = domainDate(supplier);
-  if (registered) {
-    const ageMonths =
-      (now.getUTCFullYear() - registered.getUTCFullYear()) * 12 + (now.getUTCMonth() - registered.getUTCMonth());
-    if (ageMonths < NEW_STORE_MONTHS) sentences.push(`${supplier.name} is a new store.`);
-    const started = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(registered);
-    sentences.push(`Its website started in ${started}.`);
-  }
+  const hasRating = supplier.reviewRating !== null;
   if (supplier.reviewRating !== null) {
     const count = formatReviewCount(supplier.reviewCount);
     sentences.push(
-      `On ${ratingSourceLabel(supplier.reviewsUrl)}, it has ${supplier.reviewRating.toFixed(1)} out of 5${count ? ` from ${count} reviews` : ''}.`,
+      `${supplier.name} has received customer feedback on ${ratingSourceLabel(supplier.reviewsUrl)}, where it currently holds a ` +
+        `${supplier.reviewRating.toFixed(1)} out of 5 rating${count ? ` from ${count} reviews` : ''}.`,
     );
   }
   if (coaCount > 0) {
-    sentences.push(`We link ${coaCount} of its lab ${coaCount === 1 ? 'report' : 'reports'} (COAs).`);
-    if (supplier.coaLabName) sentences.push(`${supplier.name} says ${labPhrase(supplier.coaLabName)} tests them.`);
-    sentences.push('Check that the lot number on the report matches your vial.');
+    const reports = supplier.coaLabName?.toLowerCase().startsWith('third-party')
+      ? 'published third-party laboratory reports'
+      : 'published laboratory reports';
+    sentences.push(`${hasRating ? 'The supplier also' : `${supplier.name}`} provides access to ${reports} through its COA library.`);
+  }
+  if (sentences.length === 0) return '';
+  const reviewable = [coaCount > 0 ? 'the available documentation' : null, hasRating ? 'customer feedback' : null]
+    .filter(Boolean)
+    .join(' and ');
+  sentences.push(`Visitors can review ${reviewable} before evaluating the company.`);
+  if (hasRating) {
+    sentences.push('Remember that customer ratings reflect individual experiences and do not independently confirm product quality.');
   }
   return sentences.join(' ');
 }
 
-type FaqSupplier = Pick<Supplier, 'name' | 'country' | 'supplyCountries' | 'foundedYear'>;
+/**
+ * Shipping terms a supplier states, in our words, for the ones whose policy we
+ * have read. A supplier missing here gets no shipping question.
+ */
+const SHIPPING_ANSWERS: Readonly<Record<string, string>> = {
+  'nura-peptide':
+    'Nura Peptide offers same-day shipping for eligible orders placed before 3:00 PM Eastern Time, Monday through Friday. ' +
+    'Orders placed after the cutoff or on weekends and holidays are processed the next business day.',
+};
+
+/** Return terms, from the "Returns & Refunds" section of the supplier's own policy page. */
+const RETURN_ANSWERS: Readonly<Record<string, string>> = {
+  'nura-peptide':
+    'Nura Peptide says unopened products may be eligible for return within 30 days, subject to its return and refund policy. ' +
+    'Damaged or incorrect items must be reported within 48 hours of delivery. Approved refunds are processed after the returned ' +
+    'products are received and inspected, so contact Nura Peptide customer support before starting a return.',
+};
+
+type FaqSupplier = Pick<Supplier, 'slug' | 'name' | 'coupon'>;
 
 /**
- * The FAQ set for the simplified supplier pages. Each answer is built from the
- * record and the COAs the page shows; a question we can't answer is left out.
+ * The FAQ set for the simplified supplier pages. The discount answer is built
+ * from the coupon on the record, so it can't quote a code or a percentage the
+ * supplier no longer offers; a question we can't answer is left out.
  */
-export function supplierFaqs(supplier: FaqSupplier, coaCount: number): FaqItem[] {
-  const { name } = supplier;
-  const country = supplier.country ?? (supplier.supplyCountries.length === 1 ? supplier.supplyCountries[0]! : null);
-  const place = country === 'United States' ? 'the United States' : country;
+export function supplierFaqs(supplier: FaqSupplier): FaqItem[] {
+  const { name, coupon } = supplier;
   const faqs: FaqItem[] = [];
-  if (place) {
+  const shipping = SHIPPING_ANSWERS[supplier.slug];
+  if (shipping) faqs.push({ question: `How quickly does ${name} ship orders?`, answer: shipping });
+  if (coupon) {
     faqs.push({
-      question: `Where is ${name} based?`,
-      answer: `${name} is based in ${place}${supplier.foundedYear !== null ? ` and has been selling research peptides since ${supplier.foundedYear}` : ''}.`,
+      question: `Does ${name} offer a discount code?`,
+      answer:
+        `Yes. ${site.name} currently lists an exclusive ${coupon.percentOff}% discount for ${name}. Use the coupon code ` +
+        `${coupon.code} at checkout to receive the advertised discount. Check that the discount appears before completing your order.`,
     });
   }
-  faqs.push({
-    question: `What products does ${name} offer?`,
-    answer: `${name} offers a range of research peptides and laboratory compounds in different sizes and product forms.`,
-  });
-  if (coaCount > 0) {
-    faqs.push({
-      question: `Does ${name} provide Certificates of Analysis (COAs)?`,
-      answer: `Yes. ${name} has COA reports available for listed products, with ${coaCount} ${coaCount === 1 ? 'report' : 'reports'} shown on its ${site.name} profile.`,
-    });
-  }
+  const returns = RETURN_ANSWERS[supplier.slug];
+  if (returns) faqs.push({ question: `What is ${name}'s return policy?`, answer: returns });
   return faqs;
 }

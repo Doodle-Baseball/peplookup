@@ -20,7 +20,7 @@ function compareRows(a: SupplierMarketRow, b: SupplierMarketRow, key: MarketSort
     case 'price':
       return a.price - b.price;
     case 'market':
-      return a.othersMedianPrice - b.othersMedianPrice;
+      return a.othersAveragePrice - b.othersAveragePrice;
   }
 }
 
@@ -52,7 +52,7 @@ export function SupplierMarketTable({
     { key: 'compound', label: 'Compound', align: 'left' },
     { key: 'size', label: 'Vial', align: 'left' },
     { key: 'price', label: supplierName, align: 'right' },
-    { key: 'market', label: 'Other suppliers', align: 'right' },
+    { key: 'market', label: 'Avg market price', align: 'right' },
   ];
 
   const sortedRows = useMemo(() => {
@@ -122,13 +122,8 @@ export function SupplierMarketTable({
                 <td className="whitespace-nowrap px-3 py-3.5 text-right font-mono font-bold text-content sm:px-4">
                   {formatMoney(row.price, row.currency)}
                 </td>
-                <td className="whitespace-nowrap px-3 py-3.5 text-right sm:px-4">
-                  <span className="block font-mono text-content">
-                    {formatMoney(cents(Math.round(row.othersMedianPrice)), row.currency)}
-                  </span>
-                  <span className="block text-xs text-muted">
-                    median of {row.othersCount} {row.othersCount === 1 ? 'supplier' : 'suppliers'}
-                  </span>
+                <td className="whitespace-nowrap px-3 py-3.5 text-right font-mono text-content sm:px-4">
+                  {formatMoney(cents(Math.round(row.othersAveragePrice)), row.currency)}
                 </td>
                 <td className="whitespace-nowrap px-3 py-3.5 text-right sm:px-4">
                   <Link

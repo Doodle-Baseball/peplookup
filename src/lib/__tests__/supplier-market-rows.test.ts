@@ -78,9 +78,9 @@ describe('supplierMarketRows', () => {
     expect(rows[0]).toMatchObject({ sizeLabel: '10mg', vialMcg: 10_000, price: 4900, othersCount: 3 });
   });
 
-  it('takes the median of each other supplier’s cheapest vial of exactly that size', () => {
+  it('averages each other supplier’s cheapest vial of exactly that size', () => {
     // other-a 4000 (its cheaper 10 mg), other-b 6000, other-c 7000; 5 mg, 15 mg and packs ignored.
-    expect(rows[0]!.othersMedianPrice).toBe(6000);
+    expect(rows[0]!.othersAveragePrice).toBeCloseTo(17000 / 3, 10);
   });
 
   it('compares a size only when another supplier sells that exact size', () => {
@@ -90,7 +90,7 @@ describe('supplierMarketRows', () => {
       activeSupplierSlugs: ACTIVE,
       productNames: PRODUCT_NAMES,
     });
-    expect(twentyOnly[0]).toMatchObject({ sizeLabel: '20mg', price: 9000, othersCount: 1, othersMedianPrice: 12000 });
+    expect(twentyOnly[0]).toMatchObject({ sizeLabel: '20mg', price: 9000, othersCount: 1, othersAveragePrice: 12000 });
   });
 });
 

@@ -4,7 +4,7 @@ import { WarningIcon } from '@/components/icons/icons';
 
 export function ResearchNotice() {
   return (
-    <div className="mt-5 border-y border-brand/20 bg-brand-tint">
+    <div className="border-y border-brand/20 bg-brand-tint">
       <p className="mx-auto flex max-w-shell flex-wrap items-center justify-center gap-x-2 gap-y-1 px-4 py-2.5 text-center text-xs text-muted sm:text-sm">
         <WarningIcon className="hidden h-4 w-4 shrink-0 text-warn sm:block" />
         <span>

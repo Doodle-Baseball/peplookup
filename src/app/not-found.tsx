@@ -22,10 +22,10 @@ export default function NotFound() {
   return (
     <>
       <SiteHeader />
-      <ResearchNotice />
       <main id="main" className="flex-1">
         <NotFoundContent />
       </main>
+      <ResearchNotice />
       <SiteFooter />
     </>
   );
