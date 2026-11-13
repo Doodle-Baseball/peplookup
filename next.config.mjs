@@ -34,6 +34,9 @@ const nextConfig = {
       { source: '/:slug-reviews', destination: '/supplier/:slug', statusCode: 301 },
       // The COA directory lived at /lab-reports until November 2026.
       { source: '/lab-reports', destination: '/coas', statusCode: 301 },
+      // Retired supplier and coupon pages, sent to their section listings.
+      { source: '/supplier/crystal-peptides', destination: '/supplier', statusCode: 301 },
+      { source: '/coupon/zestyrat-coupon-code', destination: '/coupon', statusCode: 301 },
     ];
   },
   async headers() {
