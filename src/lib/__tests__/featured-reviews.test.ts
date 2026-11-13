@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { featuredReviews, reviewExcerpt } from '@/lib/featured-reviews';
+import { featuredReviews, reviewExcerpt, wholeSentenceExcerpt } from '@/lib/featured-reviews';
 import type { SupplierReview } from '@/lib/schema';
 
 const review = (author: string, rating: number, reviewedAt: string | null, body = 'Good.'): SupplierReview => ({
@@ -41,5 +41,20 @@ describe('featuredReviews', () => {
       2,
     );
     expect(picked.map((entry) => entry.author)).toEqual(['new five', 'old five']);
+  });
+});
+
+describe('wholeSentenceExcerpt', () => {
+  it('returns a short review untouched', () => {
+    expect(wholeSentenceExcerpt('Great service.  Fast shipping.', 150)).toBe('Great service. Fast shipping.');
+  });
+
+  it('keeps only the whole sentences that fit, with no ellipsis', () => {
+    const body = 'Their products are high quality. Shipping was fast and careful every time I ordered from them. Highly recommended!';
+    expect(wholeSentenceExcerpt(body, 60)).toBe('Their products are high quality.');
+  });
+
+  it('gives null when the first sentence alone is too long', () => {
+    expect(wholeSentenceExcerpt(`${'word '.repeat(40)}end. Short one.`, 150)).toBeNull();
   });
 });

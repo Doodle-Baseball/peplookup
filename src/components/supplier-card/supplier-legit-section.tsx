@@ -30,7 +30,7 @@ export function SupplierLegitSection({
           <h2 id="vendor-legit-heading" className="text-2xl font-black leading-tight text-content break-words sm:text-3xl">
             Is <span className="text-accent">{supplierName}</span> legit?
           </h2>
-          <p className="mt-2 max-w-4xl text-sm leading-7 text-muted break-words sm:text-base">{summary}</p>
+          <p className="mt-2 text-sm leading-7 text-muted break-words sm:text-base">{summary}</p>
         </div>
       </div>
     </section>

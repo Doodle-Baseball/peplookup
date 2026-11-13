@@ -6,7 +6,7 @@ import { cn } from '@/lib/cn';
 import { formatRating, formatReviewDate } from '@/lib/format';
 import { ratingAttribution, ratingSourceLabel } from '@/lib/review-pages';
 import type { ReviewCount } from '@/lib/schema';
-import { reviewExcerpt } from '@/lib/featured-reviews';
+import { COMPACT_REVIEW_CHARACTERS, wholeSentenceExcerpt } from '@/lib/featured-reviews';
 import { StarTiles } from '@/components/ui/star-tiles';
 import { StarRating } from '@/components/ui/star-rating';
 import { StarIcon, ExternalIcon, FlaskIcon, SearchIcon, DocumentIcon } from '@/components/icons/icons';
@@ -17,8 +17,8 @@ const VISIBLE_REVIEWS = 3;
 /** COA rows visible before the list scrolls when it isn't sized by the reviews card beside it. */
 const STACKED_COA_ROWS = 2;
 
-/** COA cards a compact panel shows before "View all". */
-const COMPACT_COA_COUNT = 6;
+/** COA rows a compact panel's window always shows (6 cards in two columns). */
+const COMPACT_COA_ROWS = 3;
 
 /**
  * Size chips a COA card shows before a "+N" chip, capped by count and by total
@@ -76,8 +76,8 @@ export function SupplierTrustPanel({
   /** False hides the size chips on each COA card. */
   showCoaSizes?: boolean;
   /**
-   * Shorter panel: each review cut to a short excerpt with no scroll box, and
-   * the first few COAs with a "View all" toggle in place of the scrolling list.
+   * Shorter panel: each review cut to its whole sentences within 150 characters, tighter spacing, no scroll box, and
+   * every COA in a scrolling list that fills the space beside the reviews.
    */
   compact?: boolean;
 }) {
@@ -95,9 +95,6 @@ export function SupplierTrustPanel({
         : coaReports,
     [coaReports, normalizedCoaQuery],
   );
-  const [isShowingAllCoas, setIsShowingAllCoas] = useState(false);
-  const shownCoaReports =
-    compact && !isShowingAllCoas ? matchingCoaReports.slice(0, COMPACT_COA_COUNT) : matchingCoaReports;
   const coaWrapperRef = useRef<HTMLDivElement>(null);
   const coaListRef = useRef<HTMLUListElement>(null);
 
@@ -115,6 +112,7 @@ export function SupplierTrustPanel({
       list.style.gridAutoRows = '';
       list.style.height = '';
       list.style.maxHeight = '';
+      wrapper.style.minHeight = '';
       const cardHeights = Array.from(list.children, (child) => (child as HTMLElement).offsetHeight);
       if (cardHeights.length === 0) return;
       const styles = getComputedStyle(list);
@@ -123,22 +121,28 @@ export function SupplierTrustPanel({
       const rowCount = Math.ceil(cardHeights.length / columnCount);
       const rowHeight = Math.max(...cardHeights);
       const fillsColumn = styles.position === 'absolute';
-      const space = fillsColumn ? wrapper.clientHeight : STACKED_COA_ROWS * (rowHeight + gap) - gap;
-      const fittingRows = Math.max(1, Math.floor((space + gap) / (rowHeight + gap)));
+      // Vertical padding (the compact list's room for card hover effects) sits outside the rows.
+      const padding = (parseFloat(styles.paddingTop) || 0) + (parseFloat(styles.paddingBottom) || 0);
+      const windowRows = compact ? COMPACT_COA_ROWS : STACKED_COA_ROWS;
+      // Compact: the column grows if needed so the fixed rows never shrink below their natural height.
+      if (compact && fillsColumn) wrapper.style.minHeight = `${windowRows * (rowHeight + gap) - gap + padding}px`;
+      const space = fillsColumn ? wrapper.clientHeight - padding : windowRows * (rowHeight + gap) - gap;
+      // Compact shows a fixed number of rows, stretched to fill the column; otherwise as many as fit.
+      const fittingRows = compact ? windowRows : Math.max(1, Math.floor((space + gap) / (rowHeight + gap)));
       // Fewer rows than the window holds: natural height, nothing to scroll.
       if (rowCount <= fittingRows && !fillsColumn) return;
       const visibleRows = Math.min(rowCount, fittingRows);
       const stretchedRow =
         fillsColumn && rowCount > fittingRows ? (space - (visibleRows - 1) * gap) / visibleRows : rowHeight;
       list.style.gridAutoRows = `${stretchedRow}px`;
-      list.style.height = `${visibleRows * (stretchedRow + gap) - gap}px`;
+      list.style.height = `${visibleRows * (stretchedRow + gap) - gap + padding}px`;
       list.style.maxHeight = 'none';
     };
     measure();
     const observer = new ResizeObserver(measure);
     observer.observe(wrapper);
     return () => observer.disconnect();
-  }, [matchingCoaReports]);
+  }, [matchingCoaReports, compact]);
   // Each card shows only when there is something to show.
   const listRef = useRef<HTMLUListElement>(null);
   const [listMaxHeight, setListMaxHeight] = useState<number | 'none' | null>(null);
@@ -179,7 +183,8 @@ export function SupplierTrustPanel({
         {hasReviewSection ? (
         <div
           className={cn(
-            'flex flex-col rounded-panel border border-line bg-surface-raised p-5 shadow-card sm:p-6',
+            'flex flex-col rounded-panel border border-line bg-surface-raised shadow-card',
+            compact ? 'p-4 sm:p-5' : 'p-5 sm:p-6',
             // Alone in the row (no COAs to sit beside): spans the full width.
             !hasCoaSection && 'lg:col-span-2',
           )}
@@ -201,7 +206,7 @@ export function SupplierTrustPanel({
               ref={compact ? undefined : listRef}
               // Until measured (first paint) a rem cap stands in for four cards.
               className={cn(
-                'mt-5 space-y-3',
+                compact ? 'mt-4 space-y-2.5' : 'mt-5 space-y-3',
                 !compact && 'panel-scrollbar max-h-[26rem] snap-y snap-mandatory overflow-y-auto pr-2',
               )}
               style={compact || listMaxHeight === null ? undefined : { maxHeight: listMaxHeight }}
@@ -212,18 +217,18 @@ export function SupplierTrustPanel({
                 <li key={review.id ?? `${review.author}-${index}`} className="snap-start">
                   <article
                     className={cn(
-                      'rounded-card border border-line bg-surface p-5',
-                      compact ? 'tilt-card hover:border-accent/40' : 'transition-shadow hover:shadow-card',
+                      'rounded-card border border-line bg-surface',
+                      compact ? 'tilt-card p-4 hover:border-accent/40' : 'p-5 transition-shadow hover:shadow-card',
                     )}
                   >
                     <div className="flex items-center justify-between gap-3">
                       <StarTiles rating={review.rating} />
                       <span className="text-xs font-bold text-muted">{formatRating(review.rating)}</span>
                     </div>
-                    <p className={cn('mt-3 text-content', compact ? 'text-sm leading-6 sm:text-base' : 'text-base leading-7')}>
-                      {compact ? reviewExcerpt(review.body) : review.body}
+                    <p className={cn('text-content', compact ? 'mt-2 text-sm leading-6' : 'mt-3 text-base leading-7')}>
+                      {compact ? (wholeSentenceExcerpt(review.body, COMPACT_REVIEW_CHARACTERS) ?? review.body) : review.body}
                     </p>
-                    <p className="mt-4 flex min-w-0 flex-wrap items-center gap-x-1.5 text-sm text-muted">
+                    <p className={cn('flex min-w-0 flex-wrap items-center gap-x-1.5 text-sm text-muted', compact ? 'mt-2' : 'mt-4')}>
                       <span className="truncate font-bold text-content">{review.author}</span>
                       {review.reviewedAt ? (
                         <>
@@ -242,7 +247,7 @@ export function SupplierTrustPanel({
             </p>
           )}
 
-          <div className="mt-5 flex flex-wrap items-center gap-2">
+          <div className={cn('flex flex-wrap items-center gap-2', compact ? 'mt-4' : 'mt-5')}>
             {reviewsUrl ? (
               <a
                 href={reviewsUrl}
@@ -262,7 +267,8 @@ export function SupplierTrustPanel({
         {hasCoaSection ? (
         <div
           className={cn(
-            'flex h-full w-full flex-col rounded-panel border border-line bg-surface-raised p-5 shadow-card sm:p-6',
+            'flex h-full w-full flex-col rounded-panel border border-line bg-surface-raised shadow-card',
+            compact ? 'p-4 sm:p-5' : 'p-5 sm:p-6',
             // Alone in the row (no reviews to sit beside): spans the full width.
             !hasReviewSection && 'lg:col-span-2',
           )}
@@ -288,7 +294,12 @@ export function SupplierTrustPanel({
           <label className="sr-only" htmlFor={`coa-search-${supplierSlug}`}>
             Search {supplierName} COA reports
           </label>
-          <div className="mt-5 flex items-center gap-2.5 rounded-card border border-line bg-surface px-4 py-3 transition-colors focus-within:border-accent">
+          <div
+            className={cn(
+              'flex items-center gap-2.5 rounded-card border border-line bg-surface px-4 transition-colors focus-within:border-accent',
+              compact ? 'mt-4 py-2.5' : 'mt-5 py-3',
+            )}
+          >
             <SearchIcon className="h-4 w-4 shrink-0 text-faint" />
             <input
               id={`coa-search-${supplierSlug}`}
@@ -297,7 +308,7 @@ export function SupplierTrustPanel({
               value={coaQuery}
               onChange={(event) => setCoaQuery(event.target.value)}
               placeholder="Search products…"
-              className="w-full min-w-0 bg-transparent text-sm font-semibold text-content outline-none placeholder:font-normal placeholder:text-faint"
+              className="w-full min-w-0 bg-transparent text-sm font-semibold text-content outline-none placeholder:font-normal placeholder:text-faint focus:ring-0 focus-visible:ring-0"
             />
           </div>
 
@@ -306,29 +317,36 @@ export function SupplierTrustPanel({
             // card sets, absolutely positioned so its own length doesn't
             // stretch the row and no blank strip is left under it.
             <div
-              ref={compact ? undefined : coaWrapperRef}
-              className={cn('relative mt-4', hasReviewSection && !compact && 'lg:min-h-80 lg:flex-1')}
+              ref={coaWrapperRef}
+              className={cn(
+                'relative mt-4',
+                hasReviewSection && 'lg:min-h-80 lg:flex-1',
+              )}
             >
             <ul
-              ref={compact ? undefined : coaListRef}
+              ref={coaListRef}
               className={cn(
                 'grid grid-cols-1 content-start gap-2.5 sm:grid-cols-2',
                 compact
-                  ? cn(!hasReviewSection && 'lg:grid-cols-3', isShowingAllCoas && 'panel-scrollbar max-h-96 overflow-y-auto p-1')
+                  ? cn(
+                      // Room above the top row for a hovered card's 6px lift, kept when a scroll snaps to a row.
+                      'panel-scrollbar max-h-96 snap-y snap-mandatory scroll-pt-2.5 overflow-y-auto px-1 pb-1 pt-2.5',
+                      hasReviewSection ? 'lg:absolute lg:inset-0 lg:max-h-none' : 'lg:grid-cols-3',
+                    )
                   : cn(
                       'panel-scrollbar max-h-96 snap-y snap-mandatory overflow-y-auto pr-1',
                       hasReviewSection ? 'lg:absolute lg:inset-0 lg:max-h-none' : 'lg:grid-cols-3',
                     ),
               )}
-              tabIndex={compact && !isShowingAllCoas ? undefined : 0}
+              tabIndex={0}
               aria-label={`${supplierName} COA reports`}
             >
-              {shownCoaReports.map((report) => (
+              {matchingCoaReports.map((report) => (
                 <li
                   key={report.key}
                   className={cn(
-                    'flex snap-start flex-col gap-3 rounded-card border border-line bg-surface p-4',
-                    compact ? 'tilt-card hover:border-accent/40' : 'transition-shadow hover:shadow-card',
+                    'flex snap-start flex-col rounded-card border border-line bg-surface',
+                    compact ? 'tilt-card gap-2 p-3 hover:border-accent/40' : 'gap-3 p-4 transition-shadow hover:shadow-card',
                   )}
                 >
                   <div className="flex min-w-0 items-start gap-3">
@@ -368,7 +386,7 @@ export function SupplierTrustPanel({
                     target="_blank"
                     rel="nofollow noopener noreferrer"
                     aria-label={`View ${report.productName} COA`}
-                    className="mt-auto inline-flex items-center justify-center gap-1.5 rounded-pill bg-accent px-3 py-2 text-xs font-bold uppercase tracking-wide text-surface transition-colors hover:bg-accent-strong"
+                    className={cn('mt-auto inline-flex items-center justify-center gap-1.5 rounded-pill bg-accent px-3 text-xs font-bold uppercase tracking-wide text-surface transition-colors hover:bg-accent-strong', compact ? 'py-1.5' : 'py-2')}
                   >
                     View COA
                     <ExternalIcon className="h-3 w-3" />
@@ -376,16 +394,6 @@ export function SupplierTrustPanel({
                 </li>
               ))}
             </ul>
-            {compact && matchingCoaReports.length > COMPACT_COA_COUNT ? (
-              <button
-                type="button"
-                onClick={() => setIsShowingAllCoas((showing) => !showing)}
-                aria-expanded={isShowingAllCoas}
-                className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-pill border border-line bg-surface px-4 py-2.5 text-sm font-bold text-content transition-colors hover:border-accent hover:bg-accent-tint hover:text-accent-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-              >
-                {isShowingAllCoas ? 'Show fewer' : `View all ${matchingCoaReports.length} reports`}
-              </button>
-            ) : null}
             </div>
           ) : (
             <p className="mt-4 rounded-card border border-dashed border-line bg-surface p-6 text-center text-sm text-muted">

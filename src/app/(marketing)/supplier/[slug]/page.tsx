@@ -10,7 +10,7 @@ import {
   getProducts,
   getSupplierReviews,
 } from '@/lib/repository';
-import { featuredReviews } from '@/lib/featured-reviews';
+import { COMPACT_REVIEW_CHARACTERS, featuredReviews, wholeSentenceExcerpt } from '@/lib/featured-reviews';
 import { formatDate } from '@/lib/format';
 import type { Offer, Product } from '@/lib/schema';
 import { cn } from '@/lib/cn';
@@ -38,7 +38,7 @@ import {
 } from '@/components/icons/icons';
 import { PageFaqSection } from '@/components/faq/page-faq-section';
 import { SupplierContentSections } from '@/components/supplier-content/supplier-content-sections';
-import { SupplierGlanceTable, SupplierPriceComparison } from '@/components/supplier-card/supplier-facts-sections';
+import { SupplierGlanceTable } from '@/components/supplier-card/supplier-facts-sections';
 import { SupplierMarketSection } from '@/components/supplier-card/supplier-market-section';
 import { SupplierLegitSection } from '@/components/supplier-card/supplier-legit-section';
 import { supplierFaqs, supplierLegitSummary } from '@/lib/supplier-legit';
@@ -65,22 +65,15 @@ import { getRewriteFacts } from '@/lib/supplier-page-rewrite-store';
 /** How many other vendors show in "Explore more vendors". */
 const EXPLORE_VENDOR_COUNT = 6;
 
-/**
- * Suppliers whose reviews + COA panel sits after "vs other suppliers" (just
- * before the FAQ), whose "Why researchers choose" box is dropped, whose
- * "vs other suppliers" text is replaced by the live price table and whose
- * COA cards leave out the size chips, at the site owner's request. Every
- * other supplier keeps the default layout.
+/*
+ * Every supplier page uses one layout, at the site owner's request (first built
+ * for Nura Peptide): the About box above the catalogue, "Is {Name} legit?" and
+ * the live price table in place of "Why researchers choose" and the "vs other
+ * suppliers" text, then the compact reviews + COA panel just before the FAQ,
+ * whose questions come from the supplier's own record.
  */
-const TRUST_PANEL_AFTER_COMPARE: ReadonlySet<string> = new Set(['nura-peptide']);
 
-/**
- * Suppliers whose reviews and COA panel only moves below "vs other suppliers",
- * at the site owner's request; the panel and the rest of the page stay as they are.
- */
-const TRUST_PANEL_MOVED_ONLY: ReadonlySet<string> = new Set(['pspeptides']);
-
-/** Reviews the compact panel on those pages shows: the best few, as short excerpts. */
+/** Reviews the compact panel shows: the best few, as short excerpts. */
 const FEATURED_REVIEW_COUNT = 3;
 
 /** The COA link a listing carries, with the same precedence /coas uses. */
@@ -277,32 +270,32 @@ export default async function SupplierPage({
     ...(supplier.foundedYear !== null ? [{ label: 'Established', value: String(supplier.foundedYear) }] : []),
   ];
 
-  const trustPanelAfterCompare = TRUST_PANEL_AFTER_COMPARE.has(supplier.slug);
-  const trustPanelBelowContent = trustPanelAfterCompare || TRUST_PANEL_MOVED_ONLY.has(supplier.slug);
-  // The "vs other suppliers" text becomes a live single-vial price table on these pages.
-  const marketRows = trustPanelAfterCompare
-    ? supplierMarketRows({
-        supplierSlug: supplier.slug,
-        marketOffers,
-        activeSupplierSlugs: new Set(allSuppliers.filter((entry) => entry.isActive).map((entry) => entry.slug)),
-        productNames: new Map(allProducts.map((product) => [product.slug, product.name])),
-      })
-    : [];
-  // Without size chips, several cards with one product name read as duplicates, so these pages show one COA per product.
-  const shownCoaReports = trustPanelAfterCompare ? oneCoaPerProduct(coaReports) : coaReports;
+  // The "vs other suppliers" text becomes a live single-vial price table.
+  const marketRows = supplierMarketRows({
+    supplierSlug: supplier.slug,
+    marketOffers,
+    activeSupplierSlugs: new Set(allSuppliers.filter((entry) => entry.isActive).map((entry) => entry.slug)),
+    productNames: new Map(allProducts.map((product) => [product.slug, product.name])),
+  });
+  // Without size chips, several cards with one product name read as duplicates, so the panel shows one COA per product.
+  const shownCoaReports = oneCoaPerProduct(coaReports);
   // Reviews appear only when this vendor has some; the COA box always shows.
   const trustPanel = (
     <SupplierTrustPanel
       supplierName={supplier.name}
       supplierSlug={supplier.slug}
-      reviews={trustPanelAfterCompare ? featuredReviews(reviews, FEATURED_REVIEW_COUNT) : reviews}
+      // Featured reviews show whole sentences only, so a review whose first sentence alone is too long is passed over.
+      reviews={featuredReviews(
+        reviews.filter((review) => wholeSentenceExcerpt(review.body, COMPACT_REVIEW_CHARACTERS) !== null),
+        FEATURED_REVIEW_COUNT,
+      )}
       reviewsUrl={supplier.reviewsUrl}
       reviewRating={supplier.reviewRating}
       reviewCount={supplier.reviewCount}
       labName={supplier.coaLabName}
       coaReports={shownCoaReports}
-      showCoaSizes={!trustPanelAfterCompare}
-      compact={trustPanelAfterCompare}
+      showCoaSizes={false}
+      compact
     />
   );
 
@@ -470,10 +463,8 @@ export default async function SupplierPage({
         {/* ---------------------------------------------------- Store details */}
         <StoreDetailsSection supplier={supplier} className="mt-12" />
 
-        {/* On the simplified pages the About box leads into the catalogue. */}
-        {trustPanelAfterCompare ? (
-          <SupplierContentSections vendorName={supplier.name} content={supplierContent} keys={['about']} className="mt-12" />
-        ) : null}
+        {/* The About box leads into the catalogue. */}
+        <SupplierContentSections vendorName={supplier.name} content={supplierContent} keys={['about']} className="mt-12" />
 
         {/* ---------------------------------------------------------- Catalog */}
         <SupplierCatalogSection
@@ -487,50 +478,32 @@ export default async function SupplierPage({
           className="mt-12"
         />
 
-        {trustPanelBelowContent ? null : trustPanel}
+        <SupplierLegitSection
+          supplierName={supplier.name}
+          summary={supplierLegitSummary(supplier, shownCoaReports.length)}
+          className="mt-12"
+        />
+        <SupplierMarketSection
+          title={
+            <>
+              {/* Same accent as the About and "legit?" headings above it. */}
+              <span className="text-accent">{supplier.name}</span> vs market average prices
+            </>
+          }
+          supplierName={supplier.name}
+          rows={marketRows}
+          couponCode={supplier.coupon?.code ?? null}
+          sortParam={msort}
+          className="mt-4 sm:mt-6"
+        />
 
-        {/* About / Why researchers choose / vs other suppliers, editable per
-            vendor from the supplier's popup in /admin/seo. */}
-        {trustPanelAfterCompare ? (
-          <>
-            <SupplierLegitSection
-              supplierName={supplier.name}
-              summary={supplierLegitSummary(supplier, shownCoaReports.length)}
-              className="mt-12"
-            />
-            <SupplierMarketSection
-              title={
-                <>
-                  {/* Same accent as the About and "legit?" headings above it. */}
-                  <span className="text-accent">{supplier.name}</span> vs market average prices
-                </>
-              }
-              supplierName={supplier.name}
-              rows={marketRows}
-              couponCode={supplier.coupon?.code ?? null}
-              sortParam={msort}
-              className="mt-4 sm:mt-6"
-            />
-          </>
-        ) : v2 ? (
-          <>
-            {/* Content v2: the About box stays; "Why researchers choose" is hidden and
-                "vs other suppliers" becomes a price table. */}
-            <SupplierContentSections vendorName={supplier.name} content={supplierContent} keys={['about']} className="mt-12" />
-            <SupplierPriceComparison facts={v2.facts} title={supplierContent.compare.title} className="mt-4 sm:mt-6" />
-          </>
-        ) : (
-          <SupplierContentSections vendorName={supplier.name} content={supplierContent} className="mt-12" />
-        )}
+        {trustPanel}
 
-        {trustPanelBelowContent ? trustPanel : null}
-
-        {/* FAQs for this vendor, generated from their own record until a set is
-            saved for this path in /admin/seo. */}
+        {/* FAQs for this vendor, built from their own record. */}
         <PageFaqSection
           path={`/supplier/${supplier.slug}`}
           className="mt-14"
-          items={rewrite ? rewriteFaqs(rewrite) : trustPanelAfterCompare ? supplierFaqs(supplier) : undefined}
+          items={rewrite ? rewriteFaqs(rewrite) : supplierFaqs(supplier)}
           pick={
             contentV2
               ? (faqs) => supplierSpecificFaqs(faqs.filter((faq) => !isComparisonToolAnswer(faq.answer)), supplier)
