@@ -41,7 +41,6 @@ import { SupplierContentSections } from '@/components/supplier-content/supplier-
 import { SupplierGlanceTable } from '@/components/supplier-card/supplier-facts-sections';
 import { SupplierMarketSection } from '@/components/supplier-card/supplier-market-section';
 import { SupplierLegitSection } from '@/components/supplier-card/supplier-legit-section';
-import { supplierFaqs, supplierLegitSummary } from '@/lib/supplier-legit';
 import { supplierMarketRows } from '@/lib/supplier-market-rows';
 import { supplierPageUsesContentV2 } from '@/lib/seo/protected';
 import { getSupplierFacts } from '@/lib/supplier-facts-store';
@@ -52,13 +51,13 @@ import {
   supplierTitleWithoutCompetingWords,
 } from '@/lib/supplier-facts';
 import { getFaqsForPath } from '@/lib/page-faqs';
-import { getSupplierContent } from '@/lib/supplier-content-store';
+import { getSupplierContent, getSupplierPageSections } from '@/lib/supplier-content-store';
+import { coaUrlOf, oneCoaPerProduct, supplierCoaReports } from '@/lib/supplier-coa-reports';
+import { accentedTitle } from '@/components/supplier-content/accented-title';
 import {
   isRewrittenSupplierPage,
-  rewriteFaqs,
   rewriteSeoDescription,
   rewriteSeoTitle,
-  rewriteSummary,
 } from '@/lib/supplier-page-rewrite';
 import { getRewriteFacts } from '@/lib/supplier-page-rewrite-store';
 
@@ -75,41 +74,6 @@ const EXPLORE_VENDOR_COUNT = 6;
 
 /** Reviews the compact panel shows: the best few, as short excerpts. */
 const FEATURED_REVIEW_COUNT = 3;
-
-/** The COA link a listing carries, with the same precedence /coas uses. */
-function coaUrlOf(offer: Offer): string | null {
-  return offer.labReport?.reportUrl ?? offer.labReport?.labUrl ?? offer.coaUrl ?? null;
-}
-
-/**
- * One COA per product. A link several different products share is the
- * vendor's general COA page, not a report on any one compound, so a product's
- * own report is preferred; among its own reports, the one covering the most
- * listed sizes. A product with only the general page keeps that link, as it
- * is still the only COA we hold for that compound.
- */
-function oneCoaPerProduct<T extends { productName: string; url: string; sizes: readonly string[] }>(
-  reports: readonly T[],
-): T[] {
-  const productsByUrl = new Map<string, Set<string>>();
-  for (const report of reports) {
-    const products = productsByUrl.get(report.url) ?? new Set<string>();
-    products.add(report.productName);
-    productsByUrl.set(report.url, products);
-  }
-  const isGeneralPage = (url: string) => (productsByUrl.get(url)?.size ?? 0) > 1;
-  const chosen = new Map<string, T>();
-  for (const report of reports) {
-    const current = chosen.get(report.productName);
-    const isBetter =
-      current === undefined ||
-      (isGeneralPage(current.url) && !isGeneralPage(report.url)) ||
-      (isGeneralPage(current.url) === isGeneralPage(report.url) && report.sizes.length > current.sizes.length);
-    if (isBetter) chosen.set(report.productName, report);
-  }
-  // Kept in the incoming (alphabetical) order.
-  return reports.filter((report) => chosen.get(report.productName) === report);
-}
 
 /** What the supplier's title and description may state: how many products it prices and how many COAs we link. */
 function supplierSeoFacts(offers: readonly Offer[], productsBySlug: ReadonlyMap<string, Product>) {
@@ -226,33 +190,8 @@ export default async function SupplierPage({
     .slice(0, EXPLORE_VENDOR_COUNT);
 
   // The vendor's real COA documents, derived from offers we already loaded
-  // rather than a second query, with the same link precedence /coas
-  // uses. Sizes sharing one document collapse into a single entry.
-  const coaReportsByKey = new Map<
-    string,
-    { productName: string; url: string; sizes: Map<string, { vialSize: number; vialCount: number }> }
-  >();
-  for (const offer of resolvedOffers) {
-    const url = coaUrlOf(offer);
-    if (!url) continue;
-    const productName = productsBySlug.get(offer.productSlug)!.name;
-    const key = `${offer.productSlug}|${url}`;
-    const mg = offer.vialSize / 1000;
-    const sizeLabel = offer.vialCount > 1 ? `${mg} mg × ${offer.vialCount}` : `${mg}mg`;
-    const entry = coaReportsByKey.get(key) ?? { productName, url, sizes: new Map() };
-    entry.sizes.set(sizeLabel, { vialSize: offer.vialSize, vialCount: offer.vialCount });
-    coaReportsByKey.set(key, entry);
-  }
-  const coaReports = [...coaReportsByKey.entries()]
-    .map(([key, entry]) => ({
-      key,
-      productName: entry.productName,
-      url: entry.url,
-      sizes: [...entry.sizes.entries()]
-        .sort(([, a], [, b]) => a.vialSize - b.vialSize || a.vialCount - b.vialCount)
-        .map(([label]) => label),
-    }))
-    .sort((a, b) => a.productName.localeCompare(b.productName));
+  // rather than a second query, with the same link precedence /coas uses.
+  const coaReports = supplierCoaReports(resolvedOffers, productsBySlug);
 
   const logo = supplier.logoUrl ?? supplier.faviconUrl;
   // A rewritten page (one-page test): its own text, every number read live.
@@ -279,6 +218,8 @@ export default async function SupplierPage({
   });
   // Without size chips, several cards with one product name read as duplicates, so the panel shows one COA per product.
   const shownCoaReports = oneCoaPerProduct(coaReports);
+  // The intro, "legit?", market and FAQ text: what /admin/seo saved, else what the page builds itself.
+  const sections = await getSupplierPageSections(supplier, offers, productsBySlug);
   // Reviews appear only when this vendor has some; the COA box always shows.
   const trustPanel = (
     <SupplierTrustPanel
@@ -370,21 +311,15 @@ export default async function SupplierPage({
                   </p>
                 ) : null}
 
-                {rewrite ? (
-                  <p className="mt-3 max-w-2xl text-base leading-7 text-muted">{rewriteSummary(rewrite)}</p>
-                ) : (
-                  <>
-                    {v2Summary ? (
-                      <p id="supplier-summary" className="mt-3 max-w-2xl text-base leading-7 text-content">
-                        {v2Summary}
-                      </p>
-                    ) : null}
+                {!rewrite && v2Summary ? (
+                  <p id="supplier-summary" className="mt-3 max-w-2xl text-base leading-7 text-content">
+                    {v2Summary}
+                  </p>
+                ) : null}
 
-                    {supplier.description ? (
-                      <p className="mt-3 max-w-2xl text-base leading-7 text-muted">{supplier.description}</p>
-                    ) : null}
-                  </>
-                )}
+                {sections.intro ? (
+                  <p className="mt-3 max-w-2xl whitespace-pre-line text-base leading-7 text-muted">{sections.intro}</p>
+                ) : null}
 
                 <div className="mt-6 flex items-center gap-2">
                   <a
@@ -479,17 +414,14 @@ export default async function SupplierPage({
         />
 
         <SupplierLegitSection
-          supplierName={supplier.name}
-          summary={supplierLegitSummary(supplier, shownCoaReports.length)}
+          title={accentedTitle(sections.legit.title, supplier.name)}
+          summary={sections.legit.body}
           className="mt-12"
         />
         <SupplierMarketSection
-          title={
-            <>
-              {/* Same accent as the About and "legit?" headings above it. */}
-              <span className="text-accent">{supplier.name}</span> vs market average prices
-            </>
-          }
+          // Same accent as the About and "legit?" headings above it.
+          title={accentedTitle(sections.market.title, supplier.name)}
+          intro={sections.market.body}
           supplierName={supplier.name}
           rows={marketRows}
           couponCode={supplier.coupon?.code ?? null}
@@ -503,7 +435,7 @@ export default async function SupplierPage({
         <PageFaqSection
           path={`/supplier/${supplier.slug}`}
           className="mt-14"
-          items={rewrite ? rewriteFaqs(rewrite) : supplierFaqs(supplier)}
+          items={sections.faqs}
           pick={
             contentV2
               ? (faqs) => supplierSpecificFaqs(faqs.filter((faq) => !isComparisonToolAnswer(faq.answer)), supplier)

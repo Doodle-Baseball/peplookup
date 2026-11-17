@@ -17,8 +17,17 @@ import { savePageFaqs } from '@/lib/admin/page-faqs';
 import { FAQS_CACHE_TAG } from '@/lib/page-faqs';
 import { uniqueValues } from '@/lib/compound-content';
 import { QUALITY_THRESHOLDS } from '@/config/seo-quality';
-import { saveSupplierContent } from '@/lib/admin/supplier-content';
-import { getGeneratedSupplierContent, SUPPLIER_CONTENT_CACHE_TAG } from '@/lib/supplier-content-store';
+import { saveSupplierContent, saveSupplierPage } from '@/lib/admin/supplier-content';
+import {
+  getGeneratedSupplierContent,
+  getGeneratedSupplierPageSections,
+  SUPPLIER_CONTENT_CACHE_TAG,
+} from '@/lib/supplier-content-store';
+import {
+  SUPPLIER_SECTION_FIELDS,
+  toSupplierPageSectionsOverride,
+  type SupplierPageSections,
+} from '@/lib/supplier-page-sections';
 import {
   SUPPLIER_CONTENT_KEYS,
   supplierContentFieldName,
@@ -133,6 +142,58 @@ function readSupplierContent(formData: FormData): { content: SupplierContent } |
   return { content };
 }
 
+const sectionFaqsSchema = z
+  .array(
+    z.object({
+      question: z.string().max(SUPPLIER_TITLE_MAX * 2, 'Each FAQ question can be at most 400 characters.'),
+      answer: z.string().max(SUPPLIER_BODY_MAX, `Each FAQ answer can be at most ${SUPPLIER_BODY_MAX.toLocaleString('en-US')} characters.`),
+    }),
+  )
+  .max(50, 'That is more FAQs than one page should carry.');
+
+/**
+ * The intro, "Is {Name} legit?", market price and FAQ fields from the dialog,
+ * or null when the form didn't include them (every non-supplier page).
+ */
+function readSupplierSections(formData: FormData): { sections: SupplierPageSections } | { error: string } | null {
+  const field = (name: string) => {
+    const value = formData.get(name);
+    return typeof value === 'string' ? value : null;
+  };
+  const intro = field(SUPPLIER_SECTION_FIELDS.intro);
+  if (intro === null) return null;
+
+  const titles = [field(SUPPLIER_SECTION_FIELDS.legitTitle) ?? '', field(SUPPLIER_SECTION_FIELDS.marketTitle) ?? ''];
+  const bodies = [intro, field(SUPPLIER_SECTION_FIELDS.legitBody) ?? '', field(SUPPLIER_SECTION_FIELDS.marketBody) ?? ''];
+  if (titles.some((title) => title.trim().length > SUPPLIER_TITLE_MAX)) {
+    return { error: `Supplier section titles can be at most ${SUPPLIER_TITLE_MAX} characters.` };
+  }
+  if (bodies.some((body) => body.trim().length > SUPPLIER_BODY_MAX)) {
+    return { error: `Supplier section details can be at most ${SUPPLIER_BODY_MAX.toLocaleString('en-US')} characters.` };
+  }
+
+  let rawFaqs: unknown;
+  try {
+    rawFaqs = JSON.parse(field(SUPPLIER_SECTION_FIELDS.faqs) ?? '[]');
+  } catch {
+    return { error: 'The FAQs could not be read. Reload the page and try again.' };
+  }
+  const faqs = sectionFaqsSchema.safeParse(rawFaqs);
+  if (!faqs.success) return { error: faqs.error.issues[0]?.message ?? 'Those FAQs could not be saved.' };
+  if (faqs.data.some((faq) => (faq.question.trim() === '') !== (faq.answer.trim() === ''))) {
+    return { error: 'Every FAQ needs both a question and an answer.' };
+  }
+
+  return {
+    sections: {
+      intro,
+      legit: { title: titles[0]!, body: bodies[1]! },
+      market: { title: titles[1]!, body: bodies[2]! },
+      faqs: faqs.data,
+    },
+  };
+}
+
 function isDefaultInput(input: SeoPageInput): boolean {
   return (
     !input.metaTitle &&
@@ -184,6 +245,10 @@ export async function saveSeoPageAction(_prevState: SeoSaveState, formData: Form
   if (supplierContent && 'error' in supplierContent) {
     return { error: supplierContent.error, fieldErrors: {}, savedAt: null };
   }
+  const supplierSections = form.kind === 'supplier' ? readSupplierSections(formData) : null;
+  if (supplierSections && 'error' in supplierSections) {
+    return { error: supplierSections.error, fieldErrors: {}, savedAt: null };
+  }
   const renamable = form.kind === 'compound' || form.kind === 'supplier' || form.kind === 'guide';
   const renaming = renamable && form.newSlug !== '' && form.newSlug !== form.slug;
   if (renaming && !SLUG_PATTERN.test(form.newSlug)) {
@@ -226,7 +291,17 @@ export async function saveSeoPageAction(_prevState: SeoSaveState, formData: Form
       const generated = await getGeneratedSupplierContent(slug);
       if (!generated) throw new Error(`No supplier exists at ${path}.`);
       const override = toSupplierContentOverride(supplierContent.content, generated);
-      await saveSupplierContent(slug, override);
+      if (supplierSections) {
+        const generatedSections = await getGeneratedSupplierPageSections(slug);
+        if (!generatedSections) throw new Error(`No supplier exists at ${path}.`);
+        await saveSupplierPage(
+          slug,
+          override,
+          toSupplierPageSectionsOverride(supplierSections.sections, generatedSections),
+        );
+      } else {
+        await saveSupplierContent(slug, override);
+      }
       warning = await duplicateAboutWarning(slug, override.about.body);
     }
   } catch (error) {

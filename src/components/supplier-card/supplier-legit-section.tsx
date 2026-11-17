@@ -1,13 +1,14 @@
+import type { ReactNode } from 'react';
 import { cn } from '@/lib/cn';
 import { CheckBadgeIcon } from '@/components/icons/icons';
 
-/** "Is {Name} legit?": a short factual summary from the supplier's own record. */
+/** "Is {Name} legit?": a short factual summary from the supplier's own record, or the text saved in /admin/seo. */
 export function SupplierLegitSection({
-  supplierName,
+  title,
   summary,
   className,
 }: {
-  supplierName: string;
+  title: ReactNode;
   summary: string;
   className?: string;
 }) {
@@ -28,9 +29,9 @@ export function SupplierLegitSection({
         </span>
         <div className="min-w-0">
           <h2 id="vendor-legit-heading" className="text-2xl font-black leading-tight text-content break-words sm:text-3xl">
-            Is <span className="text-accent">{supplierName}</span> legit?
+            {title}
           </h2>
-          <p className="mt-2 text-sm leading-7 text-muted break-words sm:text-base">{summary}</p>
+          <p className="mt-2 whitespace-pre-line text-sm leading-7 text-muted break-words sm:text-base">{summary}</p>
         </div>
       </div>
     </section>
