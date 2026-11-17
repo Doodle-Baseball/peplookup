@@ -179,7 +179,7 @@ export function SeoDashboard({
         <StatTile label="Redirects" value={redirects.length} />
       </div>
 
-      <QualityPanel quality={quality} totalPages={rows.length} />
+      <QualityPanel quality={quality} />
 
       <section className="rounded-card border border-line bg-surface-raised p-5 sm:p-6">
         <div className="flex flex-wrap items-center gap-3">
@@ -411,20 +411,11 @@ function IndexingLine({ entry }: { entry: SeoEntry }) {
   );
 }
 
-/** B4 and B6 at a glance: how many pages are indexed, how fast new ones go live, and whose prices are stale. */
-function QualityPanel({ quality, totalPages }: { quality: SeoQualitySummary; totalPages: number }) {
+/** The bulk-indexing alert, and whose prices are stale. */
+function QualityPanel({ quality }: { quality: SeoQualitySummary }) {
   const stale = quality.stalePriceSuppliers;
   return (
     <section aria-label="Indexing and quality" className="space-y-3">
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-        <StatTile label={`Indexed (of ${totalPages})`} value={quality.indexableCount} tone="ok" />
-        <StatTile label="Failing quality check" value={quality.failingQualityCount} tone="warn" />
-        <StatTile
-          label="Pages made indexable in the last 7 days"
-          value={quality.madeIndexableLast7Days}
-          tone={quality.tooManyNewlyIndexable ? 'warn' : 'info'}
-        />
-      </div>
       {quality.tooManyNewlyIndexable ? (
         <p role="alert" className="flex gap-2 rounded-card border border-warn/30 bg-warn/5 px-4 py-3 text-sm text-content">
           <WarningIcon className="mt-0.5 h-4 w-4 shrink-0 text-warn" />
