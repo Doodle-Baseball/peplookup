@@ -36,6 +36,10 @@ const nextConfig = {
       { source: '/lab-reports', destination: '/coas', statusCode: 301 },
       // Retired supplier and coupon pages, sent to their section listings.
       { source: '/supplier/crystal-peptides', destination: '/supplier', statusCode: 301 },
+      { source: '/supplier/refined-bio-labs', destination: '/supplier', statusCode: 301 },
+      { source: '/supplier/main-peptides', destination: '/supplier', statusCode: 301 },
+      // Old duplicate address of Pure Amino's profile.
+      { source: '/supplier/pure-amino-2', destination: '/supplier/pure-amino', statusCode: 301 },
       { source: '/coupon/zestyrat-coupon-code', destination: '/coupon', statusCode: 301 },
     ];
   },
