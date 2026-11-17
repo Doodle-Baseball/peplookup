@@ -7,6 +7,7 @@ import { SupplierMarketTable } from '@/components/supplier-card/supplier-market-
 /** "{Name} vs other suppliers": the supplier's vial prices against other suppliers' vials of the exact same size. */
 export function SupplierMarketSection({
   title,
+  intro,
   supplierName,
   rows,
   couponCode,
@@ -14,6 +15,8 @@ export function SupplierMarketSection({
   className,
 }: {
   title: ReactNode;
+  /** The sentence above the table; the coupon note is added after it from the live record. */
+  intro: string;
   supplierName: string;
   rows: readonly SupplierMarketRow[];
   couponCode: string | null;
@@ -35,8 +38,7 @@ export function SupplierMarketSection({
         {title}
       </h2>
       <p className="mt-2 max-w-3xl text-sm leading-6 text-muted sm:text-base">
-        See how {supplierName}&apos;s prices compare with the average market price for the exact same compound and vial
-        size.
+        {intro}
         {couponCode ? ` Prices are shown before applying the ${couponCode} discount.` : null}
       </p>
       <SupplierMarketTable supplierName={supplierName} rows={rows} initialSort={parseMarketSort(sortParam)} />

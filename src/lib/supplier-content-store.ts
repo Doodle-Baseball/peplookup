@@ -1,7 +1,7 @@
 import 'server-only';
 import { unstable_cache } from 'next/cache';
 import { getSupabaseServerClient } from '@/lib/supabase/server';
-import { fetchSupplierContentFromDb } from '@/lib/supabase/supplier-content';
+import { fetchSupplierContentFromDb, fetchSupplierSectionsFromDb } from '@/lib/supabase/supplier-content';
 import {
   defaultSupplierContent,
   resolveSupplierContent,
@@ -9,8 +9,18 @@ import {
   type SupplierContent,
   type SupplierContentOverride,
 } from '@/lib/supplier-content';
-import type { Offer, Supplier } from '@/lib/schema';
-import { getAllOffers, getSupplier, getVendorCount } from '@/lib/repository';
+import type { Offer, Product, Supplier } from '@/lib/schema';
+import { getAllOffers, getProducts, getSupplier, getVendorCount } from '@/lib/repository';
+import {
+  defaultSupplierPageSections,
+  resolveSupplierPageSections,
+  type SupplierPageSections,
+  type SupplierPageSectionsOverride,
+} from '@/lib/supplier-page-sections';
+import { oneCoaPerProduct, supplierCoaReports } from '@/lib/supplier-coa-reports';
+import { supplierFaqs, supplierLegitSummary } from '@/lib/supplier-legit';
+import { isRewrittenSupplierPage, rewriteFaqs, rewriteSummary } from '@/lib/supplier-page-rewrite';
+import { getRewriteFacts } from '@/lib/supplier-page-rewrite-store';
 import { fillVendorCountDeep } from '@/lib/vendor-count';
 import { CATALOGUE_REVALIDATE_SECONDS } from '@/lib/cache-ttl';
 
@@ -53,4 +63,68 @@ export async function getSupplierContent(supplier: Supplier, allOffers: readonly
 export async function getGeneratedSupplierContent(slug: string): Promise<SupplierContent | null> {
   const [supplier, offers] = await Promise.all([getSupplier(slug), getAllOffers()]);
   return supplier ? defaultSupplierContent(supplier, supplierMarketStats(supplier.slug, offers)) : null;
+}
+
+/**
+ * Saved intro / legit / market / FAQ overrides for every vendor. Null from the
+ * database (0033 not run yet) means nothing is saved, so every page shows its
+ * own text.
+ */
+const getSavedSupplierSections = unstable_cache(
+  async (): Promise<Record<string, SupplierPageSectionsOverride>> => {
+    const client = getSupabaseServerClient();
+    if (!client) return {};
+    const bySlug = await fetchSupplierSectionsFromDb(client);
+    return bySlug === null ? {} : Object.fromEntries(bySlug);
+  },
+  ['supplier-page-sections'],
+  { revalidate: CATALOGUE_REVALIDATE_SECONDS, tags: [SUPPLIER_CONTENT_CACHE_TAG] },
+);
+
+/**
+ * What the intro, "Is {Name} legit?", market and FAQ sections show when
+ * nothing is saved: built exactly as the supplier page builds them, so the
+ * admin can tell an unchanged field from a real edit.
+ */
+export async function supplierPageSectionDefaults(
+  supplier: Supplier,
+  ownOffers: readonly Offer[],
+  productsBySlug: ReadonlyMap<string, Pick<Product, 'name'>>,
+): Promise<SupplierPageSections> {
+  const resolvedOffers = ownOffers.filter((offer) => productsBySlug.has(offer.productSlug));
+  const coaCount = oneCoaPerProduct(supplierCoaReports(resolvedOffers, productsBySlug)).length;
+  const rewrite = isRewrittenSupplierPage(supplier.slug)
+    ? (await getRewriteFacts(supplier, resolvedOffers)).rewrite
+    : null;
+  return defaultSupplierPageSections({
+    name: supplier.name,
+    intro: rewrite ? rewriteSummary(rewrite) : (supplier.description ?? ''),
+    legitSummary: supplierLegitSummary(supplier, coaCount),
+    faqs: rewrite ? rewriteFaqs(rewrite) : supplierFaqs(supplier),
+  });
+}
+
+/** The sections a supplier page renders: saved text where there is some, the page's own text elsewhere. */
+export async function getSupplierPageSections(
+  supplier: Supplier,
+  ownOffers: readonly Offer[],
+  productsBySlug: ReadonlyMap<string, Pick<Product, 'name'>>,
+): Promise<SupplierPageSections> {
+  const [saved, vendorCount, defaults] = await Promise.all([
+    getSavedSupplierSections(),
+    getVendorCount(),
+    supplierPageSectionDefaults(supplier, ownOffers, productsBySlug),
+  ]);
+  return fillVendorCountDeep(resolveSupplierPageSections(defaults, saved[supplier.slug] ?? null), vendorCount);
+}
+
+/** The sections' own text for one vendor, from the same data the public page uses. Null when the supplier doesn't exist. */
+export async function getGeneratedSupplierPageSections(slug: string): Promise<SupplierPageSections | null> {
+  const [supplier, offers, products] = await Promise.all([getSupplier(slug), getAllOffers(), getProducts()]);
+  if (!supplier) return null;
+  return supplierPageSectionDefaults(
+    supplier,
+    offers.filter((offer) => offer.supplierSlug === supplier.slug),
+    new Map(products.map((product) => [product.slug, product])),
+  );
 }

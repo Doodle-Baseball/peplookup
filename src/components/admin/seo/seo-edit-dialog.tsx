@@ -471,24 +471,28 @@ export function SeoEditDialog({ entry, onClose }: { entry: SeoEntry; onClose: ()
               </div>
             </Section>
 
-            <Section
-              title="FAQs"
-              description="Shown on the page in the site's FAQ design, and published as FAQPage structured data. Saved separately from the fields above."
-            >
-              <FaqEditor path={entry.path} saved={entry.faqs} effective={entry.defaultFaqs} />
-            </Section>
-
-            {entry.supplierContent ? (
+            {entry.supplierContent && entry.supplierSections ? (
+              // Supplier pages edit their FAQs with the other page sections, saved by "Save changes".
               <Section
                 title="Supplier page sections"
-                description="The About, Why researchers choose and vs other suppliers boxes shown above the FAQs on this supplier's page."
+                description="Every text section on this supplier's page, in the order the page shows them."
               >
                 <SupplierContentEditor
+                  path={entry.path}
                   saved={entry.supplierContent.saved}
                   defaults={entry.supplierContent.defaults}
+                  savedSections={entry.supplierSections.saved}
+                  sectionDefaults={entry.supplierSections.defaults}
                 />
               </Section>
-            ) : null}
+            ) : (
+              <Section
+                title="FAQs"
+                description="Shown on the page in the site's FAQ design, and published as FAQPage structured data. Saved separately from the fields above."
+              >
+                <FaqEditor path={entry.path} saved={entry.faqs} effective={entry.defaultFaqs} />
+              </Section>
+            )}
           </div>
 
           <footer className="sticky bottom-0 rounded-b-card border-t border-line bg-surface-raised px-6 py-4">

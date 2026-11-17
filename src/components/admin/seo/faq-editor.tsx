@@ -24,6 +24,9 @@ const toDrafts = (faqs: readonly FaqItem[]): Draft[] =>
  * The whole list is submitted on save, so ordering is just the array order and
  * there's no separate reorder call. Saving revalidates the FAQ cache tag, which
  * updates both the visible section and its JSON-LD on the live page.
+ *
+ * With `fieldName`, the list is instead a field of the surrounding form (as
+ * JSON in a hidden input) and is saved by that form's own submit button.
  */
 export function FaqEditor({
   path,
@@ -31,10 +34,12 @@ export function FaqEditor({
   saved,
   /** What the page currently renders, used to seed the editor the first time. */
   effective,
+  fieldName,
 }: {
   path: string;
   saved: FaqItem[] | null;
   effective: readonly FaqItem[];
+  fieldName?: string;
 }) {
   const [drafts, setDrafts] = useState<Draft[]>(() => toDrafts(saved ?? effective));
   const [openKey, setOpenKey] = useState<string | null>(null);
@@ -89,11 +94,20 @@ export function FaqEditor({
 
   const incomplete = drafts.some((d) => !d.question.trim() || !d.answer.trim());
 
+  const savedWithForm = fieldName !== undefined;
+
   return (
     <div className="space-y-3">
+      {savedWithForm ? (
+        <input
+          type="hidden"
+          name={fieldName}
+          value={JSON.stringify(drafts.map(({ question, answer }) => ({ question, answer })))}
+        />
+      ) : null}
       <p className="text-xs text-muted">
         {usingDefaults
-          ? 'This page is showing its built-in FAQs. Saving here replaces them with your own set.'
+          ? `This page is showing its built-in FAQs. ${savedWithForm ? 'Editing them here' : 'Saving here'} replaces them with your own set.`
           : `${drafts.length} saved ${drafts.length === 1 ? 'FAQ' : 'FAQs'} on this page.`}
       </p>
 
@@ -223,15 +237,17 @@ export function FaqEditor({
         >
           Add FAQ
         </button>
-        <button
-          type="button"
-          onClick={save}
-          disabled={saving || incomplete}
-          title={incomplete ? 'Every FAQ needs a question and an answer.' : undefined}
-          className="rounded-chip bg-brand px-4 py-1.5 text-xs font-bold text-white transition-opacity disabled:opacity-40"
-        >
-          {saving ? 'Saving…' : 'Save FAQs'}
-        </button>
+        {savedWithForm ? null : (
+          <button
+            type="button"
+            onClick={save}
+            disabled={saving || incomplete}
+            title={incomplete ? 'Every FAQ needs a question and an answer.' : undefined}
+            className="rounded-chip bg-brand px-4 py-1.5 text-xs font-bold text-white transition-opacity disabled:opacity-40"
+          >
+            {saving ? 'Saving…' : 'Save FAQs'}
+          </button>
+        )}
         {usingDefaults && drafts.length > 0 ? (
           <span className="text-xs text-faint">Editing a copy of the built-in set</span>
         ) : null}

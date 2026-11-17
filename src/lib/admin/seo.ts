@@ -6,6 +6,7 @@ import { STATIC_SEO_PAGES } from '@/config/seo-pages';
 import {
   getAllOffers,
   getGuides,
+  getProducts,
   getSupplier,
   getSupplierSlugsWithReviews,
   getSuppliers,
@@ -45,7 +46,9 @@ import {
 import { supplierSlugFromCouponPath } from '@/lib/coupon-pages';
 import { ratingSourceLabel, supplierSlugFromReviewsPath } from '@/lib/review-pages';
 import { formatReviewCount } from '@/lib/format';
-import { listSavedSupplierContent } from '@/lib/admin/supplier-content';
+import { listSavedSupplierContent, listSavedSupplierSections } from '@/lib/admin/supplier-content';
+import { supplierPageSectionDefaults } from '@/lib/supplier-content-store';
+import type { SupplierPageSections, SupplierPageSectionsOverride } from '@/lib/supplier-page-sections';
 import {
   defaultSupplierContent,
   supplierMarketStats,
@@ -85,6 +88,8 @@ export interface SeoEntry {
   defaultFaqs: FaqItem[];
   /** Supplier pages only: the About / Why / vs-other-suppliers boxes. Null for every other kind. */
   supplierContent: { saved: SupplierContentOverride | null; defaults: SupplierContent } | null;
+  /** Supplier pages only: the intro, "Is {Name} legit?", market price and FAQ sections. Null for every other kind. */
+  supplierSections: { saved: SupplierPageSectionsOverride | null; defaults: SupplierPageSections } | null;
   /** Whether the page is indexed, and which quality rules it fails, from src/lib/seo/indexing.ts. */
   indexing: IndexDecision;
 }
@@ -159,7 +164,19 @@ function defaultsOnly(defaults: SeoDefaults): SeoDefaults {
 
 export async function getSeoDashboardData(): Promise<SeoDashboardData> {
   const client = requireClient();
-  const [compounds, suppliers, pages, redirects, guides, offers, savedSupplierContent, publicSuppliers, slugsWithReviews] = await Promise.all([
+  const [
+    compounds,
+    suppliers,
+    pages,
+    redirects,
+    guides,
+    offers,
+    savedSupplierContent,
+    publicSuppliers,
+    slugsWithReviews,
+    savedSupplierSections,
+    products,
+  ] = await Promise.all([
     fetchProductIdentitiesFromDb(client),
     fetchSuppliersFromDb(client, { includeInactive: true }),
     client.from('seo_pages').select('*'),
@@ -169,6 +186,8 @@ export async function getSeoDashboardData(): Promise<SeoDashboardData> {
     listSavedSupplierContent(),
     getSuppliers(),
     getSupplierSlugsWithReviews(),
+    listSavedSupplierSections(),
+    getProducts(),
   ]);
   if (!compounds) throw new AdminDbError('The products table could not be read.');
   if (!suppliers) throw new AdminDbError('The suppliers table could not be read.');
@@ -228,6 +247,31 @@ export async function getSeoDashboardData(): Promise<SeoDashboardData> {
       defaults: defaultSupplierContent(supplier, supplierMarketStats(supplier.slug, offers)),
     };
   };
+  // Built the way the public page builds them, from the same public record and offers.
+  const productsBySlug = new Map(products.map((product) => [product.slug, product]));
+  const sectionDefaultsBySlug = new Map(
+    await Promise.all(
+      suppliers.map(
+        async (rawSupplier) => {
+          const supplier = publicSupplierBySlug.get(rawSupplier.slug) ?? rawSupplier;
+          return [
+            supplier.slug,
+            await supplierPageSectionDefaults(
+              supplier,
+              offers.filter((offer) => offer.supplierSlug === supplier.slug),
+              productsBySlug,
+            ),
+          ] as const;
+        },
+      ),
+    ),
+  );
+  const supplierSectionsFor = (kind: SeoPageKind, slug: string | null): SeoEntry['supplierSections'] => {
+    if (kind !== 'supplier' || !slug) return null;
+    const defaults = sectionDefaultsBySlug.get(slug);
+    if (!defaults) return null;
+    return { saved: savedSupplierSections.get(slug) ?? null, defaults };
+  };
   const quality = await getPageQualityIndex();
   const toEntry = (kind: SeoPageKind, group: string, name: string, slug: string | null, defaults: SeoDefaults) => ({
     path: defaults.path,
@@ -240,6 +284,7 @@ export async function getSeoDashboardData(): Promise<SeoDashboardData> {
     faqs: faqsByPath.get(defaults.path) ?? null,
     defaultFaqs: defaultFaqsFor(defaults.path),
     supplierContent: supplierContentFor(kind, slug),
+    supplierSections: supplierSectionsFor(kind, slug),
     indexing: indexDecisionFor(defaults.path, quality.facts[defaults.path], overrides.get(defaults.path) ?? null),
   });
   const byName = <T extends { name: string }>(a: T, b: T) => a.name.localeCompare(b.name);
