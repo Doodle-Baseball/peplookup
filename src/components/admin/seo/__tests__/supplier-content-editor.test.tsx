@@ -73,7 +73,7 @@ describe('SupplierContentEditor', () => {
     expect(JSON.parse(String(data.get('supplierSection_faqs')))).toEqual(SECTION_DEFAULTS.faqs);
   });
 
-  it('opens on saved text and can restore the generated version', () => {
+  it('opens on saved text', () => {
     const formData = renderInForm(
       {
         about: { title: 'Meet Amino Club', body: null },
@@ -93,10 +93,6 @@ describe('SupplierContentEditor', () => {
     expect(formData().get('supplierSection_intro')).toBe('Saved intro.');
     expect(formData().get('supplierSection_legitBody')).toBe('Saved legit.');
     expect(formData().get('supplierSection_faqs')).toBe('[]');
-
-    fireEvent.click(screen.getByRole('button', { name: 'Restore generated text' }));
-    expect(formData().get('supplierContent_about_title')).toBe('About Amino Club');
-    expect(formData().get('supplierSection_intro')).toBe('Generated intro.');
-    expect(JSON.parse(String(formData().get('supplierSection_faqs')))).toEqual(SECTION_DEFAULTS.faqs);
+    expect(screen.queryByRole('button', { name: 'Restore generated text' })).toBeNull();
   });
 });

@@ -11,113 +11,16 @@ import {
 } from 'react';
 import { createPortal } from 'react-dom';
 import type { RenamableKind, SeoEntry } from '@/lib/admin/seo';
-import type { SeoTaskStatus } from '@/lib/seo';
-import {
-  resetSeoPageAction,
-  saveSeoPageAction,
-  setPageTaskStatusAction,
-  type SeoSaveState,
-} from '@/app/admin/(dashboard)/seo/actions';
+import { resetSeoPageAction, saveSeoPageAction, type SeoSaveState } from '@/app/admin/(dashboard)/seo/actions';
 import { TagListInput } from '@/components/admin/tag-list-input';
-import { characterCount, DESCRIPTION_LENGTH, TITLE_LENGTH, taskStatusLabel } from '@/lib/seo-status';
+import { characterCount, DESCRIPTION_LENGTH, TITLE_LENGTH } from '@/lib/seo-status';
 import { site } from '@/config/site';
-import { indexStatusLabel } from '@/lib/seo/indexing';
 import { cn } from '@/lib/cn';
-import { ChevronDownIcon, CloseIcon, WarningIcon } from '@/components/icons/icons';
+import { CloseIcon, WarningIcon } from '@/components/icons/icons';
 import { FaqEditor } from '@/components/admin/seo/faq-editor';
-import { OTHER_VENDOR_COUNT_TOKEN, VENDOR_COUNT_TOKEN } from '@/lib/vendor-count';
 import { SupplierContentEditor } from '@/components/admin/seo/supplier-content-editor';
 
 const INITIAL_STATE: SeoSaveState = { error: null, fieldErrors: {}, savedAt: null };
-
-const TASK_STATUS_VALUES: readonly SeoTaskStatus[] = ['needs-work', 'pending', 'done'];
-
-/** Same colour language the dashboard cards use for these three states. */
-const TASK_STATUS_STYLE: Record<SeoTaskStatus, { field: string; dot: string }> = {
-  'needs-work': { field: 'border-warn/40 bg-warn/5 text-warn', dot: 'bg-warn' },
-  pending: { field: 'border-info/40 bg-info/5 text-info', dot: 'bg-info' },
-  done: { field: 'border-ok/40 bg-ok/5 text-ok', dot: 'bg-ok' },
-};
-
-/**
- * Saved on its own via `setPageTaskStatusAction` rather than through the main
- * form: it's a workflow note for the admin, unrelated to the page's actual
- * SEO fields, so it shouldn't wait for (or be lost by) the rest of the save.
- *
- * No "Not set" option: a page nobody has ever touched here defaults to
- * "Needs work" in the dropdown, since that's the honest starting state for
- * SEO on a page nobody has reviewed yet.
- */
-function TaskStatusDropdown({ path, kind, initial }: { path: string; kind: string; initial: SeoTaskStatus | null }) {
-  const [value, setValue] = useState<SeoTaskStatus>(initial ?? 'needs-work');
-  const [pending, startTransition] = useTransition();
-  const [error, setError] = useState<string | null>(null);
-
-  function onChange(event: React.ChangeEvent<HTMLSelectElement>) {
-    const next = event.target.value as SeoTaskStatus;
-    const previous = value;
-    setValue(next); // optimistic
-    setError(null);
-    startTransition(async () => {
-      const result = await setPageTaskStatusAction(path, next);
-      if (result.error) {
-        setValue(previous);
-        setError(result.error);
-      }
-    });
-  }
-
-  const style = TASK_STATUS_STYLE[value];
-
-  return (
-    <div>
-      <label htmlFor="seo-task-status" className="block text-sm font-semibold text-content">
-        Status
-      </label>
-
-      {/* The select is styled as a status pill that takes its colour from the
-          current value, with a custom chevron since `appearance-none` drops
-          the native one. The status dot and chevron are decorative overlays,
-          so they must not swallow clicks meant for the select underneath. */}
-      <div className="relative mt-1.5 max-w-xs">
-        <span
-          aria-hidden="true"
-          className={cn(
-            'pointer-events-none absolute left-3.5 top-1/2 h-2 w-2 -translate-y-1/2 rounded-full',
-            style.dot,
-          )}
-        />
-        <select
-          id="seo-task-status"
-          value={value}
-          onChange={onChange}
-          disabled={pending}
-          className={cn(
-            'w-full appearance-none rounded-pill border py-2.5 pl-8 pr-10',
-            'text-sm font-bold outline-none transition-colors',
-            'focus:ring-2 focus:ring-brand/20 disabled:opacity-60',
-            style.field,
-          )}
-        >
-          {TASK_STATUS_VALUES.map((option) => (
-            <option key={option} value={option} className="bg-surface text-content">
-              {taskStatusLabel(option, kind)}
-            </option>
-          ))}
-        </select>
-        <ChevronDownIcon
-          aria-hidden="true"
-          className={cn(
-            'pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 transition-transform',
-            pending && 'animate-pulse',
-          )}
-        />
-      </div>
-
-      {error ? <p role="alert" className="mt-1 text-xs font-semibold text-danger">{error}</p> : null}
-    </div>
-  );
-}
 
 // Duplicated from lib/admin/seo (server-only) so this client component never imports it at runtime.
 const SLUG_PREFIX: Record<RenamableKind, string> = {
@@ -144,13 +47,15 @@ function LengthCounter({ value, range }: { value: string; range: { min: number; 
   );
 }
 
-function Section({ title, description, children }: { title: string; description?: string; children: ReactNode }) {
+function Section({ title, description, children }: { title?: string; description?: string; children: ReactNode }) {
   return (
     <section className="space-y-4 border-t border-line pt-5 first:border-0 first:pt-0">
-      <div>
-        <h3 className="text-sm font-black uppercase tracking-wide text-content">{title}</h3>
-        {description ? <p className="mt-0.5 text-xs text-muted">{description}</p> : null}
-      </div>
+      {title ? (
+        <div>
+          <h3 className="text-sm font-black uppercase tracking-wide text-content">{title}</h3>
+          {description ? <p className="mt-0.5 text-xs text-muted">{description}</p> : null}
+        </div>
+      ) : null}
       {children}
     </section>
   );
@@ -249,10 +154,6 @@ export function SeoEditDialog({ entry, onClose }: { entry: SeoEntry; onClose: ()
           </header>
 
           <div className="space-y-6 px-6 py-6">
-            <Section title="Workflow status" description="A note for the admin only. Saved immediately, separate from the fields below.">
-              <TaskStatusDropdown path={entry.path} kind={entry.kind} initial={override?.taskStatus ?? null} />
-            </Section>
-
             {renamableKind ? (
               <Section
                 title="URL slug"
@@ -296,10 +197,7 @@ export function SeoEditDialog({ entry, onClose }: { entry: SeoEntry; onClose: ()
               </Section>
             ) : null}
 
-            <Section
-              title="Search appearance"
-              description={`Leave a field blank to keep the page's default. Type ${VENDOR_COUNT_TOKEN} anywhere (titles, descriptions, headings, FAQs, page text) to show the live supplier count, or ${OTHER_VENDOR_COUNT_TOKEN} for that count minus one ("vs. 89 other suppliers").`}
-            >
+            <Section>
               <div>
                 <div className="flex items-center justify-between gap-3">
                   <label htmlFor="seo-title" className="text-sm font-semibold text-content">
@@ -380,7 +278,6 @@ export function SeoEditDialog({ entry, onClose }: { entry: SeoEntry; onClose: ()
             </Section>
 
             <Section title="Indexing & sharing">
-              <IndexingStatus entry={entry} />
               <div className="flex flex-wrap gap-3">
                 <label className="flex cursor-pointer items-center gap-2 rounded-chip border border-line bg-surface px-3 py-2 text-sm text-content has-[:checked]:border-brand has-[:checked]:bg-brand-soft">
                   <input type="checkbox" name="robotsIndex" defaultChecked={override?.robotsIndex ?? true} />
@@ -540,30 +437,5 @@ export function SeoEditDialog({ entry, onClose }: { entry: SeoEntry; onClose: ()
       </div>
     </div>,
     document.body,
-  );
-}
-
-/**
- * The page's indexing decision as it stands: "Indexed ✓" or "Not indexed –
- * reason: …", and any quality rule it fails. While a page type's rules are
- * reported but not enforced, a failing page is still indexed and says so.
- */
-function IndexingStatus({ entry }: { entry: SeoEntry }) {
-  const { indexing } = entry;
-  const failing = indexing.qualityFailures;
-  return (
-    <div
-      className={cn(
-        'rounded-chip border px-3.5 py-2.5 text-xs',
-        !indexing.indexable ? 'border-warn/30 bg-warn/5' : failing.length > 0 ? 'border-info/30 bg-info/5' : 'border-ok/30 bg-ok/5',
-      )}
-    >
-      <p className={cn('font-bold', indexing.indexable ? 'text-ok' : 'text-warn')}>{indexStatusLabel(indexing)}</p>
-      {failing.length > 0 ? (
-        <p className="mt-1 text-muted">
-          Quality check {indexing.enforced ? 'failing' : 'failing (reported only, not enforced)'}: {failing.join('; ')}.
-        </p>
-      ) : null}
-    </div>
   );
 }

@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import { AdminPageHeader } from '@/components/admin/page-header';
 import { SeoDashboard } from '@/components/admin/seo/seo-dashboard';
 import { getSeoDashboardData, type SeoDashboardData } from '@/lib/admin/seo';
 
@@ -18,17 +17,16 @@ export default async function AdminSeoPage() {
   }
 
   return (
-    <>
-      <AdminPageHeader title="SEO" />
-      <div className="px-4 py-6 sm:px-8 sm:py-8">
-        {data ? (
-          <SeoDashboard entries={data.entries} redirects={data.redirects} quality={data.quality} setupError={data.setupError} />
-        ) : (
-          <p role="alert" className="rounded-card border border-danger/30 bg-danger/5 px-5 py-4 text-sm font-semibold text-danger">
-            {loadError}
-          </p>
-        )}
-      </div>
-    </>
+    <div className="px-4 py-6 sm:px-8 sm:py-8">
+      {/* No visible page header here by the owner's choice; the heading stays for screen readers. */}
+      <h1 className="sr-only">SEO</h1>
+      {data ? (
+        <SeoDashboard entries={data.entries} setupError={data.setupError} />
+      ) : (
+        <p role="alert" className="rounded-card border border-danger/30 bg-danger/5 px-5 py-4 text-sm font-semibold text-danger">
+          {loadError}
+        </p>
+      )}
+    </div>
   );
 }

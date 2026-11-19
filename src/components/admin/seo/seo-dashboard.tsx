@@ -1,13 +1,8 @@
 'use client';
 
-import { supplierPath } from '@/lib/site-paths';
 import { useMemo, useState } from 'react';
-import type { SeoEntry, SeoPageKind, SeoQualitySummary } from '@/lib/admin/seo';
-import type { SeoRedirect } from '@/lib/seo';
-import { effectiveSeo, seoChecks, seoStatus, taskStatusLabel, type EffectiveSeo, type SeoStatus } from '@/lib/seo-status';
-import { indexStatusLabel } from '@/lib/seo/indexing';
-import { QUALITY_THRESHOLDS } from '@/config/seo-quality';
-import type { SeoTaskStatus } from '@/lib/seo';
+import type { SeoEntry, SeoPageKind } from '@/lib/admin/seo';
+import { effectiveSeo, type EffectiveSeo } from '@/lib/seo-status';
 import { SeoEditDialog } from '@/components/admin/seo/seo-edit-dialog';
 import { cn } from '@/lib/cn';
 import { ExternalIcon, PencilIcon, SearchIcon, WarningIcon } from '@/components/icons/icons';
@@ -15,13 +10,9 @@ import { ExternalIcon, PencilIcon, SearchIcon, WarningIcon } from '@/components/
 const PAGE_SIZE = 24;
 const VISIBLE_KEYWORDS = 4;
 
-type KindFilter = 'all' | SeoPageKind;
-type StatusFilter = 'any' | SeoStatus | 'customized';
-type TaskStatusFilter = 'all' | SeoTaskStatus;
-type IndexingFilter = 'all' | 'indexed' | 'not-indexed' | 'failing';
-
-const SELECT_CLASS =
-  'cursor-pointer rounded-chip border border-line bg-surface px-3.5 py-2.5 text-sm font-semibold text-content outline-none transition-colors hover:border-brand focus-visible:border-brand focus-visible:ring-2 focus-visible:ring-brand/40';
+/** Review pages are left out: each one now redirects to its supplier page, so there is nothing to edit. */
+type ListedKind = Exclude<SeoPageKind, 'review'>;
+type KindFilter = 'all' | ListedKind;
 
 const KIND_TABS: readonly { value: KindFilter; label: string }[] = [
   { value: 'all', label: 'All pages' },
@@ -30,97 +21,42 @@ const KIND_TABS: readonly { value: KindFilter; label: string }[] = [
   { value: 'supplier', label: 'Suppliers' },
   { value: 'guide', label: 'Guides' },
   { value: 'coupon', label: 'Coupon pages' },
-  { value: 'review', label: 'Review pages' },
 ];
 
-const KIND_LABEL: Record<SeoPageKind, string> = {
+const KIND_LABEL: Record<ListedKind, string> = {
   static: 'Static',
   compound: 'Compound',
   supplier: 'Supplier',
   guide: 'Guide',
   coupon: 'Coupon page',
-  review: 'Review page',
 };
 
 interface Row {
-  entry: SeoEntry;
+  entry: SeoEntry & { kind: ListedKind };
   seo: EffectiveSeo;
-  status: SeoStatus;
-  passed: number;
-  total: number;
-  taskStatus: SeoTaskStatus | null;
-  taskStatusLabel: string | null;
 }
 
-function StatTile({ label, value, tone }: { label: string; value: number; tone?: 'ok' | 'warn' | 'info' }) {
-  return (
-    <div
-      className={cn(
-        // Tinted to match the number it carries, so the row reads as a summary
-        // at a glance rather than five identical grey boxes.
-        'rounded-card border px-4 py-3 shadow-sm transition-colors',
-        tone === 'ok' && 'border-ok/25 bg-ok/5',
-        tone === 'warn' && 'border-warn/25 bg-warn/5',
-        tone === 'info' && 'border-info/25 bg-info/5',
-        !tone && 'border-line bg-surface-raised',
-      )}
-    >
-      <p className="text-micro font-bold uppercase text-faint">{label}</p>
-      <p
-        className={cn(
-          'mt-1 text-2xl font-black text-content',
-          tone === 'ok' && 'text-ok',
-          tone === 'warn' && 'text-warn',
-          tone === 'info' && 'text-info',
-        )}
-      >
-        {value}
-      </p>
-    </div>
-  );
+function isListed(entry: SeoEntry): entry is SeoEntry & { kind: ListedKind } {
+  return entry.kind !== 'review';
 }
 
-export function SeoDashboard({
-  entries,
-  redirects,
-  quality,
-  setupError,
-}: {
-  entries: SeoEntry[];
-  redirects: SeoRedirect[];
-  quality: SeoQualitySummary;
-  setupError: string | null;
-}) {
+export function SeoDashboard({ entries, setupError }: { entries: SeoEntry[]; setupError: string | null }) {
   const [query, setQuery] = useState('');
   const [kind, setKind] = useState<KindFilter>('all');
-  const [status, setStatus] = useState<StatusFilter>('any');
-  const [taskStatus, setTaskStatus] = useState<TaskStatusFilter>('all');
-  const [indexing, setIndexing] = useState<IndexingFilter>('all');
   const [page, setPage] = useState(0);
   const [editingPath, setEditingPath] = useState<string | null>(null);
 
   const rows = useMemo<Row[]>(
     () =>
-      entries.map((entry) => {
-        // Whether the page is indexed comes from the one indexing decision, not the switch alone.
-        const seo = { ...effectiveSeo(entry.defaults, entry.override), robotsIndex: entry.indexing.indexable };
-        const checks = seoChecks(seo);
-        const taskStatus = entry.override?.taskStatus ?? null;
-        return {
-          entry,
-          seo,
-          status: seoStatus(seo),
-          passed: checks.filter((check) => check.passed).length,
-          total: checks.length,
-          taskStatus,
-          taskStatusLabel: taskStatus ? taskStatusLabel(taskStatus, entry.kind) : null,
-        };
-      }),
+      entries.filter(isListed).map((entry) => ({
+        entry,
+        seo: effectiveSeo(entry.defaults, entry.override),
+      })),
     [entries],
   );
 
   const kindCounts = useMemo(() => {
-    const counts: Record<KindFilter, number> = { all: rows.length, static: 0, compound: 0, supplier: 0, guide: 0, coupon: 0, review: 0 };
+    const counts: Record<KindFilter, number> = { all: rows.length, static: 0, compound: 0, supplier: 0, guide: 0, coupon: 0 };
     for (const row of rows) counts[row.entry.kind] += 1;
     return counts;
   }, [rows]);
@@ -128,12 +64,6 @@ export function SeoDashboard({
   const needle = query.trim().toLowerCase();
   const filtered = rows.filter((row) => {
     if (kind !== 'all' && row.entry.kind !== kind) return false;
-    if (status === 'customized' && !row.entry.override) return false;
-    if (status !== 'any' && status !== 'customized' && row.status !== status) return false;
-    if (taskStatus !== 'all' && row.taskStatus !== taskStatus) return false;
-    if (indexing === 'indexed' && !row.entry.indexing.indexable) return false;
-    if (indexing === 'not-indexed' && row.entry.indexing.indexable) return false;
-    if (indexing === 'failing' && row.entry.indexing.qualityFailures.length === 0) return false;
     if (!needle) return true;
     return (
       row.entry.name.toLowerCase().includes(needle) ||
@@ -147,10 +77,6 @@ export function SeoDashboard({
   const currentPage = Math.min(page, pageCount - 1);
   const pageRows = filtered.slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE);
   const editing = editingPath ? (entries.find((entry) => entry.path === editingPath) ?? null) : null;
-
-  const optimizedCount = rows.filter((row) => row.status === 'optimized').length;
-  const needsWorkCount = rows.filter((row) => row.status === 'needs-work').length;
-  const customizedCount = rows.filter((row) => row.entry.override).length;
 
   function resetPaging<T>(setter: (value: T) => void) {
     return (value: T) => {
@@ -171,70 +97,18 @@ export function SeoDashboard({
         </div>
       ) : null}
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
-        <StatTile label="Total pages" value={rows.length} />
-        <StatTile label="Optimized" value={optimizedCount} tone="ok" />
-        <StatTile label="Needs work" value={needsWorkCount} tone="warn" />
-        <StatTile label="Customized" value={customizedCount} tone="info" />
-        <StatTile label="Redirects" value={redirects.length} />
-      </div>
-
-      <QualityPanel quality={quality} />
-
       <section className="rounded-card border border-line bg-surface-raised p-5 sm:p-6">
-        <div className="flex flex-wrap items-center gap-3">
-          <label className="flex min-w-[14rem] flex-1 items-center gap-2 rounded-chip border border-line bg-surface px-3.5 py-2.5 focus-within:border-brand">
-            <SearchIcon className="h-4 w-4 shrink-0 text-faint" />
-            <span className="sr-only">Search pages</span>
-            <input
-              type="search"
-              value={query}
-              onChange={(event) => resetPaging(setQuery)(event.target.value)}
-              placeholder="Search by page name, URL, title or keyword"
-              className="min-w-0 flex-1 bg-transparent text-sm text-content outline-none placeholder:text-faint focus-visible:ring-0"
-            />
-          </label>
-          <label className="flex items-center gap-2 text-sm font-semibold text-content">
-            SEO
-            <select
-              value={status}
-              onChange={(event) => resetPaging(setStatus)(event.target.value as StatusFilter)}
-              className={SELECT_CLASS}
-            >
-              <option value="any">Any status</option>
-              <option value="optimized">Optimized</option>
-              <option value="needs-work">Needs work</option>
-              <option value="noindex">Noindex</option>
-              <option value="customized">Customized</option>
-            </select>
-          </label>
-          <label className="flex items-center gap-2 text-sm font-semibold text-content">
-            Indexing
-            <select
-              value={indexing}
-              onChange={(event) => resetPaging(setIndexing)(event.target.value as IndexingFilter)}
-              className={SELECT_CLASS}
-            >
-              <option value="all">All</option>
-              <option value="indexed">Indexed</option>
-              <option value="not-indexed">Not indexed</option>
-              <option value="failing">Failing quality check</option>
-            </select>
-          </label>
-          <label className="flex items-center gap-2 text-sm font-semibold text-content">
-            Status
-            <select
-              value={taskStatus}
-              onChange={(event) => resetPaging(setTaskStatus)(event.target.value as TaskStatusFilter)}
-              className={SELECT_CLASS}
-            >
-              <option value="all">All</option>
-              <option value="needs-work">Needs work</option>
-              <option value="pending">Pending</option>
-              <option value="done">Done / Optimized</option>
-            </select>
-          </label>
-        </div>
+        <label className="flex items-center gap-2 rounded-chip border border-line bg-surface px-3.5 py-2.5 focus-within:border-brand">
+          <SearchIcon className="h-4 w-4 shrink-0 text-faint" />
+          <span className="sr-only">Search pages</span>
+          <input
+            type="search"
+            value={query}
+            onChange={(event) => resetPaging(setQuery)(event.target.value)}
+            placeholder="Search by page name, URL, title or keyword"
+            className="min-w-0 flex-1 bg-transparent text-sm text-content outline-none placeholder:text-faint focus-visible:ring-0"
+          />
+        </label>
 
         <div role="group" aria-label="Page type" className="mt-4 flex flex-wrap gap-2">
           {KIND_TABS.map((tab) => (
@@ -261,7 +135,7 @@ export function SeoDashboard({
 
         {pageRows.length === 0 ? (
           <p className="mt-4 rounded-card border border-dashed border-line p-10 text-center text-sm text-muted">
-            No pages match these filters.
+            No pages match this search.
           </p>
         ) : (
           <ul className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 2xl:grid-cols-3">
@@ -309,17 +183,9 @@ function SeoCard({ row, onEdit, disabled }: { row: Row; onEdit: () => void; disa
     <li className="flex flex-col rounded-card border border-line bg-surface p-4 shadow-sm transition-colors hover:border-accent/40">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-1.5">
-            <span className="rounded-pill bg-surface-sunken px-2 py-0.5 text-micro font-bold uppercase text-muted">
-              {KIND_LABEL[entry.kind]}
-            </span>
-            {/* Coupon and review pages report the result once their saved SEO passes every check. */}
-            {(entry.kind === 'coupon' || entry.kind === 'review') && row.status === 'optimized' ? (
-              <span className="rounded-pill bg-ok/10 px-2 py-0.5 text-micro font-bold uppercase text-ok">Optimized</span>
-            ) : entry.override ? (
-              <span className="rounded-pill bg-info/10 px-2 py-0.5 text-micro font-bold uppercase text-info">Customized</span>
-            ) : null}
-          </div>
+          <span className="rounded-pill bg-surface-sunken px-2 py-0.5 text-micro font-bold uppercase text-muted">
+            {KIND_LABEL[entry.kind]}
+          </span>
           <h3 className="mt-1.5 truncate font-black text-content">{entry.name}</h3>
           <a
             href={entry.path}
@@ -331,18 +197,7 @@ function SeoCard({ row, onEdit, disabled }: { row: Row; onEdit: () => void; disa
             <ExternalIcon className="h-3 w-3 shrink-0" />
           </a>
         </div>
-        {row.taskStatusLabel ? (
-          <span
-            className={cn(
-              'shrink-0 rounded-pill px-2 py-0.5 text-micro font-bold uppercase',
-              row.taskStatus === 'done' && 'bg-ok/10 text-ok',
-              row.taskStatus === 'pending' && 'bg-info/10 text-info',
-              row.taskStatus === 'needs-work' && 'bg-warn/10 text-warn',
-            )}
-          >
-            {row.taskStatusLabel}
-          </span>
-        ) : null}
+        <RobotsBadge indexable={entry.indexing.indexable} />
       </div>
 
       <dl className="mt-3 space-y-2 text-sm">
@@ -373,12 +228,7 @@ function SeoCard({ row, onEdit, disabled }: { row: Row; onEdit: () => void; disa
         </div>
       </dl>
 
-      <IndexingLine entry={entry} />
-
-      <div className="mt-auto flex items-center justify-between gap-3 pt-4">
-        <span className="text-xs text-muted">
-          {row.passed}/{row.total} checks passed
-        </span>
+      <div className="mt-auto flex justify-end pt-4">
         <button
           type="button"
           onClick={onEdit}
@@ -393,60 +243,17 @@ function SeoCard({ row, onEdit, disabled }: { row: Row; onEdit: () => void; disa
   );
 }
 
-/** "Indexed ✓" or "Not indexed – reason: …", plus any quality rule the page fails. */
-function IndexingLine({ entry }: { entry: SeoEntry }) {
-  const { indexing } = entry;
+/** The robots tag the live page carries: "Index" or "Noindex". */
+function RobotsBadge({ indexable }: { indexable: boolean }) {
   return (
-    <div className="mt-3 space-y-1 text-xs">
-      <p className={cn('font-bold', indexing.indexable ? 'text-ok' : 'text-warn')}>{indexStatusLabel(indexing)}</p>
-      {indexing.qualityFailures.length > 0 ? (
-        <p className="text-muted">
-          <span className="font-semibold text-content">
-            Quality check failing{indexing.enforced ? '' : ' (not enforced)'}:
-          </span>{' '}
-          {indexing.qualityFailures.join('; ')}
-        </p>
-      ) : null}
-    </div>
-  );
-}
-
-/** The bulk-indexing alert, and whose prices are stale. */
-function QualityPanel({ quality }: { quality: SeoQualitySummary }) {
-  const stale = quality.stalePriceSuppliers;
-  return (
-    <section aria-label="Indexing and quality" className="space-y-3">
-      {quality.tooManyNewlyIndexable ? (
-        <p role="alert" className="flex gap-2 rounded-card border border-warn/30 bg-warn/5 px-4 py-3 text-sm text-content">
-          <WarningIcon className="mt-0.5 h-4 w-4 shrink-0 text-warn" />
-          {quality.madeIndexableLast7Days} pages were made indexable in the last 7 days, more than{' '}
-          {QUALITY_THRESHOLDS.maxNewlyIndexablePerWeek}. Put pages live a few at a time, not in bulk.
-        </p>
-      ) : null}
-      {stale.length > 0 ? (
-        <details className="rounded-card border border-warn/30 bg-warn/5 px-4 py-3 text-sm text-content">
-          <summary className="flex cursor-pointer items-center gap-2 font-semibold">
-            <WarningIcon className="h-4 w-4 shrink-0 text-warn" />
-            {stale.length} {stale.length === 1 ? 'supplier has' : 'suppliers have'} prices not updated in{' '}
-            {QUALITY_THRESHOLDS.stalePriceDays} days
-          </summary>
-          <ul className="mt-2 grid grid-cols-1 gap-1 sm:grid-cols-2 lg:grid-cols-3">
-            {stale.map((supplier) => (
-              <li key={supplier.slug} className="text-muted">
-                <a
-                  href={supplierPath(supplier.slug)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-semibold text-brand hover:underline"
-                >
-                  {supplier.name}
-                </a>{' '}
-                · {supplier.daysOld} days
-              </li>
-            ))}
-          </ul>
-        </details>
-      ) : null}
-    </section>
+    <span
+      className={cn(
+        'inline-flex shrink-0 items-center gap-1.5 rounded-pill border px-2.5 py-1 text-micro font-bold uppercase',
+        indexable ? 'border-ok/30 bg-ok/10 text-ok' : 'border-line bg-surface-sunken text-muted',
+      )}
+    >
+      <span aria-hidden="true" className={cn('h-1.5 w-1.5 rounded-full', indexable ? 'bg-ok' : 'bg-faint')} />
+      {indexable ? 'Index' : 'Noindex'}
+    </span>
   );
 }

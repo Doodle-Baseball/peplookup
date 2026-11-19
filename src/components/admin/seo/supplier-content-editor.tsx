@@ -126,22 +126,13 @@ export function SupplierContentEditor({
   const [sections, setSections] = useState<SupplierPageSections>(() =>
     resolveSupplierPageSections(sectionDefaults, savedSections),
   );
-  // Remounts the FAQ editor when the generated text is restored.
-  const [faqVersion, setFaqVersion] = useState(0);
-
   const hasSaved = saved !== null || savedSections !== null;
-
-  function restoreGenerated() {
-    setAbout(defaults.about);
-    setSections(sectionDefaults);
-    setFaqVersion((version) => version + 1);
-  }
 
   return (
     <div className="space-y-4">
       <p className="text-xs text-muted">
         {hasSaved
-          ? 'Fields you have saved show your text. Clear a field, or restore the generated text, to go back to the version built from the supplier’s data.'
+          ? 'Fields you have saved show your text. Clear a field to go back to the version built from the supplier’s data.'
           : 'Every section is showing the text the page builds from the supplier’s own data. Edit any field to replace it.'}{' '}
         Saved with <span className="font-semibold text-content">Save changes</span> below.
       </p>
@@ -239,21 +230,12 @@ export function SupplierContentEditor({
         hint="Shown at the bottom of the page and published as FAQPage structured data. An empty list removes the section."
       >
         <FaqEditor
-          key={faqVersion}
           path={path}
-          saved={faqVersion === 0 ? (savedSections?.faqs ?? null) : null}
+          saved={savedSections?.faqs ?? null}
           effective={sectionDefaults.faqs}
           fieldName={SUPPLIER_SECTION_FIELDS.faqs}
         />
       </SectionBox>
-
-      <button
-        type="button"
-        onClick={restoreGenerated}
-        className="rounded-chip border border-line px-3 py-1.5 text-xs font-bold text-content transition-colors hover:border-brand"
-      >
-        Restore generated text
-      </button>
     </div>
   );
 }
