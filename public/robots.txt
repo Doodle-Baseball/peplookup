@@ -22,5 +22,3 @@ Disallow: /supplier/*pq=
 Disallow: /suppliers/*pq=
 Disallow: /coas?
  
-Sitemap: https://www.peplookup.com/sitemap.xml
- 

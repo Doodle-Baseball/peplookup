@@ -10,7 +10,7 @@ export const maxDuration = 60;
 const ORIGIN = `https://${site.domain}`;
 
 /**
- * C3, every 15 minutes: the homepage, one supplier page and the sitemap must
+ * C3, every 15 minutes: the homepage and one supplier page must
  * each answer 200 on the live domain (a redirect counts as a failure). Emails
  * when any doesn't.
  *
@@ -23,7 +23,7 @@ export async function GET(request: Request) {
   if (denied) return denied;
 
   const supplier = (await getSuppliers())[0];
-  const paths = ['/', ...(supplier ? [supplierPath(supplier.slug)] : []), '/sitemap.xml'];
+  const paths = ['/', ...(supplier ? [supplierPath(supplier.slug)] : [])];
   const results = await Promise.all(
     paths.map(async (path) => {
       try {

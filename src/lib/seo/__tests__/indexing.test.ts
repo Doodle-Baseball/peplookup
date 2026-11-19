@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
+  applyIndexablePaths,
   indexDecision,
   indexStatusLabel,
   isIndexable,
@@ -129,5 +130,24 @@ describe('isProductionDeployment', () => {
     expect(isProductionDeployment({ VERCEL_ENV: 'production' })).toBe(true);
     expect(isProductionDeployment({ VERCEL_ENV: 'preview' })).toBe(false);
     expect(isProductionDeployment({})).toBe(false);
+  });
+});
+
+describe('applyIndexablePaths (only the home page is indexed)', () => {
+  const indexable = staticPageDecision('/', LIVE);
+
+  it('keeps the home page indexable', () => {
+    expect(applyIndexablePaths('/', indexable).indexable).toBe(true);
+  });
+
+  it('keeps the home page noindex when its own rules say so', () => {
+    const preview = staticPageDecision('/', { ...LIVE, isProduction: false });
+    expect(applyIndexablePaths('/', preview).indexable).toBe(false);
+  });
+
+  it.each(['/supplier/purgo-labs', '/product/bpc-157', '/guide/storage', '/about'])('makes %s noindex, with the reason', (path) => {
+    const decision = applyIndexablePaths(path, indexable);
+    expect(decision.indexable).toBe(false);
+    expect(decision.reasons).toContain('only the home page is indexed (site setting)');
   });
 });

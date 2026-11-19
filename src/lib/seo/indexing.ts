@@ -57,6 +57,23 @@ export type PageQualityFacts =
  */
 const PRIVATE_PATHS: ReadonlySet<string> = new Set(['/thanks', '/extension/welcome', '/extension/uninstalled', '/load']);
 
+/**
+ * On 2026-11-18 the site owner chose to keep only the home page in search:
+ * every other page is noindex, whatever its quality or admin switch says.
+ * Add a path here to let it be indexed again (by the usual rules).
+ */
+const INDEXABLE_PATHS: ReadonlySet<string> = new Set(['/']);
+
+/** Takes every page outside {@link INDEXABLE_PATHS} out of search; the listed pages keep their own decision. */
+export function applyIndexablePaths(path: string, decision: IndexDecision): IndexDecision {
+  if (INDEXABLE_PATHS.has(path)) return decision;
+  return {
+    ...decision,
+    indexable: false,
+    reasons: [...decision.reasons, 'only the home page is indexed (site setting)'],
+  };
+}
+
 export interface IndexContext {
   /** VERCEL_ENV === 'production'. Every other deployment is noindex. */
   isProduction: boolean;

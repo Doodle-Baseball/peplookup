@@ -2,10 +2,8 @@
 // SEO build check (B7). Fails the deploy when the site about to go live would:
 //   - put a star or emoji in any title or description,
 //   - give two or more pages the same title,
-//   - list a URL in sitemap.xml that is noindex or doesn't answer 200,
-//   - (production only) output noindex on "/" or on more than half its pages,
-//   - block Googlebot with "Disallow: /" in robots.txt,
-//   - change the number of sitemap URLs by more than 20% from the live site.
+//   - (production only) output noindex on "/",
+//   - block Googlebot with "Disallow: /" in robots.txt.
 //
 // Runs as `postbuild` (so `npm run build` on Vercel runs it after `next build`):
 // it starts the freshly built site with `next start`, crawls it and exits
@@ -15,20 +13,14 @@
 //   node scripts/seo-check.mjs --url http://localhost:3000   check a site that is already running
 //
 // Outside Vercel the postbuild run is skipped unless SEO_CHECK=1, so a local
-// `npm run build` doesn't crawl. Preview builds run every check except the two
-// that only make sense in production (previews are noindex on purpose).
-//
-// A deliberate sitemap change of more than 20% (pages taken out of search on
-// purpose, say) is allowed once by setting SEO_CHECK_EXPECTED_SITEMAP_COUNT to
-// the exact new count for that deploy; any other count still fails.
+// `npm run build` doesn't crawl. Preview builds run every check except the one
+// that only makes sense in production (previews are noindex on purpose).
 
 import { spawn } from 'node:child_process';
 import { createServer } from 'node:net';
 import { setTimeout as sleep } from 'node:timers/promises';
 
 const LIVE_ORIGIN = 'https://www.peplookup.com';
-const MAX_SITEMAP_CHANGE = 0.2;
-const MAX_NOINDEX_SHARE = 0.5;
 const CONCURRENCY = 6;
 const REQUEST_TIMEOUT_MS = 60_000;
 
@@ -179,40 +171,19 @@ async function main() {
     if (robots.status !== 200) fail(`robots.txt answered ${robots.status}`);
     else if (blocksGooglebot(robots.text)) fail('robots.txt has "Disallow: /" for Googlebot');
 
-    // ------------------------------------------------------------ sitemap
-    const sitemap = await fetchText(`${site.base}/sitemap.xml`);
-    if (sitemap.status !== 200) {
-      fail(`sitemap.xml answered ${sitemap.status}`);
-      return;
-    }
-    const newPaths = sitemapPaths(sitemap.text);
-
-    // The live site is the last deploy: its sitemap is the baseline for the size check.
+    // ------------------------------------------------------------ pages
+    // The site has no sitemap since 2026-11-18 (only "/" is indexed). The live
+    // site's sitemap, while it still answers, adds the pages that used to be
+    // listed, so their titles keep being checked.
     let livePaths = [];
     try {
       const live = await fetchText(`${LIVE_ORIGIN}/sitemap.xml`);
       if (live.status === 200) livePaths = sitemapPaths(live.text);
-      else warn(`live sitemap.xml answered ${live.status}; size check skipped`);
     } catch (error) {
-      warn(`live sitemap.xml could not be read (${error.message}); size check skipped`);
+      warn(`live sitemap.xml could not be read (${error.message}); checking "/" only`);
     }
 
-    if (isProduction && livePaths.length > 0) {
-      const change = Math.abs(newPaths.length - livePaths.length) / livePaths.length;
-      const expected = Number(process.env.SEO_CHECK_EXPECTED_SITEMAP_COUNT);
-      if (change > MAX_SITEMAP_CHANGE && expected !== newPaths.length) {
-        fail(
-          `sitemap.xml would go from ${livePaths.length} to ${newPaths.length} URLs (${Math.round(change * 100)}% change, limit ${MAX_SITEMAP_CHANGE * 100}%). ` +
-            `If that is intended, set SEO_CHECK_EXPECTED_SITEMAP_COUNT=${newPaths.length} for this one deploy.`,
-        );
-      }
-    }
-
-    // ------------------------------------------------------------ pages
-    // Every URL in the new sitemap, plus every URL that was live before, so an
-    // accidental noindex can't hide by also emptying the sitemap.
-    const sitemapSet = new Set(newPaths);
-    const toCrawl = [...new Set(['/', ...newPaths, ...livePaths])];
+    const toCrawl = [...new Set(['/', ...livePaths])];
     const pages = await inBatches(toCrawl, async (path) => {
       try {
         const { status, text } = await fetchText(`${site.base}${path}`);
@@ -224,15 +195,9 @@ async function main() {
 
     const titles = new Map();
     let noindexCount = 0;
-    let servedCount = 0;
     for (const page of pages) {
       const noindex = /noindex/i.test(page.robots ?? '');
-      if (sitemapSet.has(page.path)) {
-        if (page.status !== 200) fail(`${page.path} is in sitemap.xml but answered ${page.status || page.error}`);
-        if (noindex) fail(`${page.path} is in sitemap.xml but is noindex`);
-      }
       if (page.status !== 200) continue;
-      servedCount += 1;
       if (noindex) noindexCount += 1;
       if (page.title && hasStarOrEmoji(page.title)) fail(`${page.path} title contains a star or emoji: "${page.title}"`);
       if (page.description && hasStarOrEmoji(page.description)) {
@@ -249,14 +214,9 @@ async function main() {
       const home = pages.find((page) => page.path === '/');
       if (!home || home.status !== 200) fail(`"/" answered ${home?.status ?? 'nothing'}`);
       else if (/noindex/i.test(home.robots ?? '')) fail('"/" outputs noindex');
-      if (servedCount > 0 && noindexCount / servedCount > MAX_NOINDEX_SHARE) {
-        fail(`${noindexCount} of ${servedCount} pages output noindex (more than ${MAX_NOINDEX_SHARE * 100}%)`);
-      }
     }
 
-    console.log(
-      `[seo-check] ${pages.length} pages crawled, ${newPaths.length} URLs in sitemap.xml (live: ${livePaths.length || 'unknown'}), ${noindexCount} noindex.`,
-    );
+    console.log(`[seo-check] ${pages.length} pages crawled, ${noindexCount} noindex.`);
   } finally {
     site.stop();
   }

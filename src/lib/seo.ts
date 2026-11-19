@@ -12,6 +12,7 @@ import { followRedirects, rowToSeoRedirect, type SeoRedirect, type SeoRedirectRo
 import { getInactiveReviewFacts, getPageQualityIndex, getSupplierTextContext } from '@/lib/seo/page-quality';
 import { QUALITY_RULES_ENFORCED } from '@/config/seo-quality';
 import {
+  applyIndexablePaths,
   indexDecision,
   isProductionDeployment,
   pageTypeForPath,
@@ -279,6 +280,15 @@ function decide(
   override: SeoOverride | null,
   isProduction = isProductionDeployment(),
 ): IndexDecision {
+  return applyIndexablePaths(path, decideByRules(path, facts, override, isProduction));
+}
+
+function decideByRules(
+  path: string,
+  facts: PageQualityFacts | undefined,
+  override: SeoOverride | null,
+  isProduction: boolean,
+): IndexDecision {
   const context = {
     isProduction,
     adminRobotsIndex: override ? override.robotsIndex : null,
@@ -356,7 +366,11 @@ export async function withSeo(path: string, base: Metadata): Promise<Metadata> {
   const description = rawDescription ? cleaned.description : base.description;
   const canonical = seo?.canonicalUrl ?? base.alternates?.canonical;
   const follow = seo?.robotsFollow ?? true;
-  const robots = !decision.indexable ? { index: false, follow } : follow ? base.robots : { index: true, follow: false };
+  const robots = !decision.indexable
+    ? { index: false, follow }
+    : follow
+      ? (base.robots ?? { index: true, follow: true })
+      : { index: true, follow: false };
 
   return {
     ...base,

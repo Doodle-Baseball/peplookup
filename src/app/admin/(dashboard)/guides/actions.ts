@@ -52,7 +52,6 @@ function revalidateGuideSurfaces(...slugs: string[]) {
   revalidateTag('guides');
   revalidatePath('/admin/guides');
   revalidatePath('/guide');
-  revalidatePath('/sitemap.xml');
   for (const slug of slugs) revalidatePath(guidePath(slug));
 }
 
