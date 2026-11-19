@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useTransition } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import {
   deleteVendorRequest,
@@ -275,6 +276,29 @@ function RequestCard({
           </Detail>
         )}
       </dl>
+
+      {screenshotUrl ? (
+        <a
+          href={screenshotUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={`Open the payment screenshot from ${request.organizationName} in a new tab`}
+          className="group mt-4 block overflow-hidden rounded-card border border-line bg-surface transition-colors hover:border-brand"
+        >
+          <span className="block px-4 pt-3 text-micro font-bold uppercase tracking-wide text-faint">Payment screenshot</span>
+          <span className="relative block h-72 w-full">
+            {/* Signed, short-lived private URL: never sent through the image optimiser or its 30-day cache. */}
+            <Image
+              src={screenshotUrl}
+              alt={`Payment screenshot from ${request.organizationName}`}
+              fill
+              unoptimized
+              sizes="(min-width: 1024px) 900px, 100vw"
+              className="object-contain p-3 transition-opacity group-hover:opacity-90"
+            />
+          </span>
+        </a>
+      ) : null}
 
       {request.message ? (
         <div className="mt-4 rounded-card border border-line bg-surface p-4">
