@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { AdminPageHeader } from '@/components/admin/page-header';
 import { VendorListingBoard } from '@/components/admin/vendor-listing-board';
 import { listRequests, type VendorListingRequest } from '@/lib/vendor-listing/requests';
+import { signedScreenshotUrls } from '@/lib/vendor-listing/screenshots';
 
 export const metadata: Metadata = { title: 'Supplier Listing | Admin', robots: { index: false, follow: false } };
 
@@ -10,9 +11,16 @@ export const dynamic = 'force-dynamic';
 
 export default async function AdminVendorListingPage() {
   let requests: VendorListingRequest[] = [];
+  let screenshotUrls: Record<string, string> = {};
   let loadError: string | null = null;
   try {
     requests = await listRequests();
+    const paths = requests.flatMap((request) => (request.paymentScreenshotPath ? [request.paymentScreenshotPath] : []));
+    const byPath = await signedScreenshotUrls(paths);
+    for (const request of requests) {
+      const url = request.paymentScreenshotPath ? byPath[request.paymentScreenshotPath] : undefined;
+      if (url) screenshotUrls[request.requestId] = url;
+    }
   } catch (error) {
     loadError = error instanceof Error ? error.message : 'Requests could not be loaded.';
   }
@@ -26,7 +34,7 @@ export default async function AdminVendorListingPage() {
             {loadError}
           </p>
         ) : (
-          <VendorListingBoard requests={requests} />
+          <VendorListingBoard requests={requests} screenshotUrls={screenshotUrls} />
         )}
       </div>
     </>

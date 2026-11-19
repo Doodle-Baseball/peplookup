@@ -33,20 +33,32 @@ export interface BoardRequest {
   commissionPercent: number;
   customerDiscountPercent: number;
   message: string | null;
-  status: 'PENDING_PAYMENT' | 'PAID';
+  affiliateSignupUrl: string | null;
+  coaPageUrl: string | null;
+  status: 'PENDING_PAYMENT' | 'PAID' | 'PENDING_REVIEW' | 'APPROVED' | 'REJECTED';
+  paymentMethod: 'btc' | 'paypal' | null;
+  paymentScreenshotPath: string | null;
   whopPaymentId: string | null;
   paidAt: string | null;
   seenAt: string | null;
   createdAt: string;
 }
 
-type Filter = 'ALL' | 'PAID' | 'PENDING_PAYMENT';
+type Filter = 'ALL' | 'PENDING_REVIEW' | 'PAID' | 'PENDING_PAYMENT';
 
 const FILTERS: { id: Filter; label: string }[] = [
   { id: 'ALL', label: 'All' },
+  { id: 'PENDING_REVIEW', label: 'Awaiting review' },
   { id: 'PAID', label: 'Paid' },
   { id: 'PENDING_PAYMENT', label: 'Pending payment' },
 ];
+
+/** Requests from the BTC/PayPal form, as opposed to the old Whop checkout. */
+function isManualPayment(request: BoardRequest): boolean {
+  return request.status === 'PENDING_REVIEW' || request.status === 'APPROVED' || request.status === 'REJECTED';
+}
+
+const PAYMENT_METHOD_NAME = { btc: 'Bitcoin (BTC)', paypal: 'PayPal' } as const;
 
 const MARK_SEEN_DELAY_MS = 3000;
 
@@ -87,6 +99,16 @@ function Stat({ label, value, delayClass }: { label: string; value: string; dela
 }
 
 function StatusBadge({ status }: { status: BoardRequest['status'] }) {
+  if (status === 'PENDING_REVIEW' || status === 'APPROVED' || status === 'REJECTED') {
+    const label = status === 'PENDING_REVIEW' ? 'Awaiting review' : status === 'APPROVED' ? 'Approved' : 'Rejected';
+    const tone = status === 'PENDING_REVIEW' ? 'bg-warn/15 text-warn' : status === 'APPROVED' ? 'bg-ok/15 text-ok' : 'bg-danger/10 text-danger';
+    return (
+      <span className={cn('inline-flex items-center gap-1.5 rounded-pill px-3 py-1 text-xs font-bold', tone)}>
+        <ClockIcon className="h-3.5 w-3.5" />
+        {label}
+      </span>
+    );
+  }
   return status === 'PAID' ? (
     <span className="inline-flex items-center gap-1.5 rounded-pill bg-ok/15 px-3 py-1 text-xs font-bold text-ok">
       <CheckCircleIcon className="h-3.5 w-3.5" />
@@ -109,15 +131,28 @@ function Detail({ label, children }: { label: string; children: React.ReactNode 
   );
 }
 
+function OutboundLink({ href }: { href: string | null }) {
+  if (!href) return <>—</>;
+  return (
+    <a href={href} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-accent hover:underline">
+      {href.replace(/^https?:\/\//, '')}
+      <ExternalIcon className="h-3 w-3 shrink-0" />
+    </a>
+  );
+}
+
 function RequestCard({
   request,
   isNew,
   index,
+  screenshotUrl,
 }: {
   request: BoardRequest;
   isNew: boolean;
   index: number;
+  screenshotUrl: string | null;
 }) {
+  const manual = isManualPayment(request);
   const [isPending, startTransition] = useTransition();
   const [feedback, setFeedback] = useState<VerifyPaymentState | null>(null);
   const plan = vendorListingPlan(request.plan);
@@ -209,13 +244,36 @@ function RequestCard({
         </Detail>
         <Detail label="Commission">{formatPercent(request.commissionPercent)}</Detail>
         <Detail label="Customer discount">{formatPercent(request.customerDiscountPercent)}</Detail>
-        <Detail label={request.status === 'PAID' ? 'Paid' : 'Whop payment'}>
-          {request.status === 'PAID' ? (
-            request.paidAt ? <TimeAgo iso={request.paidAt} /> : 'Yes'
-          ) : (
-            'Not confirmed yet'
-          )}
-        </Detail>
+        {manual ? (
+          <>
+            <Detail label="Affiliate sign-up">
+              <OutboundLink href={request.affiliateSignupUrl} />
+            </Detail>
+            <Detail label="COA page">
+              <OutboundLink href={request.coaPageUrl} />
+            </Detail>
+            <Detail label="Payment method">{request.paymentMethod ? PAYMENT_METHOD_NAME[request.paymentMethod] : '—'}</Detail>
+            <Detail label="Payment screenshot">
+              {screenshotUrl ? (
+                <a href={screenshotUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-accent hover:underline">
+                  View screenshot
+                  <ExternalIcon className="h-3 w-3 shrink-0" />
+                </a>
+              ) : (
+                '—'
+              )}
+            </Detail>
+            <Detail label="Submitted">{new Date(request.createdAt).toLocaleString()}</Detail>
+          </>
+        ) : (
+          <Detail label={request.status === 'PAID' ? 'Paid' : 'Whop payment'}>
+            {request.status === 'PAID' ? (
+              request.paidAt ? <TimeAgo iso={request.paidAt} /> : 'Yes'
+            ) : (
+              'Not confirmed yet'
+            )}
+          </Detail>
+        )}
       </dl>
 
       {request.message ? (
@@ -226,7 +284,16 @@ function RequestCard({
       ) : null}
 
       <footer className="mt-5 flex flex-wrap items-center gap-3 border-t border-line pt-4">
-        {request.status === 'PENDING_PAYMENT' ? (
+        {/* The Whop buttons don't apply to BTC/PayPal requests: check the screenshot, then add the supplier. */}
+        {manual ? (
+          <Link
+            href="/admin/vendors/new"
+            className="btn-3d inline-flex items-center gap-2 rounded-chip bg-brand px-4 py-2 text-sm font-bold text-white"
+          >
+            <GlobeIcon className="h-4 w-4" />
+            Add this supplier
+          </Link>
+        ) : request.status === 'PENDING_PAYMENT' ? (
           <>
             <button
               type="button"
@@ -293,7 +360,13 @@ function RequestCard({
   );
 }
 
-export function VendorListingBoard({ requests }: { requests: BoardRequest[] }) {
+export function VendorListingBoard({
+  requests,
+  screenshotUrls,
+}: {
+  requests: BoardRequest[];
+  screenshotUrls: Record<string, string>;
+}) {
   const [filter, setFilter] = useState<Filter>('ALL');
   // Captured once on first render. Marking everything seen refreshes the page
   // data a moment later, and without this the "New" tags would vanish while
@@ -311,14 +384,16 @@ export function VendorListingBoard({ requests }: { requests: BoardRequest[] }) {
   }, [newIds]);
 
   const paid = requests.filter((request) => request.status === 'PAID');
-  const pending = requests.length - paid.length;
+  const pending = requests.filter((request) => request.status === 'PENDING_PAYMENT').length;
+  const awaitingReview = requests.filter((request) => request.status === 'PENDING_REVIEW').length;
   const revenueCents = paid.reduce((sum, request) => sum + request.amountCents, 0);
   const visible = filter === 'ALL' ? requests : requests.filter((request) => request.status === filter);
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <Stat label="Total requests" value={String(requests.length)} delayClass="animate-delay-100" />
+        <Stat label="Awaiting review" value={String(awaitingReview)} delayClass="animate-delay-100" />
         <Stat label="Paid" value={String(paid.length)} delayClass="animate-delay-200" />
         <Stat label="Pending payment" value={String(pending)} delayClass="animate-delay-300" />
         <Stat label="Confirmed revenue" value={formatUsd(revenueCents)} delayClass="animate-delay-400" />
@@ -363,6 +438,7 @@ export function VendorListingBoard({ requests }: { requests: BoardRequest[] }) {
               request={request}
               isNew={newIds.has(request.requestId)}
               index={index}
+              screenshotUrl={screenshotUrls[request.requestId] ?? null}
             />
           ))}
         </div>

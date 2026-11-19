@@ -13,7 +13,11 @@ const MISSING_TABLE_HINT =
 const MISSING_MESSAGE_COLUMN_HINT =
   'The message column is not there yet. Run supabase/migrations/0021_vendor_listing_message.sql in the Supabase SQL editor first.';
 
-export type VendorListingStatus = 'PENDING_PAYMENT' | 'PAID';
+/**
+ * PENDING_PAYMENT and PAID come from the Whop checkout; PENDING_REVIEW,
+ * APPROVED and REJECTED from the manual BTC/PayPal flow (migration 0034).
+ */
+export type VendorListingStatus = 'PENDING_PAYMENT' | 'PAID' | 'PENDING_REVIEW' | 'APPROVED' | 'REJECTED';
 
 export interface VendorListingRequest {
   requestId: string;
@@ -26,7 +30,11 @@ export interface VendorListingRequest {
   commissionPercent: number;
   customerDiscountPercent: number;
   message: string | null;
+  affiliateSignupUrl: string | null;
+  coaPageUrl: string | null;
   status: VendorListingStatus;
+  paymentMethod: 'btc' | 'paypal' | null;
+  paymentScreenshotPath: string | null;
   whopPaymentId: string | null;
   paidAt: string | null;
   seenAt: string | null;
@@ -45,8 +53,13 @@ const rowSchema = z.object({
   customer_discount_percent: z.coerce.number(),
   // Absent until 0021_vendor_listing_message.sql has been run.
   message: z.string().nullish(),
-  status: z.enum(['PENDING_PAYMENT', 'PAID']),
-  whop_payment_id: z.string().nullable(),
+  // Columns added by 0034_vendor_listing_manual_payment.sql.
+  affiliate_signup_url: z.string().nullish(),
+  coa_page_url: z.string().nullish(),
+  status: z.enum(['PENDING_PAYMENT', 'PAID', 'PENDING_REVIEW', 'APPROVED', 'REJECTED']),
+  payment_method: z.enum(['btc', 'paypal']).nullish(),
+  payment_screenshot_path: z.string().nullish(),
+  whop_payment_id: z.string().nullish(),
   paid_at: z.string().nullable(),
   seen_at: z.string().nullable(),
   created_at: z.string(),
@@ -65,15 +78,19 @@ function fromRow(row: unknown): VendorListingRequest {
     commissionPercent: parsed.commission_percent,
     customerDiscountPercent: parsed.customer_discount_percent,
     message: parsed.message ?? null,
+    affiliateSignupUrl: parsed.affiliate_signup_url ?? null,
+    coaPageUrl: parsed.coa_page_url ?? null,
     status: parsed.status,
-    whopPaymentId: parsed.whop_payment_id,
+    paymentMethod: parsed.payment_method ?? null,
+    paymentScreenshotPath: parsed.payment_screenshot_path ?? null,
+    whopPaymentId: parsed.whop_payment_id ?? null,
     paidAt: parsed.paid_at,
     seenAt: parsed.seen_at,
     createdAt: parsed.created_at,
   };
 }
 
-function requireClient() {
+export function requireClient() {
   const client = getSupabaseServerClient();
   if (!client) {
     throw new VendorListingDbError(
@@ -163,9 +180,6 @@ export async function listRequests(): Promise<VendorListingRequest[]> {
   const { data, error } = await requireClient()
     .from('vendor_listing_requests')
     .select()
-    // Rows from the new manual-payment flow (PENDING_REVIEW etc.) are skipped
-    // until the new admin board is deployed; this code only understands these two.
-    .in('status', ['PENDING_PAYMENT', 'PAID'])
     .order('created_at', { ascending: false })
     .limit(500);
   if (error) fail(error);
