@@ -163,6 +163,9 @@ export async function listRequests(): Promise<VendorListingRequest[]> {
   const { data, error } = await requireClient()
     .from('vendor_listing_requests')
     .select()
+    // Rows from the new manual-payment flow (PENDING_REVIEW etc.) are skipped
+    // until the new admin board is deployed; this code only understands these two.
+    .in('status', ['PENDING_PAYMENT', 'PAID'])
     .order('created_at', { ascending: false })
     .limit(500);
   if (error) fail(error);
