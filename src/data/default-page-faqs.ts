@@ -16,6 +16,32 @@ export interface FaqItem {
  * outcome in a person or animal.
  */
 export const DEFAULT_PAGE_FAQS: Readonly<Record<string, readonly FaqItem[]>> = {
+  '/supplier-listing': [
+    {
+      question: 'What do you need from me?',
+      answer: `Your brand name, a contact email, your website, the link to your affiliate program sign-up page, your COA page, and the commission and customer discount you offer. Then a payment by Bitcoin or PayPal and a screenshot of it. Once the payment is confirmed, we join your affiliate program, set up our tracking links and build your listing.`,
+    },
+    {
+      question: 'Does paying get my brand a good review?',
+      answer: `No. Paying gets your brand listed. Prices are compared exactly as published, and any rating of your brand is not affected by payment.`,
+    },
+    {
+      question: 'Do you guarantee traffic or sales?',
+      answer: `No. We don't promise any revenue, traffic, rankings or sales. Your payment covers your brand's listing on ${site.name} as described on this page.`,
+    },
+    {
+      question: "Why aren't free listings available?",
+      answer: `Free listings are closed at the moment. Paid listings are open now.`,
+    },
+    {
+      question: 'How is my payment confirmed?',
+      answer: `After you submit the form with your payment screenshot, our team checks that the funds arrived. Your listing is published within one business day of the payment being confirmed and the listing approved.`,
+    },
+    {
+      question: 'Can I pay with PayPal?',
+      answer: `Yes. You can pay with PayPal or Bitcoin (BTC). The payment step shows you exactly where to send it. Put your brand name in the payment note so we can match it to your application.`,
+    },
+  ],
   '/': [
     {
       question: `What is ${site.name}?`,

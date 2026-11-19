@@ -587,6 +587,173 @@
   .animate-sheen { animation: sheen 7s ease-in-out infinite; }
 }
 
+/* Supplier listing page: hero chips bob gently, and the backlink line in the
+   "what you get" card flows from PepLookup to the brand. Off for reduced motion. */
+@keyframes listing-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes listing-dash {
+  to { stroke-dashoffset: -24; }
+}
+
+@keyframes listing-grow {
+  from { transform: scaleY(0.2); }
+  to { transform: scaleY(1); }
+}
+
+/* The supplier listing hero sits on the page ground itself. Its green glow
+   fades in from the top, so there is no hard edge under the floating navbar. */
+.listing-hero-glow {
+  -webkit-mask-image: linear-gradient(180deg, transparent, #000 35%, #000 70%, transparent);
+  mask-image: linear-gradient(180deg, transparent, #000 35%, #000 70%, transparent);
+}
+
+/* Light cards with depth: a layered shadow tinted with the accent, and on
+   wide screens a slight tilt that settles flat on hover. */
+.listing-card-3d {
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.9),
+    0 1px 2px rgb(var(--content) / 0.06),
+    0 18px 40px -18px rgb(var(--accent-strong) / 0.35),
+    0 40px 80px -40px rgb(var(--content) / 0.25);
+}
+/* The hero's preview card: a small stack tilted in 3D, with its badges
+   floating in front. Flat on phones; it eases towards flat on hover. */
+@media (min-width: 640px) {
+  .listing-card-stage { perspective: 1600px; }
+  .listing-card-tilt {
+    transform: rotateX(6deg) rotateY(-10deg);
+    transform-style: preserve-3d;
+  }
+  .listing-chip-pop { transform: translateZ(60px); }
+}
+@media (min-width: 640px) and (prefers-reduced-motion: no-preference) {
+  .listing-card-tilt { transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+  .listing-card-stage:hover .listing-card-tilt { transform: rotateX(2deg) rotateY(-3deg); }
+}
+
+/* The black price card: depth from a raised top edge, a deep drop shadow and
+   a faint green glow underneath. */
+.listing-card-3d-dark {
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.12),
+    0 2px 4px rgb(0 0 0 / 0.2),
+    0 24px 48px -16px rgb(0 0 0 / 0.45),
+    0 36px 70px -30px rgb(var(--accent) / 0.55);
+}
+
+/* On a laptop the hero's first block fills the window under the navbar
+   (promo bar + floating header, about 7.5rem), so only the pitch and its
+   buttons show until the visitor scrolls. */
+@media (min-width: 1024px) {
+  .listing-hero-screen {
+    min-height: calc(100svh - 7rem);
+  }
+}
+
+/* The hero card's illustrative trend line draws itself in, then its area fades up. */
+@keyframes listing-draw {
+  from { stroke-dashoffset: 1; }
+  to { stroke-dashoffset: 0; }
+}
+
+/* The numbered "How it works" tiles glow in the accent colour. */
+.listing-step-glow {
+  box-shadow: 0 14px 30px -10px rgb(var(--accent) / 0.6);
+}
+
+
+@keyframes listing-caret {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+/* Types the query, holds, deletes it, repeats. Width is in `ch` with steps(),
+   so it needs a monospace face and the query's exact length (--chars). */
+@keyframes listing-type {
+  0%, 8% { width: 0; }
+  45%, 75% { width: calc(var(--chars) * 1ch); }
+  92%, 100% { width: 0; }
+}
+
+/* A pointer glides onto the button, presses it, and drifts back. */
+@keyframes listing-pointer {
+  0%, 15% { translate: 48px 36px; }
+  45% { translate: 0 0; scale: 1; }
+  52% { translate: 0 0; scale: 0.85; }
+  60%, 80% { translate: 0 0; scale: 1; }
+  100% { translate: 48px 36px; }
+}
+
+@keyframes listing-press {
+  0%, 48%, 58%, 100% { scale: 1; }
+  52% { scale: 0.95; }
+}
+
+@keyframes listing-shimmer {
+  from { background-position: 0% 50%; }
+  to { background-position: 200% 50%; }
+}
+
+@keyframes listing-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgb(var(--accent) / 0), 0 0 40px -10px rgb(var(--accent) / 0.35); }
+  50% { box-shadow: 0 0 0 6px rgb(var(--accent) / 0.08), 0 0 60px -6px rgb(var(--accent) / 0.55); }
+}
+
+/*
+ * Scroll reveal, armed by <ScrollReveal /> only for elements that start below
+ * the fold, so nothing is ever hidden without JavaScript or before it can be
+ * shown. Uses the individual `translate`/`scale` properties rather than
+ * `transform`, so it composes with hover lifts such as .card-3d, and the
+ * classes are removed once the entrance is over.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  [data-reveal].reveal-armed { opacity: 0; translate: 0 28px; }
+  [data-reveal='zoom'].reveal-armed { translate: 0 16px; scale: 0.96; }
+  [data-reveal='line'].reveal-armed { opacity: 1; translate: none; scale: 0 1; transform-origin: left; }
+  [data-reveal].reveal-in {
+    opacity: 1;
+    translate: 0 0;
+    scale: 1;
+    transition:
+      opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+      translate 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+      scale 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .animate-listing-shimmer {
+    background-size: 200% auto;
+    animation: listing-shimmer 6s linear infinite;
+  }
+  .animate-listing-glow { animation: listing-glow 3.2s ease-in-out infinite; }
+  .animate-listing-caret { animation: listing-caret 1s step-end infinite; }
+  .animate-listing-type {
+    display: inline-block;
+    overflow: hidden;
+    white-space: nowrap;
+    vertical-align: bottom;
+    animation: listing-type 5s steps(var(--chars)) infinite;
+  }
+  .animate-listing-pointer { animation: listing-pointer 4s cubic-bezier(0.45, 0, 0.2, 1) infinite; }
+  .animate-listing-press { animation: listing-press 4s ease-in-out infinite; }
+  .animate-listing-float { animation: listing-float 5s ease-in-out infinite; }
+  .animate-listing-float-slow { animation: listing-float 7s ease-in-out 1s infinite; }
+  .animate-listing-dash { animation: listing-dash 1.2s linear infinite; }
+  .animate-listing-grow {
+    transform-origin: bottom;
+    animation: listing-grow 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .animate-listing-draw {
+    stroke-dasharray: 1;
+    animation: listing-draw 1.6s cubic-bezier(0.65, 0, 0.35, 1) 0.4s both;
+  }
+  .animate-listing-area { animation: fade-in 0.8s ease-out 1.2s both; }
+}
+
 @keyframes sheen {
   0%, 60% { transform: translateX(-120%) skewX(-20deg); }
   100% { transform: translateX(320%) skewX(-20deg); }

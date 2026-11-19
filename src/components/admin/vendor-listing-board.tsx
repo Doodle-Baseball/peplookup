@@ -1,18 +1,22 @@
 'use client';
 
 import { useEffect, useState, useTransition } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import {
+  approveRequest,
   deleteVendorRequest,
-  markRequestPaidManually,
   markRequestsSeen,
+  rejectRequest,
   verifyRequestPayment,
-  type VerifyPaymentState,
+  type RequestActionState,
 } from '@/app/admin/(dashboard)/vendor-listing/actions';
-import { vendorListingPlan } from '@/config/vendor-listing';
+import { PAYMENT_METHOD_LABEL, vendorListingPlan, type VendorPaymentMethod } from '@/config/vendor-listing';
 import {
   CheckCircleIcon,
   ClockIcon,
+  CloseIcon,
+  DocumentIcon,
   ExternalIcon,
   GlobeIcon,
   StoreIcon,
@@ -30,25 +34,36 @@ export interface BoardRequest {
   email: string;
   contactNumber: string | null;
   websiteUrl: string;
+  affiliateSignupUrl: string | null;
+  coaPageUrl: string | null;
   commissionPercent: number;
   customerDiscountPercent: number;
   message: string | null;
-  status: 'PENDING_PAYMENT' | 'PAID';
-  whopPaymentId: string | null;
+  status: 'PENDING_REVIEW' | 'APPROVED' | 'REJECTED';
+  paymentMethod: VendorPaymentMethod | null;
+  paymentVerifiedAt: string | null;
+  reviewedAt: string | null;
   paidAt: string | null;
   seenAt: string | null;
   createdAt: string;
 }
 
-type Filter = 'ALL' | 'PAID' | 'PENDING_PAYMENT';
+type Filter = 'ALL' | 'PENDING_REVIEW' | 'APPROVED' | 'REJECTED';
 
 const FILTERS: { id: Filter; label: string }[] = [
   { id: 'ALL', label: 'All' },
-  { id: 'PAID', label: 'Paid' },
-  { id: 'PENDING_PAYMENT', label: 'Pending payment' },
+  { id: 'PENDING_REVIEW', label: 'Awaiting review' },
+  { id: 'APPROVED', label: 'Approved' },
+  { id: 'REJECTED', label: 'Rejected' },
 ];
 
 const MARK_SEEN_DELAY_MS = 3000;
+
+type PaymentState = 'verified' | 'awaiting';
+
+function paymentState(request: BoardRequest): PaymentState {
+  return request.paymentVerifiedAt ? 'verified' : 'awaiting';
+}
 
 /**
  * "2m ago" depends on the moment it is rendered, so the server's text and the
@@ -86,68 +101,105 @@ function Stat({ label, value, delayClass }: { label: string; value: string; dela
   );
 }
 
-function StatusBadge({ status }: { status: BoardRequest['status'] }) {
-  return status === 'PAID' ? (
-    <span className="inline-flex items-center gap-1.5 rounded-pill bg-ok/15 px-3 py-1 text-xs font-bold text-ok">
-      <CheckCircleIcon className="h-3.5 w-3.5" />
-      Paid
-    </span>
-  ) : (
-    <span className="inline-flex items-center gap-1.5 rounded-pill bg-warn/15 px-3 py-1 text-xs font-bold text-warn">
-      <ClockIcon className="h-3.5 w-3.5" />
-      Pending payment
+function Badge({ tone, icon, children }: { tone: 'ok' | 'warn' | 'danger' | 'muted'; icon: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <span
+      className={cn(
+        'inline-flex items-center gap-1.5 rounded-pill px-3 py-1 text-xs font-bold',
+        tone === 'ok' && 'bg-ok/15 text-ok',
+        tone === 'warn' && 'bg-warn/15 text-warn',
+        tone === 'danger' && 'bg-danger/15 text-danger',
+        tone === 'muted' && 'bg-surface-sunken text-muted',
+      )}
+    >
+      {icon}
+      {children}
     </span>
   );
 }
 
-function Detail({ label, children }: { label: string; children: React.ReactNode }) {
+function PaymentBadge({ request }: { request: BoardRequest }) {
+  const state = paymentState(request);
+  if (state === 'verified') return <Badge tone="ok" icon={<CheckCircleIcon className="h-3.5 w-3.5" />}>Payment verified</Badge>;
+  return <Badge tone="warn" icon={<ClockIcon className="h-3.5 w-3.5" />}>Payment to verify</Badge>;
+}
+
+function ListingBadge({ status }: { status: BoardRequest['status'] }) {
+  if (status === 'APPROVED') return <Badge tone="ok" icon={<CheckCircleIcon className="h-3.5 w-3.5" />}>Approved</Badge>;
+  if (status === 'REJECTED') return <Badge tone="danger" icon={<CloseIcon className="h-3.5 w-3.5" />}>Rejected</Badge>;
+  return <Badge tone="warn" icon={<ClockIcon className="h-3.5 w-3.5" />}>Awaiting review</Badge>;
+}
+
+function Detail({ label, children, wide = false }: { label: string; children: React.ReactNode; wide?: boolean }) {
   return (
-    <div className="min-w-0">
+    <div className={cn('min-w-0', wide && 'sm:col-span-2 lg:col-span-3')}>
       <dt className="text-micro font-bold uppercase tracking-wide text-faint">{label}</dt>
       <dd className="mt-0.5 break-words text-sm font-semibold text-content">{children}</dd>
     </div>
   );
 }
 
+function OutboundLink({ href }: { href: string | null }) {
+  if (!href) return <>—</>;
+  return (
+    <a href={href} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-accent hover:underline">
+      <span className="break-all">{href.replace(/^https?:\/\//, '')}</span>
+      <ExternalIcon className="h-3 w-3 shrink-0" />
+    </a>
+  );
+}
+
+const SECONDARY_BUTTON =
+  'inline-flex items-center gap-2 rounded-chip border border-line bg-surface px-4 py-2 text-sm font-bold text-content transition-colors hover:border-brand disabled:opacity-70';
+
 function RequestCard({
   request,
+  screenshotUrl,
   isNew,
   index,
 }: {
   request: BoardRequest;
+  screenshotUrl: string | null;
   isNew: boolean;
   index: number;
 }) {
   const [isPending, startTransition] = useTransition();
-  const [feedback, setFeedback] = useState<VerifyPaymentState | null>(null);
+  const [feedback, setFeedback] = useState<RequestActionState | null>(null);
   const plan = vendorListingPlan(request.plan);
+  const payment = paymentState(request);
+  const underReview = request.status === 'PENDING_REVIEW';
+
+  const run = (action: (requestId: string) => Promise<RequestActionState>) => {
+    startTransition(async () => {
+      setFeedback(await action(request.requestId));
+    });
+  };
 
   const verify = () => {
-    startTransition(async () => {
-      setFeedback(await verifyRequestPayment(request.requestId));
-    });
+    if (!window.confirm(`Mark the payment from ${request.organizationName} as verified? Only do this after seeing it in the wallet or PayPal account.`)) return;
+    run(verifyRequestPayment);
+  };
+
+  const approve = () => {
+    if (!window.confirm(`Approve the listing for ${request.organizationName}? You still add the supplier to publish it.`)) return;
+    run(approveRequest);
+  };
+
+  const reject = () => {
+    if (!window.confirm(`Reject the listing for ${request.organizationName}?`)) return;
+    run(rejectRequest);
   };
 
   const remove = () => {
     const warning =
-      request.status === 'PAID'
-        ? 'This request is PAID. Deleting it removes the record here, but does not refund the payment in Whop.'
+      payment === 'verified'
+        ? 'This payment was verified. Deleting removes the record and screenshot here, but does not refund anything.'
         : 'This cannot be undone.';
     if (!window.confirm(`Delete the request from ${request.organizationName} (${request.requestId})? ${warning}`)) return;
     startTransition(async () => {
       const result = await deleteVendorRequest(request.requestId);
       // On success the card disappears with the refreshed list; only a failure needs showing.
       if (result.tone === 'error') setFeedback(result);
-    });
-  };
-
-  const markPaid = () => {
-    const confirmed = window.confirm(
-      `Mark ${request.organizationName} as paid? Only do this after seeing the payment in Whop. It emails the applicant.`,
-    );
-    if (!confirmed) return;
-    startTransition(async () => {
-      setFeedback(await markRequestPaidManually(request.requestId));
     });
   };
 
@@ -173,99 +225,106 @@ function RequestCard({
             <span className="truncate">{request.organizationName}</span>
           </h2>
           <p className="mt-1 font-mono text-xs font-bold tracking-wider text-muted">
-            <TimeAgo iso={request.createdAt} />
+            {request.requestId} · <time dateTime={request.createdAt}>{new Date(request.createdAt).toLocaleString()}</time> (
+            <TimeAgo iso={request.createdAt} />)
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <span
-            className={cn(
-              'rounded-pill px-3 py-1 text-xs font-bold',
-              request.plan === 'pro' ? 'bg-brand text-white' : 'bg-brand-soft text-brand-strong',
-            )}
-          >
+          <span className="rounded-pill bg-brand-soft px-3 py-1 text-xs font-bold text-brand-strong">
             {plan.name} · {formatUsd(request.amountCents)}/{plan.interval === 'month' ? 'mo' : 'yr'}
           </span>
-          <StatusBadge status={request.status} />
+          <PaymentBadge request={request} />
+          <ListingBadge status={request.status} />
         </div>
       </header>
 
       <dl className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <Detail label="Email">
+        <Detail label="Contact email">
           <a href={`mailto:${request.email}`} className="text-accent hover:underline">
             {request.email}
           </a>
         </Detail>
         <Detail label="Contact number">{request.contactNumber ?? '—'}</Detail>
         <Detail label="Website">
-          <a
-            href={request.websiteUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-accent hover:underline"
-          >
-            {request.websiteUrl.replace(/^https?:\/\//, '')}
-            <ExternalIcon className="h-3 w-3 shrink-0" />
-          </a>
+          <OutboundLink href={request.websiteUrl} />
         </Detail>
+        <Detail label="Affiliate sign-up">
+          <OutboundLink href={request.affiliateSignupUrl} />
+        </Detail>
+        <Detail label="COA page">
+          <OutboundLink href={request.coaPageUrl} />
+        </Detail>
+        <Detail label="Payment method">{request.paymentMethod ? PAYMENT_METHOD_LABEL[request.paymentMethod] : '—'}</Detail>
         <Detail label="Commission">{formatPercent(request.commissionPercent)}</Detail>
         <Detail label="Customer discount">{formatPercent(request.customerDiscountPercent)}</Detail>
-        <Detail label={request.status === 'PAID' ? 'Paid' : 'Whop payment'}>
-          {request.status === 'PAID' ? (
-            request.paidAt ? <TimeAgo iso={request.paidAt} /> : 'Yes'
+        <Detail label="Payment screenshot">
+          {screenshotUrl ? (
+            <a href={screenshotUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-accent hover:underline">
+              <DocumentIcon className="h-4 w-4 shrink-0" />
+              View screenshot
+              <ExternalIcon className="h-3 w-3 shrink-0" />
+            </a>
           ) : (
-            'Not confirmed yet'
+            '—'
           )}
         </Detail>
       </dl>
 
+      {screenshotUrl ? (
+        <a
+          href={screenshotUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={`Open the payment screenshot from ${request.organizationName} in a new tab`}
+          className="group mt-4 block overflow-hidden rounded-card border border-line bg-surface transition-colors hover:border-brand"
+        >
+          <span className="block px-4 pt-3 text-micro font-bold uppercase tracking-wide text-faint">Payment screenshot</span>
+          <span className="relative block h-72 w-full">
+            {/* Signed, short-lived private URL: never sent through the image optimiser or its 30-day cache. */}
+            <Image
+              src={screenshotUrl}
+              alt={`Payment screenshot from ${request.organizationName}`}
+              fill
+              unoptimized
+              sizes="(min-width: 1024px) 900px, 100vw"
+              className="object-contain p-3 transition-opacity group-hover:opacity-90"
+            />
+          </span>
+        </a>
+      ) : null}
+
       {request.message ? (
         <div className="mt-4 rounded-card border border-line bg-surface p-4">
-          <p className="text-micro font-bold uppercase tracking-wide text-faint">Message</p>
+          <p className="text-micro font-bold uppercase tracking-wide text-faint">Anything else</p>
           <p className="mt-1 whitespace-pre-line break-words text-sm text-content">{request.message}</p>
         </div>
       ) : null}
 
       <footer className="mt-5 flex flex-wrap items-center gap-3 border-t border-line pt-4">
-        {request.status === 'PENDING_PAYMENT' ? (
-          <>
-            <button
-              type="button"
-              onClick={verify}
-              disabled={isPending}
-              className="btn-3d inline-flex items-center gap-2 rounded-chip bg-brand px-4 py-2 text-sm font-bold text-white disabled:opacity-70"
-            >
-              <CheckCircleIcon className="h-4 w-4" />
-              {isPending ? 'Checking Whop…' : 'Verify payment with Whop'}
-            </button>
-            <button
-              type="button"
-              onClick={markPaid}
-              disabled={isPending}
-              className="inline-flex items-center gap-2 rounded-chip border border-line bg-surface px-4 py-2 text-sm font-bold text-content transition-colors hover:border-brand disabled:opacity-70"
-            >
-              Mark as paid
-            </button>
-          </>
-        ) : (
-          <>
-            <Link
-              href="/admin/vendors/new"
-              className="btn-3d inline-flex items-center gap-2 rounded-chip bg-brand px-4 py-2 text-sm font-bold text-white"
-            >
-              <GlobeIcon className="h-4 w-4" />
-              Add this supplier
-            </Link>
-            <button
-              type="button"
-              onClick={verify}
-              disabled={isPending}
-              className="inline-flex items-center gap-2 rounded-chip border border-line bg-surface px-4 py-2 text-sm font-bold text-content transition-colors hover:border-brand disabled:opacity-70"
-            >
-              <CheckCircleIcon className="h-4 w-4" />
-              {isPending ? 'Checking Whop…' : 'Verify payment'}
-            </button>
-          </>
-        )}
+        {underReview && payment === 'awaiting' ? (
+          <button type="button" onClick={verify} disabled={isPending} className="btn-3d inline-flex items-center gap-2 rounded-chip bg-brand px-4 py-2 text-sm font-bold text-white disabled:opacity-70">
+            <CheckCircleIcon className="h-4 w-4" />
+            Verify payment
+          </button>
+        ) : null}
+        {underReview && payment === 'verified' ? (
+          <button type="button" onClick={approve} disabled={isPending} className="btn-3d inline-flex items-center gap-2 rounded-chip bg-brand px-4 py-2 text-sm font-bold text-white disabled:opacity-70">
+            <CheckCircleIcon className="h-4 w-4" />
+            Approve listing
+          </button>
+        ) : null}
+        {underReview ? (
+          <button type="button" onClick={reject} disabled={isPending} className={SECONDARY_BUTTON}>
+            <CloseIcon className="h-4 w-4" />
+            Reject
+          </button>
+        ) : null}
+        {request.status === 'APPROVED' ? (
+          <Link href="/admin/vendors/new" className="btn-3d inline-flex items-center gap-2 rounded-chip bg-brand px-4 py-2 text-sm font-bold text-white">
+            <GlobeIcon className="h-4 w-4" />
+            Add this supplier
+          </Link>
+        ) : null}
         <button
           type="button"
           onClick={remove}
@@ -279,7 +338,7 @@ function RequestCard({
           <p
             role="status"
             className={cn(
-              'text-sm font-semibold',
+              'w-full text-sm font-semibold',
               feedback.tone === 'ok' && 'text-ok',
               feedback.tone === 'info' && 'text-muted',
               feedback.tone === 'error' && 'text-danger',
@@ -293,7 +352,14 @@ function RequestCard({
   );
 }
 
-export function VendorListingBoard({ requests }: { requests: BoardRequest[] }) {
+export function VendorListingBoard({
+  requests,
+  screenshotUrls,
+}: {
+  requests: BoardRequest[];
+  /** Signed links, keyed by request id. */
+  screenshotUrls: Record<string, string>;
+}) {
   const [filter, setFilter] = useState<Filter>('ALL');
   // Captured once on first render. Marking everything seen refreshes the page
   // data a moment later, and without this the "New" tags would vanish while
@@ -310,18 +376,20 @@ export function VendorListingBoard({ requests }: { requests: BoardRequest[] }) {
     return () => window.clearTimeout(timer);
   }, [newIds]);
 
-  const paid = requests.filter((request) => request.status === 'PAID');
-  const pending = requests.length - paid.length;
-  const revenueCents = paid.reduce((sum, request) => sum + request.amountCents, 0);
+  const awaitingReview = requests.filter((request) => request.status === 'PENDING_REVIEW').length;
+  const approved = requests.filter((request) => request.status === 'APPROVED').length;
+  const verifiedRevenueCents = requests
+    .filter((request) => paymentState(request) === 'verified')
+    .reduce((sum, request) => sum + request.amountCents, 0);
   const visible = filter === 'ALL' ? requests : requests.filter((request) => request.status === filter);
 
   return (
     <div className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Stat label="Total requests" value={String(requests.length)} delayClass="animate-delay-100" />
-        <Stat label="Paid" value={String(paid.length)} delayClass="animate-delay-200" />
-        <Stat label="Pending payment" value={String(pending)} delayClass="animate-delay-300" />
-        <Stat label="Confirmed revenue" value={formatUsd(revenueCents)} delayClass="animate-delay-400" />
+        <Stat label="Awaiting review" value={String(awaitingReview)} delayClass="animate-delay-200" />
+        <Stat label="Approved" value={String(approved)} delayClass="animate-delay-300" />
+        <Stat label="Verified revenue" value={formatUsd(verifiedRevenueCents)} delayClass="animate-delay-400" />
       </div>
 
       <div role="tablist" aria-label="Filter requests" className="flex flex-wrap gap-2">
@@ -361,6 +429,7 @@ export function VendorListingBoard({ requests }: { requests: BoardRequest[] }) {
             <RequestCard
               key={request.requestId}
               request={request}
+              screenshotUrl={screenshotUrls[request.requestId] ?? null}
               isNew={newIds.has(request.requestId)}
               index={index}
             />

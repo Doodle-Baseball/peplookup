@@ -2,7 +2,7 @@ import 'server-only';
 import { randomBytes } from 'node:crypto';
 import { z } from 'zod';
 import { getSupabaseServerClient } from '@/lib/supabase/server';
-import type { VendorListingPlanId } from '@/config/vendor-listing';
+import type { VendorListingPlanId, VendorPaymentMethod } from '@/config/vendor-listing';
 import type { VendorApplication } from '@/lib/vendor-listing/application';
 
 export class VendorListingDbError extends Error {}
@@ -10,10 +10,16 @@ export class VendorListingDbError extends Error {}
 const MISSING_TABLE_HINT =
   'The vendor_listing_requests table is not there yet. Run supabase/migrations/0020_vendor_listing_requests.sql in the Supabase SQL editor first.';
 
-const MISSING_MESSAGE_COLUMN_HINT =
-  'The message column is not there yet. Run supabase/migrations/0021_vendor_listing_message.sql in the Supabase SQL editor first.';
+const MISSING_COLUMN_HINT =
+  'Some supplier listing columns are not there yet. Run supabase/migrations/0021_vendor_listing_message.sql and 0034_vendor_listing_manual_payment.sql in the Supabase SQL editor first.';
 
-export type VendorListingStatus = 'PENDING_PAYMENT' | 'PAID';
+/**
+ * The flow is manual payment, then admin review. Rows left over from the old
+ * Whop checkout (PENDING_PAYMENT, PAID) are never read: every query asks only
+ * for these statuses, so they stay untouched in the table and cannot break a page.
+ */
+const CURRENT_STATUSES = ['PENDING_REVIEW', 'APPROVED', 'REJECTED'] as const;
+export type VendorListingStatus = (typeof CURRENT_STATUSES)[number];
 
 export interface VendorListingRequest {
   requestId: string;
@@ -23,11 +29,16 @@ export interface VendorListingRequest {
   email: string;
   contactNumber: string | null;
   websiteUrl: string;
+  affiliateSignupUrl: string | null;
+  coaPageUrl: string | null;
   commissionPercent: number;
   customerDiscountPercent: number;
   message: string | null;
   status: VendorListingStatus;
-  whopPaymentId: string | null;
+  paymentMethod: VendorPaymentMethod | null;
+  paymentScreenshotPath: string | null;
+  paymentVerifiedAt: string | null;
+  reviewedAt: string | null;
   paidAt: string | null;
   seenAt: string | null;
   createdAt: string;
@@ -41,12 +52,17 @@ const rowSchema = z.object({
   email: z.string(),
   contact_number: z.string().nullable(),
   website_url: z.string(),
+  // The columns below are absent until their migrations (0021, 0034) have been run.
+  affiliate_signup_url: z.string().nullish(),
+  coa_page_url: z.string().nullish(),
   commission_percent: z.coerce.number(),
   customer_discount_percent: z.coerce.number(),
-  // Absent until 0021_vendor_listing_message.sql has been run.
   message: z.string().nullish(),
-  status: z.enum(['PENDING_PAYMENT', 'PAID']),
-  whop_payment_id: z.string().nullable(),
+  status: z.enum(CURRENT_STATUSES),
+  payment_method: z.enum(['btc', 'paypal']).nullish(),
+  payment_screenshot_path: z.string().nullish(),
+  payment_verified_at: z.string().nullish(),
+  reviewed_at: z.string().nullish(),
   paid_at: z.string().nullable(),
   seen_at: z.string().nullable(),
   created_at: z.string(),
@@ -62,18 +78,23 @@ function fromRow(row: unknown): VendorListingRequest {
     email: parsed.email,
     contactNumber: parsed.contact_number,
     websiteUrl: parsed.website_url,
+    affiliateSignupUrl: parsed.affiliate_signup_url ?? null,
+    coaPageUrl: parsed.coa_page_url ?? null,
     commissionPercent: parsed.commission_percent,
     customerDiscountPercent: parsed.customer_discount_percent,
     message: parsed.message ?? null,
     status: parsed.status,
-    whopPaymentId: parsed.whop_payment_id,
+    paymentMethod: parsed.payment_method ?? null,
+    paymentScreenshotPath: parsed.payment_screenshot_path ?? null,
+    paymentVerifiedAt: parsed.payment_verified_at ?? null,
+    reviewedAt: parsed.reviewed_at ?? null,
     paidAt: parsed.paid_at,
     seenAt: parsed.seen_at,
     createdAt: parsed.created_at,
   };
 }
 
-function requireClient() {
+export function requireClient() {
   const client = getSupabaseServerClient();
   if (!client) {
     throw new VendorListingDbError(
@@ -87,7 +108,9 @@ function fail(error: { code?: string; message: string }): never {
   // 42P01 = undefined_table, PGRST205 = PostgREST's "not in schema cache".
   if (error.code === '42P01' || error.code === 'PGRST205') throw new VendorListingDbError(MISSING_TABLE_HINT);
   // 42703 = undefined_column, PGRST204 = PostgREST's "column not in schema cache".
-  if (error.code === '42703' || error.code === 'PGRST204') throw new VendorListingDbError(MISSING_MESSAGE_COLUMN_HINT);
+  if (error.code === '42703' || error.code === 'PGRST204') throw new VendorListingDbError(MISSING_COLUMN_HINT);
+  // 23514 = check_violation: the status check still predates 0034.
+  if (error.code === '23514') throw new VendorListingDbError(`${MISSING_COLUMN_HINT} (${error.message})`);
   throw new VendorListingDbError(error.message);
 }
 
@@ -101,27 +124,33 @@ export function generateRequestId(): string {
   return `VL-${id}`;
 }
 
+/** A submitted application with its payment screenshot, waiting for the admin's review. */
 export async function createRequest(input: {
+  requestId: string;
   application: VendorApplication;
   amountCents: number;
+  paymentMethod: VendorPaymentMethod;
+  paymentScreenshotPath: string;
 }): Promise<VendorListingRequest> {
-  const client = requireClient();
   const { application } = input;
-  const { data, error } = await client
+  const { data, error } = await requireClient()
     .from('vendor_listing_requests')
     .insert({
-      request_id: generateRequestId(),
+      request_id: input.requestId,
       plan: application.plan,
       amount_cents: input.amountCents,
       organization_name: application.organizationName,
       email: application.email,
       contact_number: application.contactNumber ?? null,
       website_url: application.websiteUrl,
+      affiliate_signup_url: application.affiliateSignupUrl,
+      coa_page_url: application.coaPageUrl,
       commission_percent: application.commissionPercent,
       customer_discount_percent: application.customerDiscountPercent,
-      // Only sent when filled in, so applications without one keep working
-      // even before the message column exists.
-      ...(application.message ? { message: application.message } : {}),
+      message: application.message ?? null,
+      status: 'PENDING_REVIEW',
+      payment_method: input.paymentMethod,
+      payment_screenshot_path: input.paymentScreenshotPath,
     })
     .select()
     .single();
@@ -134,27 +163,8 @@ export async function getRequest(requestId: string): Promise<VendorListingReques
     .from('vendor_listing_requests')
     .select()
     .eq('request_id', requestId)
+    .in('status', [...CURRENT_STATUSES])
     .maybeSingle();
-  if (error) fail(error);
-  return data ? fromRow(data) : null;
-}
-
-/**
- * The newest unpaid request from this email, optionally for one plan. A
- * Whop plan-link payment carries no request id, so the buyer's email is the
- * only link back to the application they filled in.
- */
-export async function findPendingRequestByEmail(
-  email: string,
-  plan?: VendorListingPlanId,
-): Promise<VendorListingRequest | null> {
-  let query = requireClient()
-    .from('vendor_listing_requests')
-    .select()
-    .eq('status', 'PENDING_PAYMENT')
-    .eq('email', email.trim().toLowerCase()); // stored lowercase by the application schema
-  if (plan) query = query.eq('plan', plan);
-  const { data, error } = await query.order('created_at', { ascending: false }).limit(1).maybeSingle();
   if (error) fail(error);
   return data ? fromRow(data) : null;
 }
@@ -163,6 +173,7 @@ export async function listRequests(): Promise<VendorListingRequest[]> {
   const { data, error } = await requireClient()
     .from('vendor_listing_requests')
     .select()
+    .in('status', [...CURRENT_STATUSES])
     .order('created_at', { ascending: false })
     .limit(500);
   if (error) fail(error);
@@ -176,6 +187,7 @@ export async function countUnseenRequests(): Promise<number> {
   const { count, error } = await client
     .from('vendor_listing_requests')
     .select('request_id', { count: 'exact', head: true })
+    .in('status', [...CURRENT_STATUSES])
     .is('seen_at', null);
   return error ? 0 : (count ?? 0);
 }
@@ -193,28 +205,38 @@ export async function markAllSeen(): Promise<void> {
   if (error) fail(error);
 }
 
-/**
- * PENDING_PAYMENT → PAID, exactly once. The `neq` guard makes the update a
- * no-op for a request that is already paid, so a Whop webhook retry (or the
- * webhook racing the admin's "Verify" button) returns `null` and the caller
- * does not send the confirmation emails a second time.
- */
-export async function markPaid(
-  requestId: string,
-  payment: { paymentId: string; paidAt: string | null },
-): Promise<VendorListingRequest | null> {
+/** The admin has checked the screenshot against the BTC wallet or PayPal account. Only a request still under review. */
+export async function markPaymentVerified(requestId: string): Promise<VendorListingRequest | null> {
+  const now = new Date().toISOString();
   const { data, error } = await requireClient()
     .from('vendor_listing_requests')
-    .update({
-      status: 'PAID',
-      whop_payment_id: payment.paymentId,
-      paid_at: payment.paidAt ?? new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    })
+    .update({ payment_verified_at: now, updated_at: now })
     .eq('request_id', requestId)
-    .neq('status', 'PAID')
+    .eq('status', 'PENDING_REVIEW')
+    .is('payment_verified_at', null)
     .select()
     .maybeSingle();
+  if (error) fail(error);
+  return data ? fromRow(data) : null;
+}
+
+/**
+ * PENDING_REVIEW -> APPROVED or REJECTED, once. Approving needs a verified
+ * payment; the filters make the update a no-op otherwise, and the caller
+ * reports that instead of guessing why.
+ */
+export async function reviewRequest(
+  requestId: string,
+  decision: 'APPROVED' | 'REJECTED',
+): Promise<VendorListingRequest | null> {
+  const now = new Date().toISOString();
+  let query = requireClient()
+    .from('vendor_listing_requests')
+    .update({ status: decision, reviewed_at: now, updated_at: now })
+    .eq('request_id', requestId)
+    .eq('status', 'PENDING_REVIEW');
+  if (decision === 'APPROVED') query = query.not('payment_verified_at', 'is', null);
+  const { data, error } = await query.select().maybeSingle();
   if (error) fail(error);
   return data ? fromRow(data) : null;
 }

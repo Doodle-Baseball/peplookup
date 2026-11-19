@@ -1,20 +1,31 @@
 import 'server-only';
 import { site } from '@/config/site';
-import { VENDOR_LISTING_CONTACT, formatPlanPrice, vendorListingPlan } from '@/config/vendor-listing';
+import { PAYMENT_METHOD_LABEL, formatPlanPrice, vendorListingPlan } from '@/config/vendor-listing';
 import type { VendorListingRequest } from '@/lib/vendor-listing/requests';
 
 /**
  * Transactional email through Resend's HTTP API (no SDK, no new dependency).
- * Sending is best-effort by design: a failed email must never block a
- * payment from being recorded, so every function resolves to a boolean and
- * logs the reason instead of throwing.
+ * Sending is best-effort by design: a failed email must never block an
+ * application from being recorded, so every function resolves to a boolean
+ * and logs the reason instead of throwing.
  */
 
 function adminRecipient(): string {
   return process.env.VENDOR_LISTING_NOTIFY_EMAIL ?? site.contactEmail;
 }
 
-async function send(message: { to: string; subject: string; html: string; replyTo?: string }): Promise<boolean> {
+interface Attachment {
+  filename: string;
+  bytes: Uint8Array;
+}
+
+async function send(message: {
+  to: string;
+  subject: string;
+  html: string;
+  replyTo?: string;
+  attachments?: readonly Attachment[];
+}): Promise<boolean> {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.VENDOR_LISTING_EMAIL_FROM;
   if (!apiKey || !from) {
@@ -31,6 +42,14 @@ async function send(message: { to: string; subject: string; html: string; replyT
         subject: message.subject,
         html: message.html,
         ...(message.replyTo ? { reply_to: message.replyTo } : {}),
+        ...(message.attachments?.length
+          ? {
+              attachments: message.attachments.map((attachment) => ({
+                filename: attachment.filename,
+                content: Buffer.from(attachment.bytes).toString('base64'),
+              })),
+            }
+          : {}),
       }),
     });
     if (!response.ok) {
@@ -61,20 +80,29 @@ function row(label: string, value: string): string {
   return `<tr><td style="padding:8px 12px;color:#6b7280;font-size:13px;white-space:nowrap;border-bottom:1px solid #eee">${escapeHtml(label)}</td><td style="padding:8px 12px;font-size:14px;font-weight:600;border-bottom:1px solid #eee">${value}</td></tr>`;
 }
 
+function link(url: string): string {
+  const safe = escapeHtml(url);
+  return `<a href="${safe}">${safe}</a>`;
+}
+
 function detailsTable(request: VendorListingRequest): string {
   const plan = vendorListingPlan(request.plan);
-  const website = escapeHtml(request.websiteUrl);
   return `<table style="border-collapse:collapse;width:100%;border:1px solid #eee;border-radius:8px">
 ${row('Request ID', escapeHtml(request.requestId))}
+${row('Submitted', escapeHtml(new Date(request.createdAt).toUTCString()))}
 ${row('Plan', `${escapeHtml(plan.name)} (${formatPlanPrice(plan)}/${plan.interval === 'month' ? 'mo' : 'yr'})`)}
-${row('Organisation', escapeHtml(request.organizationName))}
-${row('Email', `<a href="mailto:${escapeHtml(request.email)}">${escapeHtml(request.email)}</a>`)}
+${row('Brand name', escapeHtml(request.organizationName))}
+${row('Contact email', `<a href="mailto:${escapeHtml(request.email)}">${escapeHtml(request.email)}</a>`)}
 ${row('Contact number', request.contactNumber ? escapeHtml(request.contactNumber) : '—')}
-${row('Website', `<a href="${website}">${website}</a>`)}
+${row('Website', link(request.websiteUrl))}
+${row('Affiliate sign-up', request.affiliateSignupUrl ? link(request.affiliateSignupUrl) : '—')}
+${row('COA page', request.coaPageUrl ? link(request.coaPageUrl) : '—')}
 ${row('Commission', formatPercent(request.commissionPercent))}
 ${row('Customer discount', formatPercent(request.customerDiscountPercent))}
-${request.message ? row('Message', escapeHtml(request.message).replace(/\n/g, '<br>')) : ''}
-${row('Payment', request.status === 'PAID' ? 'PAID' : 'Pending payment')}
+${request.message ? row('Anything else', escapeHtml(request.message).replace(/\n/g, '<br>')) : ''}
+${row('Payment method', request.paymentMethod ? escapeHtml(PAYMENT_METHOD_LABEL[request.paymentMethod]) : '—')}
+${row('Payment', 'Screenshot attached, not verified yet')}
+${row('Listing', 'Awaiting review')}
 </table>`;
 }
 
@@ -87,45 +115,21 @@ ${body}
 </div>`;
 }
 
-/** Sent to the site owner the moment the form is submitted, before any payment. */
-export function sendNewRequestEmail(request: VendorListingRequest): Promise<boolean> {
+/**
+ * Sent to the site owner (info@peplookup.com unless VENDOR_LISTING_NOTIFY_EMAIL
+ * says otherwise) the moment an application is submitted, with the payment
+ * screenshot attached. Nothing is published until the admin approves it.
+ */
+export function sendNewRequestEmail(request: VendorListingRequest, screenshot: Attachment): Promise<boolean> {
   return send({
     to: adminRecipient(),
     replyTo: request.email,
     subject: `New supplier listing request: ${request.organizationName} (${request.requestId})`,
     html: layout(
       'New supplier listing request',
-      'Someone just submitted the supplier application form. They are being sent to checkout now; you will get a second email when payment is confirmed.',
+      'A brand submitted the supplier listing form with a payment screenshot (attached). Verify the payment, then approve or reject the listing in /admin/vendor-listing.',
       detailsTable(request),
     ),
-  });
-}
-
-/** Sent to the site owner once Whop confirms the payment. */
-export function sendPaymentConfirmedAdminEmail(request: VendorListingRequest): Promise<boolean> {
-  return send({
-    to: adminRecipient(),
-    replyTo: request.email,
-    subject: `Payment received: ${request.organizationName} (${request.requestId})`,
-    html: layout(
-      'Payment confirmed',
-      'Whop confirmed this payment. The supplier is ready to be added to the site.',
-      detailsTable(request),
-    ),
-  });
-}
-
-/** Sent to the applicant once Whop confirms the payment. */
-export function sendPaymentConfirmedApplicantEmail(request: VendorListingRequest): Promise<boolean> {
-  const contact = VENDOR_LISTING_CONTACT;
-  return send({
-    to: request.email,
-    replyTo: contact.email,
-    subject: `We received your supplier listing request (${request.requestId})`,
-    html: layout(
-      'Thank you, your payment was received',
-      `Your request ID is <strong>${escapeHtml(request.requestId)}</strong>. ${escapeHtml(contact.name)} will contact you within ${contact.responseWindow} to set up your listing. Questions in the meantime? Write to <a href="mailto:${contact.email}">${contact.email}</a>.`,
-      detailsTable(request),
-    ),
+    attachments: [screenshot],
   });
 }
